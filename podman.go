@@ -10,14 +10,14 @@ import (
 )
 
 type Configuration struct {
-	storageLocation string
-	upKeybind       string
-	downKeybind     string
-	leftKeybind     string
-	rightKeybind    string
-	playKeybind     string
-	searchKeybind   string
-	subscribed      []PodcastEntry
+	StorageLocation string
+	UpKeybind       string
+	DownKeybind     string
+	LeftKeybind     string
+	RightKeybind    string
+	PlayKeybind     string
+	SearchKeybind   string
+	Subscribed      []PodcastEntry
 }
 
 type PodcastEntry struct {
@@ -28,7 +28,7 @@ type PodcastEntry struct {
 
 func main() {
 	//make configurationg struct that holds default settings
-	config := Configuration{"~/podman", "<up>", "<down>", "<left>", "<right>", "<space>", "/", make([]PodcastEntry, 0)}
+	config := Configuration{"~/podman", "k", "j", "h", "l", " ", "/", make([]PodcastEntry, 0)}
 	//read command line flags first
 	noTui := flag.Bool("no-tui", false, "Select whether to use the TUI or not")
 	flag.Parse()
@@ -82,12 +82,12 @@ func readConfig(c Configuration) Configuration {
 	if err != nil {
 		//config does not exist so build one out of the defult settings
 		//first check if the storage location is ok
-		if _, err := os.Stat(c.storageLocation); os.IsNotExist(err) {
+		if _, err := os.Stat(c.StorageLocation); os.IsNotExist(err) {
 			//path does not exist try to make
-			err := os.Mkdir(c.storageLocation, 0666)
+			err := os.Mkdir(c.StorageLocation, 0666)
 			if err != nil {
 				//failed to create folder to store, store files in same directory as program
-				c.storageLocation = "."
+				c.StorageLocation = "."
 			}
 		}
 		writeConfig(c)
@@ -106,6 +106,11 @@ func writeConfig(c Configuration) {
 		return
 	}
 	defer config.Close()
-	encoder := json.NewEncoder(config)
-	encoder.Encode(c)
+	jsonSettings, err := json.Marshal(&c)
+	if err != nil {
+		panic("could not save settings, cannot continue")
+	}
+	config.Write(jsonSettings)
+	//encoder := json.NewEncoder(config)
+	//encoder.Encode(jsonSettings)
 }
