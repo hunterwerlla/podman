@@ -107,7 +107,17 @@ func CliInterface(config Configuration) (Configuration, bool) {
 		}
 		for i, _ := range config.Subscribed {
 			if i == num {
-				parseRss(config.Subscribed[i].FeedURL)
+				entries, err := parseRss(config.Subscribed[i].FeedURL)
+				if err != nil {
+					fmt.Printf("%d when attempting to parse RSS\n", err.Error)
+					break
+				}
+				for i, entry := range entries {
+					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n Downloaded: %t\n", i, entry.title, entry.Summary, entry.Content, entry.Downloaded)
+					if i == 10 {
+						break
+					}
+				}
 			}
 		}
 	} else if command == "help" {

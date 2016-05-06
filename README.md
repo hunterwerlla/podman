@@ -12,7 +12,7 @@ H< >L
 / to search
 
 #Dependencies
-Podman requires [gocui](https://github.com/jroimartin/gocui) for the interface, [go-sox](https://github.com/krig/go-sox) to play audio files, [mahonia for RSS](https://github.com/axgle/mahonia), and [RSS](https://github.com/SlyMarbo/rss). The search relies on ITunes beause it is the largest source of podcasts on the internet (but podcasts are downloaded from their respective RSS feeds).
+Podman requires [gocui](https://github.com/jroimartin/gocui) for the interface, [go-sox](https://github.com/krig/go-sox) to play audio files, [sanitize](https://github.com/kennygrant/sanitize), and [RSS](https://github.com/SlyMarbo/rss). The search relies on ITunes beause it is the largest source of podcasts on the internet (but podcasts are downloaded from their respective RSS feeds).
 #Why?
 I did not find any usable integrated podcast clients for the command line. There are a few that rely on RSS, but none that integrate searching and playback as well. I wanted a complete package like gPodder for the command line, but better.
 #Why Go?
