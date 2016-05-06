@@ -4,6 +4,7 @@ import (
 	"encoding/json" //for decoding search data from itunes
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	//"github.com/krig/go-sox" //for playing podcasts
@@ -38,7 +39,7 @@ func main() {
 	if *noTui == true {
 		end := false
 		for end != true {
-			end = CliInterface()
+			end = CliInterface(config)
 		}
 	} else {
 		//TUI
@@ -46,7 +47,7 @@ func main() {
 	}
 }
 
-func CliInterface() bool {
+func CliInterface(config Configuration) bool {
 	command := ""
 	fmt.Scanf("%s", &command)
 	command = strings.ToLower(command)
@@ -65,6 +66,8 @@ func CliInterface() bool {
 		}
 	} else if command == "help" {
 		fmt.Println("Type list to list your subscriptions, /<string> to search, exit to exit, help to show this")
+	} else if command == "settings" {
+		fmt.Println(config)
 	} else {
 		fmt.Println("Type help for a list of commands")
 	}
@@ -79,6 +82,7 @@ func getSubscribed() []PodcastEntry {
 func readConfig(c Configuration) Configuration {
 	//check if there is a config file
 	config, err := os.Open("./config.json")
+	defer config.Close()
 	if err != nil {
 		//config does not exist so build one out of the defult settings
 		//first check if the storage location is ok
@@ -93,7 +97,11 @@ func readConfig(c Configuration) Configuration {
 		writeConfig(c)
 		return c
 	}
-	defer config.Close()
+	buffer, err := ioutil.ReadAll(config)
+	if err != nil {
+		panic("could not read config file")
+	}
+	json.Unmarshal(buffer, &c)
 	//now read in the settings and write it to the configuration object
 	return c
 }
@@ -103,6 +111,7 @@ func writeConfig(c Configuration) {
 	config, err := os.Create("./config.json")
 	if err != nil {
 		//using default settings because cannot write settings
+		fmt.Println("Cannot Save Settings!")
 		return
 	}
 	defer config.Close()
@@ -111,6 +120,4 @@ func writeConfig(c Configuration) {
 		panic("could not save settings, cannot continue")
 	}
 	config.Write(jsonSettings)
-	//encoder := json.NewEncoder(config)
-	//encoder.Encode(jsonSettings)
 }
