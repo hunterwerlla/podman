@@ -10,7 +10,7 @@ import (
 
 func main() {
 	//make configurationg struct that holds default settings
-	config := Configuration{"~/podman", "k", "j", "h", "l", " ", "/", make([]Podcast, 0)}
+	config := Configuration{"~/podman", "k", "j", "h", "l", " ", "/", make([]Podcast, 0), make([]PodcastEntry, 0)}
 	//read command line flags first
 	noTui := flag.Bool("no-tui", false, "Select whether to use the TUI or not")
 	flag.Parse()
@@ -60,12 +60,12 @@ func CliInterface(config Configuration) (Configuration, bool) {
 						fmt.Println("error converting to int")
 						break
 					}
-					for i, _ := range results {
+					for i := len(results) - 1; i >= 0; i-- {
 						if i == num {
 							fmt.Println("appending the result to subscribed")
 							//add description to it
 							podcastAddDescription(&results[i])
-							//then addd
+							//then add
 							config.Subscribed = append(config.Subscribed, results[i])
 							writeConfig(config) //update config on disk
 							goto searchEnd      //considered harmful
@@ -105,21 +105,56 @@ func CliInterface(config Configuration) (Configuration, bool) {
 			fmt.Println("please use in the form of \"show <number>\"")
 			return config, false
 		}
-		for i, _ := range config.Subscribed {
+		for i, pc := range config.Subscribed {
 			if i == num {
-				entries, err := parseRss(config.Subscribed[i].FeedURL)
+				entries, err := parseRss(pc.FeedURL)
 				if err != nil {
-					fmt.Printf("%d when attempting to parse RSS\n", err.Error)
+					fmt.Printf("%d when attempting to parse RSS\n", err.Error())
 					break
 				}
-				for i, entry := range entries {
-					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n Downloaded: %t\n", i, entry.title, entry.Summary, entry.Content, entry.Downloaded)
+				for i := len(entries) - 1; i >= 0; i-- {
+					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n", i, entries[i].title, entries[i].Summary, entries[i].Content)
 					if i == 10 {
 						break
 					}
 				}
 			}
 		}
+	} else if command == "download" {
+		fmt.Scanf("%s", &command)
+		pcNum, err := strconv.Atoi(command)
+		if err != nil {
+			fmt.Println("please use in the form of \"download <podcast number> <episode number>\"")
+			return config, false
+		}
+		fmt.Scanf("%s", &command)
+		epNum, err := strconv.Atoi(command)
+		if err != nil {
+			fmt.Println("please use in the form of \"download <podcast number> <episode number>\"")
+			return config, false
+		}
+		for i, pc := range config.Subscribed {
+			if i == pcNum {
+				entries, err := parseRss(pc.FeedURL)
+				if err != nil {
+					fmt.Printf("%d when attempting to parse RSS\n", err.Error())
+					break
+				}
+				for i := len(entries) - 1; i >= 0; i-- {
+					if i == epNum {
+						config, err := download(config, pc, entries[i])
+						if err != nil {
+							fmt.Printf("Error when downloading: %s\n", err.Error())
+						}
+						return config, false
+					}
+				}
+				fmt.Println("Invalid episode number")
+				return config, false
+			}
+		}
+		fmt.Println("Invalid subscription number")
+		return config, false
 	} else if command == "help" {
 		fmt.Println("Type ls to list your subscriptions, /<string> to search, exit to exit, help to show this")
 	} else if command == "settings" {

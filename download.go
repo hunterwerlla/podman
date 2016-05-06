@@ -2,10 +2,19 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"os"
+	"strings"
 )
 
-func download(podcast Podcast, ep PodcastEpisode) error {
-	fmt.Println("not implemented yet")
-	return nil
+func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configuration, error) {
+	folder := strings.Trim(podcast.CollectionName, " \t\n")
+	fullPath := config.StorageLocation + "/" + folder
+	err := os.MkdirAll(fullPath, 0666)
+	if err != nil {
+		return config, err
+	}
+	if true {
+		return config, errors.New("")
+	}
+	return config, nil
 }

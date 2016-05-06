@@ -9,6 +9,7 @@ type Configuration struct {
 	PlayKeybind     string
 	SearchKeybind   string
 	Subscribed      []Podcast
+	Downloaded      []PodcastEntry
 }
 
 type Podcast struct {
@@ -19,11 +20,10 @@ type Podcast struct {
 }
 
 type PodcastEntry struct {
-	title      string
-	Summary    string
-	Link       string
-	Content    string
-	Downloaded bool
+	title   string
+	Summary string
+	Link    string
+	Content string
 }
 
 type ItunesSearch struct {
