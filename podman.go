@@ -17,7 +17,7 @@ func main() {
 	//read config file
 	config = readConfig(config)
 	//write config on sucessful exit
-	defer writeConfig(config)
+	//defer writeConfig(config)
 	//made a decision to use TUI or not
 	if *noTui == true {
 		end := false
@@ -28,6 +28,7 @@ func main() {
 		//TUI
 		panic("unimplemented")
 	}
+	writeConfig(config)
 }
 
 func CliInterface(config Configuration) (Configuration, bool) {
@@ -63,7 +64,8 @@ func CliInterface(config Configuration) (Configuration, bool) {
 						if i == num {
 							fmt.Println("appending the result to subscribed")
 							config.Subscribed = append(config.Subscribed, results[i])
-							goto searchEnd //yada yada considered harmful: this is much easier to jump out of these nested for loops
+							writeConfig(config) //update config on disk
+							goto searchEnd      //yada yada considered harmful: this is much easier to jump out of these nested for loops
 						}
 					}
 					fmt.Println("Number is in wrong format or too large, try again")
@@ -73,13 +75,28 @@ func CliInterface(config Configuration) (Configuration, bool) {
 			}
 		searchEnd:
 		}
-	} else if command == "list" {
-		for _, entry := range config.Subscribed {
+	} else if command == "ls" {
+		for i, entry := range config.Subscribed {
 			//do nothing
-			fmt.Println(entry.ArtistName)
+			fmt.Printf("%2d\t%2s\t%15s\n", i, entry.CollectionName, entry.ArtistName)
+		}
+	} else if command == "rm" {
+		fmt.Scanf("%s", &command)
+		num, err := strconv.Atoi(command)
+		if err != nil {
+			fmt.Println("please use in the form of \"rm <number>\"")
+			return config, false
+		}
+		for i, _ := range config.Subscribed {
+			if i == num {
+				//then remove this one
+				fmt.Printf("Removing %s\n", config.Subscribed[i].CollectionName)
+				config.Subscribed = append(config.Subscribed[:i], config.Subscribed[i+1:]...)
+				writeConfig(config)
+			}
 		}
 	} else if command == "help" {
-		fmt.Println("Type list to list your subscriptions, /<string> to search, exit to exit, help to show this")
+		fmt.Println("Type ls to list your subscriptions, /<string> to search, exit to exit, help to show this")
 	} else if command == "settings" {
 		fmt.Println(config)
 	} else {

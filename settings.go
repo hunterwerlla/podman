@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json" //for settings
-	//"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -47,5 +47,11 @@ func writeConfig(c Configuration) {
 	if err != nil {
 		panic("could not save settings, cannot continue")
 	}
-	config.Write(jsonSettings)
+	var jsonSettingsPretty bytes.Buffer
+	err = json.Indent(&jsonSettingsPretty, jsonSettings, "", "    ")
+	if err != nil {
+		config.Write(jsonSettings)
+		return
+	}
+	config.Write(jsonSettingsPretty.Bytes())
 }

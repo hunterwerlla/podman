@@ -8,8 +8,6 @@ import (
 	"net/http"
 )
 
-//itunes search url
-
 //search itunes for a podcast with the string given, then returns an array of Podcast
 func searchItunes(term string) ([]Podcast, error) {
 	const itunesUrl string = "https://itunes.apple.com/search?entity=podcast&term="
