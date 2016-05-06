@@ -15,6 +15,7 @@ type Podcast struct {
 	ArtistName     string
 	CollectionName string
 	FeedURL        string
+	Description    string
 }
 
 type PodcastEntry struct {

@@ -63,9 +63,12 @@ func CliInterface(config Configuration) (Configuration, bool) {
 					for i, _ := range results {
 						if i == num {
 							fmt.Println("appending the result to subscribed")
+							//add description to it
+							podcastAddDescription(&results[i])
+							//then addd
 							config.Subscribed = append(config.Subscribed, results[i])
 							writeConfig(config) //update config on disk
-							goto searchEnd      //yada yada considered harmful: this is much easier to jump out of these nested for loops
+							goto searchEnd      //considered harmful
 						}
 					}
 					fmt.Println("Number is in wrong format or too large, try again")
@@ -93,6 +96,18 @@ func CliInterface(config Configuration) (Configuration, bool) {
 				fmt.Printf("Removing %s\n", config.Subscribed[i].CollectionName)
 				config.Subscribed = append(config.Subscribed[:i], config.Subscribed[i+1:]...)
 				writeConfig(config)
+			}
+		}
+	} else if command == "show" {
+		fmt.Scanf("%s", &command)
+		num, err := strconv.Atoi(command)
+		if err != nil {
+			fmt.Println("please use in the form of \"show <number>\"")
+			return config, false
+		}
+		for i, _ := range config.Subscribed {
+			if i == num {
+				parseRss(config.Subscribed[i].FeedURL)
 			}
 		}
 	} else if command == "help" {
