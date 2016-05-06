@@ -2,6 +2,13 @@
 Podman is a terminal based podcast client written in Go.
 
 #Default Key Binds
+  K 
+  ^
+H< >L
+  ∨
+  J
+
+/ to search
 
 #Dependencies
 Podman requires [gocui](https://github.com/jroimartin/gocui) for the interface and [go-sox](https://github.com/krig/go-sox) to play audio files. The search relies on ITunes beause it is the largest source of podcasts on the internet (but podcasts are downloaded from their respective RSS feeds).

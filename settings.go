@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json" //for settings
-	"fmt"
+	//"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -40,8 +40,7 @@ func writeConfig(c Configuration) {
 	config, err := os.Create("./config.json")
 	if err != nil {
 		//using default settings because cannot write settings
-		fmt.Println("Cannot Save Settings!")
-		return
+		panic("could not save settings, cannot continue")
 	}
 	defer config.Close()
 	jsonSettings, err := json.Marshal(&c)

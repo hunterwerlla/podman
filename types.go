@@ -12,13 +12,17 @@ type Configuration struct {
 }
 
 type Podcast struct {
-	name   string
-	author string
-	uri    string
+	ArtistName     string
+	CollectionName string
+	FeedURL        string
 }
 
 type PodcastEntry struct {
 	title       string
 	number      int
 	description string
+}
+
+type ItunesSearch struct {
+	Results []Podcast
 }
