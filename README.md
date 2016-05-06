@@ -3,11 +3,11 @@ Podman is a terminal based podcast client written in Go.
 
 #Default Key Binds
   
-  K  
-  ∧ 
-H< >L 
-  ∨ 
-  J 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;K   
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;∧  
+H&nbsp;<&nbsp;&nbsp;&nbsp;>&nbsp;L  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;∨  
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;J  
  
 / to search
 
