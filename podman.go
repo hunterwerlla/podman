@@ -3,14 +3,22 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os/user"
 	"strconv"
 	"strings"
 	//"github.com/krig/go-sox" //for playing podcasts
 )
 
 func main() {
+	//get users home dir, the default storage
+	usr, err := user.Current()
+	defaultStorage := "."
+	//if no error, sore in home directory
+	if err == nil {
+		defaultStorage = usr.HomeDir + "/" + "podman"
+	}
 	//make configurationg struct that holds default settings
-	config := Configuration{"~/podman", "k", "j", "h", "l", " ", "/", make([]Podcast, 0), make([]PodcastEntry, 0)}
+	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", make([]Podcast, 0), make([]PodcastEntry, 0)}
 	//read command line flags first
 	noTui := flag.Bool("no-tui", false, "Select whether to use the TUI or not")
 	flag.Parse()
@@ -114,9 +122,6 @@ func CliInterface(config Configuration) (Configuration, bool) {
 				}
 				for i := len(entries) - 1; i >= 0; i-- {
 					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n", i, entries[i].title, entries[i].Summary, entries[i].Content)
-					if i == 10 {
-						break
-					}
 				}
 			}
 		}
@@ -133,6 +138,7 @@ func CliInterface(config Configuration) (Configuration, bool) {
 			fmt.Println("please use in the form of \"download <podcast number> <episode number>\"")
 			return config, false
 		}
+		fmt.Printf("trying to do ep %d of show %d\n", epNum, pcNum)
 		for i, pc := range config.Subscribed {
 			if i == pcNum {
 				entries, err := parseRss(pc.FeedURL)
@@ -149,7 +155,7 @@ func CliInterface(config Configuration) (Configuration, bool) {
 						return config, false
 					}
 				}
-				fmt.Println("Invalid episode number")
+				fmt.Printf("Invalid episode number %d\n", epNum)
 				return config, false
 			}
 		}

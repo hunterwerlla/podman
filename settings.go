@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json" //for settings
+	"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -17,8 +18,10 @@ func readConfig(c Configuration) Configuration {
 		//first check if the storage location is ok
 		if _, err := os.Stat(c.StorageLocation); os.IsNotExist(err) {
 			//path does not exist try to make
-			err := os.Mkdir(c.StorageLocation, 0666)
+			fmt.Printf("making folder at:%s\n", c.StorageLocation)
+			err := os.MkdirAll(c.StorageLocation, 0700)
 			if err != nil {
+				fmt.Println("cannot make folder everyting kill")
 				//failed to create folder to store, store files in same directory as program
 				c.StorageLocation = "."
 			}

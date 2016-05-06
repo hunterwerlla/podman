@@ -9,7 +9,7 @@ import (
 func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configuration, error) {
 	folder := strings.Trim(podcast.CollectionName, " \t\n")
 	fullPath := config.StorageLocation + "/" + folder
-	err := os.MkdirAll(fullPath, 0666)
+	err := os.MkdirAll(fullPath, 0700)
 	if err != nil {
 		return config, err
 	}
