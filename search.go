@@ -62,7 +62,7 @@ func parseRss(input string) ([]PodcastEntry, error) {
 		content = strings.Replace(content, "\n", "", -1)
 		title := sanitize.HTML(strings.Replace(item.Title, "\n", " ", -1))
 		title = strings.Replace(content, "\n", "", -1)
-		entries = append(entries, PodcastEntry{title, item.Summary, item.Link, content})
+		entries = append(entries, PodcastEntry{title, item.Summary, item.Link, content, ""})
 	}
 	return entries, nil
 }

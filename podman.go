@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/krig/go-sox" //for playing podcasts
 	"os/user"
 	"strconv"
 	"strings"
-	//"github.com/krig/go-sox" //for playing podcasts
+	"time"
 )
 
 func main() {
@@ -68,13 +69,13 @@ func CliInterface(config Configuration) (Configuration, bool) {
 						fmt.Println("error converting to int")
 						break
 					}
-					for i := len(results) - 1; i >= 0; i-- {
+					for i, result := range results {
 						if i == num {
 							fmt.Println("appending the result to subscribed")
 							//add description to it
-							podcastAddDescription(&results[i])
+							podcastAddDescription(&result)
 							//then add
-							config.Subscribed = append(config.Subscribed, results[i])
+							config.Subscribed = append(config.Subscribed, result)
 							writeConfig(config) //update config on disk
 							goto searchEnd      //considered harmful
 						}
@@ -120,11 +121,12 @@ func CliInterface(config Configuration) (Configuration, bool) {
 					fmt.Printf("%d when attempting to parse RSS\n", err.Error())
 					break
 				}
-				for i := len(entries) - 1; i >= 0; i-- {
+				for i, _ := range entries {
 					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n", i, entries[i].title, entries[i].Summary, entries[i].Content)
 				}
 			}
 		}
+		return config, false
 	} else if command == "download" {
 		fmt.Scanf("%s", &command)
 		pcNum, err := strconv.Atoi(command)
@@ -138,19 +140,20 @@ func CliInterface(config Configuration) (Configuration, bool) {
 			fmt.Println("please use in the form of \"download <podcast number> <episode number>\"")
 			return config, false
 		}
-		fmt.Printf("trying to do ep %d of show %d\n", epNum, pcNum)
-		for i, pc := range config.Subscribed {
-			if i == pcNum {
+		for ii, pc := range config.Subscribed {
+			if ii == pcNum {
 				entries, err := parseRss(pc.FeedURL)
 				if err != nil {
 					fmt.Printf("%d when attempting to parse RSS\n", err.Error())
 					break
 				}
-				for i := len(entries) - 1; i >= 0; i-- {
+				for i, entry := range entries {
 					if i == epNum {
-						config, err := download(config, pc, entries[i])
+						config, err := download(config, pc, entry)
 						if err != nil {
 							fmt.Printf("Error when downloading: %s\n", err.Error())
+						} else {
+							fmt.Println("Finished downloading")
 						}
 						return config, false
 					}
@@ -160,6 +163,37 @@ func CliInterface(config Configuration) (Configuration, bool) {
 			}
 		}
 		fmt.Println("Invalid subscription number")
+		return config, false
+	} else if command == "play" {
+		//TODO make it send a message to a goroutine instead
+		fmt.Scanf("%s", &command)
+		pcNum, err := strconv.Atoi(command)
+		if err != nil {
+			fmt.Println("please use in the form of \"play <downloaded episode number>\"")
+			return config, false
+		}
+		for i, item := range config.Downloaded {
+			if i == pcNum {
+				if !sox.Init() {
+					fmt.Println("Unable to start the player")
+					return config, false
+				}
+				defer sox.Quit()
+				in := sox.OpenRead(item.StorageLocation)
+				defer in.Release()
+				out := sox.OpenWrite("default", in.Signal(), nil, "alsa")
+				if out == nil {
+					out = sox.OpenWrite("default", in.Signal(), nil, "pulseaudio")
+					if out == nil {
+						fmt.Println("Cannot open audio output devices")
+						return config, false
+					}
+				}
+				time.Sleep(time.Second * 10)
+				return config, false
+			}
+		}
+		fmt.Println("episode not found")
 		return config, false
 	} else if command == "help" {
 		fmt.Println("Type ls to list your subscriptions, /<string> to search, exit to exit, help to show this")

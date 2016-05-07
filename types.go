@@ -20,10 +20,11 @@ type Podcast struct {
 }
 
 type PodcastEntry struct {
-	title   string
-	Summary string
-	Link    string
-	Content string
+	title           string
+	Summary         string
+	Link            string
+	Content         string
+	StorageLocation string
 }
 
 type ItunesSearch struct {
