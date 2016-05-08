@@ -14,10 +14,10 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configura
 	fullPath := config.StorageLocation + "/" + folder
 	fullPathFile := ""
 	title := ""
-	if len(ep.title) > 30 {
-		title = ep.title[0:30]
+	if len(ep.Title) > 30 {
+		title = ep.Title[0:30]
 	} else {
-		title = ep.title
+		title = ep.Title
 	}
 	//check if title has extension, if not strip possible period and add extension
 	if path.Ext(title) != "mp3" {

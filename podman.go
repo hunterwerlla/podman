@@ -3,11 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/krig/go-sox" //for playing podcasts
 	"os/user"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func main() {
@@ -20,18 +18,22 @@ func main() {
 	}
 	//make configurationg struct that holds default settings
 	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", make([]Podcast, 0), make([]PodcastEntry, 0)}
-	//read command line flags first
+	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the TUI or not")
 	flag.Parse()
 	//read config file
 	config = readConfig(config)
+	//make the channels used by player
+	playerControl := make(chan int)
+	playerFile := make(chan string)
+	go play(playerFile, playerControl)
 	//write config on sucessful exit
 	//defer writeConfig(config)
 	//made a decision to use TUI or not
 	if *noTui == true {
 		end := false
 		for end != true {
-			config, end = CliInterface(config)
+			config, end = CliInterface(config, playerFile, playerControl)
 		}
 	} else {
 		//TUI
@@ -40,7 +42,7 @@ func main() {
 	writeConfig(config)
 }
 
-func CliInterface(config Configuration) (Configuration, bool) {
+func CliInterface(config Configuration, playerFile chan string, playerControl chan int) (Configuration, bool) {
 	command := ""
 	fmt.Scanf("%s", &command)
 	command = strings.ToLower(command)
@@ -122,7 +124,7 @@ func CliInterface(config Configuration) (Configuration, bool) {
 					break
 				}
 				for i, entry := range entries {
-					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n", i, entry.title, entry.Summary, entry.Content)
+					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n", i, entry.Title, entry.Summary, entry.Content)
 				}
 			}
 		}
@@ -174,29 +176,17 @@ func CliInterface(config Configuration) (Configuration, bool) {
 		}
 		for i, item := range config.Downloaded {
 			if i == pcNum {
-				if !sox.Init() {
-					fmt.Println("Unable to start the player")
-					return config, false
-				}
-				defer sox.Quit()
-				in := sox.OpenRead(item.StorageLocation)
-				defer in.Release()
-				//TODO make it work on windows too
-				out := sox.OpenWrite("default", in.Signal(), nil, "alsa")
-				if out == nil {
-					out = sox.OpenWrite("default", in.Signal(), nil, "pulseaudio")
-					if out == nil {
-						fmt.Println("Cannot open audio output devices")
-						return config, false
-					}
-				}
-				//TODO remove when real routine
-				time.Sleep(time.Second * 10)
+				//send storage location to player
+				playerFile <- item.StorageLocation
 				return config, false
 			}
 		}
 		fmt.Println("episode not found")
 		return config, false
+	} else if command == "ls-download" {
+		for i, podcast := range config.Downloaded {
+			fmt.Printf("%d %s %s\n", i, podcast.PodcastTitle, podcast.Title)
+		}
 	} else if command == "help" {
 		fmt.Println("Type ls to list your subscriptions, /<string> to search, exit to exit, help to show this")
 	} else if command == "settings" {

@@ -20,7 +20,8 @@ type Podcast struct {
 }
 
 type PodcastEntry struct {
-	title           string
+	PodcastTitle    string
+	Title           string
 	Summary         string
 	Link            string
 	Content         string

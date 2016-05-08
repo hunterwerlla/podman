@@ -36,41 +36,6 @@ func searchItunes(term string) ([]Podcast, error) {
 	return results.Results, nil
 }
 
-/*
-func podcastAddDescription(podcast *Podcast) error {
-	feed, err := rss.Fetch(podcast.FeedURL)
-	if err != nil {
-		fmt.Println("Unable to fetch RSS data, try again later")
-		return err
-	}
-	podcast.Description = feed.Description
-	return nil
-}
-
-//takes an RSS url and returns the data in the form of an array of podcast episode entries
-//The Item type comes from RSS
-
-func parseRss(input string) ([]PodcastEntry, error) {
-	feed, err := rss.Fetch(input)
-	if err != nil {
-		fmt.Println("Unable to fetch RSS data, try again later")
-		return make([]PodcastEntry, 0), nil
-	}
-	entries := make([]PodcastEntry, 0)
-	for _, item := range feed.Items {
-		//change it from Item type from RSS to built in PodcastEntry type, while also removing whitespace
-		//it also strips HTML tags because a lot of podcasts include them in their RSS data
-		content := sanitize.HTML(strings.Replace(item.Content, "\n", " ", -1))
-		content = strings.Replace(content, "\n", "", -1)
-		title := sanitize.HTML(strings.Replace(item.Title, "\n", " ", -1))
-		title = strings.Replace(content, "\n", "", -1)
-		fmt.Println(item.Enclosures[0])
-		entries = append(entries, PodcastEntry{title, item.Summary, item.Link, content, ""})
-	}
-	return entries, nil
-}
-*/
-
 //this function will add additional data to the podcast beyond the itunes data (a description)
 func podcastAddDescription(podcast *Podcast) error {
 	feed, err := rss.Read(podcast.FeedURL)
@@ -81,6 +46,8 @@ func podcastAddDescription(podcast *Podcast) error {
 	podcast.Description = feed.Description
 	return nil
 }
+
+//TODO strip HTML
 func parseRss(input string) ([]PodcastEntry, error) {
 	feed, err := rss.Read(input)
 	if err != nil {
@@ -104,7 +71,7 @@ func parseRss(input string) ([]PodcastEntry, error) {
 				break
 			}
 		}
-		entries = append(entries, PodcastEntry{title, description, url, content, ""})
+		entries = append(entries, PodcastEntry{feed.Title, title, description, url, content, ""})
 	}
 	return entries, nil
 }
