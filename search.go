@@ -71,7 +71,13 @@ func parseRss(input string) ([]PodcastEntry, error) {
 				break
 			}
 		}
-		entries = append(entries, PodcastEntry{feed.Title, title, description, url, content, ""})
+		guid := ""
+		if strings.TrimSpace(item.GUID) == "" {
+			guid = "-1"
+		} else {
+			guid = item.GUID
+		}
+		entries = append(entries, PodcastEntry{feed.Title, title, description, url, content, guid, ""})
 	}
 	return entries, nil
 }

@@ -25,6 +25,7 @@ type PodcastEntry struct {
 	Summary         string
 	Link            string
 	Content         string
+	GUID            string
 	StorageLocation string
 }
 
