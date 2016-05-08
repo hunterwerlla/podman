@@ -121,8 +121,8 @@ func CliInterface(config Configuration) (Configuration, bool) {
 					fmt.Printf("%d when attempting to parse RSS\n", err.Error())
 					break
 				}
-				for i, _ := range entries {
-					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n", i, entries[i].title, entries[i].Summary, entries[i].Content)
+				for i, entry := range entries {
+					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n", i, entry.title, entry.Summary, entry.Content)
 				}
 			}
 		}
@@ -165,7 +165,7 @@ func CliInterface(config Configuration) (Configuration, bool) {
 		fmt.Println("Invalid subscription number")
 		return config, false
 	} else if command == "play" {
-		//TODO make it send a message to a goroutine instead
+		//TODO make it send a message to a goroutine that runs all the time instead
 		fmt.Scanf("%s", &command)
 		pcNum, err := strconv.Atoi(command)
 		if err != nil {
@@ -181,6 +181,7 @@ func CliInterface(config Configuration) (Configuration, bool) {
 				defer sox.Quit()
 				in := sox.OpenRead(item.StorageLocation)
 				defer in.Release()
+				//TODO make it work on windows too
 				out := sox.OpenWrite("default", in.Signal(), nil, "alsa")
 				if out == nil {
 					out = sox.OpenWrite("default", in.Signal(), nil, "pulseaudio")
@@ -189,6 +190,7 @@ func CliInterface(config Configuration) (Configuration, bool) {
 						return config, false
 					}
 				}
+				//TODO remove when real routine
 				time.Sleep(time.Second * 10)
 				return config, false
 			}

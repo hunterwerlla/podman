@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -11,11 +13,22 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configura
 	folder := strings.Replace(podcast.CollectionName, " ", "", -1) //remove spaces
 	fullPath := config.StorageLocation + "/" + folder
 	fullPathFile := ""
-	if len(ep.title) > 20 {
-		fullPathFile = fullPath + "/" + ep.title[0:20]
+	title := ""
+	if len(ep.title) > 30 {
+		title = ep.title[0:30]
 	} else {
-		fullPathFile = fullPath + "/" + ep.title
+		title = ep.title
 	}
+	//check if title has extension, if not strip possible period and add extension
+	if path.Ext(title) != "mp3" {
+		title = strings.Replace(title, ".", "", -1)
+		title += ".mp3"
+	}
+	//if empty, title invalid
+	if title == ".mp3" {
+		return config, errors.New("invalid path")
+	}
+	fullPathFile = fullPath + "/" + title
 	err := os.MkdirAll(fullPath, 0700)
 	if err != nil {
 		return config, err
