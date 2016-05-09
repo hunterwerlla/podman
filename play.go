@@ -96,7 +96,7 @@ func play(config Configuration, fileNameChannel chan string, control chan int, e
 				if position == 0 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
-					//write filename to channel to begin again
+					//TODO fix this channel issue which makes no sense and makes the code worse
 					//fileNameChannel <- cachedFileName
 					fileName = cachedFileName
 				}
@@ -176,10 +176,24 @@ func play(config Configuration, fileNameChannel chan string, control chan int, e
 					}
 				}
 			case 5: //exit
-				break //break out of loop for cleanup
+				//clean up
+				if chain != nil {
+					chain.Release()
+					chain = nil
+				}
+				if inFile != nil {
+					inFile.Release()
+					inFile = nil
+				}
+				if outFile != nil {
+					outFile.Release()
+					outFile = nil
+				}
+				goto exit //break out of loop for cleanup
 			}
 		}
 	}
+exit:
 	if inFile != nil {
 		inFile.Release()
 	}
