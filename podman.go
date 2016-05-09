@@ -183,6 +183,10 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 		}
 		fmt.Println("episode not found")
 		return config, false
+	} else if command == "stop" {
+		playerControl <- 2
+	} else if command == "pause" {
+		playerControl <- 1
 	} else if command == "ls-download" {
 		for i, podcast := range config.Downloaded {
 			fmt.Printf("%d %s %s\n", i, podcast.PodcastTitle, podcast.Title)
