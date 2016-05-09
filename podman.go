@@ -51,5 +51,6 @@ func main() {
 	}
 	playerControl <- 5 //tell it to exit
 	writeConfig(config)
+	//wait for player to clean up
 	<-playerExit
 }

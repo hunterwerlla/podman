@@ -176,19 +176,6 @@ func play(config Configuration, fileNameChannel chan string, control chan int, e
 					}
 				}
 			case 5: //exit
-				//clean up
-				if chain != nil {
-					chain.Release()
-					chain = nil
-				}
-				if inFile != nil {
-					inFile.Release()
-					inFile = nil
-				}
-				if outFile != nil {
-					outFile.Release()
-					outFile = nil
-				}
 				goto exit //break out of loop for cleanup
 			}
 		}
