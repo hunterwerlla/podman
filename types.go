@@ -34,3 +34,8 @@ type PodcastEntry struct {
 type ItunesSearch struct {
 	Results []Podcast
 }
+
+type GlobalState struct {
+	Playing string
+	Config  *Configuration
+}

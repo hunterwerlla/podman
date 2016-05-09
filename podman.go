@@ -7,6 +7,11 @@ import (
 	"os/user"
 )
 
+//global state
+var (
+	globals GlobalState = GlobalState{"", nil}
+)
+
 func main() {
 	//get users home dir, the default storage
 	usr, err := user.Current()
@@ -27,13 +32,14 @@ func main() {
 	playerFile := make(chan string)
 	playerExit := make(chan bool)
 	go play(config, playerFile, playerControl, playerExit)
-	//write config on sucessful exit
-	//defer writeConfig(config)
+	//set up annoying global variable
+	globals.Config = &config
 	//made a decision to use TUI or not
 	if *noTui == true {
 		end := false
 		for end != true {
 			config, end = CliInterface(config, playerFile, playerControl)
+			globals.Config = &config
 		}
 	} else {
 		g := gocui.NewGui()
@@ -42,7 +48,19 @@ func main() {
 		}
 		defer g.Close()
 		g.SetLayout(mainLayout)
+		//allow mouse
+		g.Mouse = true
 		if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quitGui); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		if err := g.SetKeybinding("player", gocui.KeySpace, gocui.ModNone, playSelected); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		//TODO fix keybinds
+		if err := g.SetKeybinding("list", gocui.KeyCtrlA, gocui.ModNone, cursorDown); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		if err := g.SetKeybinding("list", gocui.KeyCtrlB, gocui.ModNone, cursorUp); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
