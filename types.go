@@ -1,15 +1,17 @@
 package main
 
 type Configuration struct {
-	StorageLocation string
-	UpKeybind       string
-	DownKeybind     string
-	LeftKeybind     string
-	RightKeybind    string
-	PlayKeybind     string
-	SearchKeybind   string
-	Subscribed      []Podcast
-	Downloaded      []PodcastEntry
+	StorageLocation    string
+	UpKeybind          string
+	DownKeybind        string
+	LeftKeybind        string
+	RightKeybind       string
+	PlayKeybind        string
+	SearchKeybind      string
+	forwardSkipLength  int
+	backwardSkipLength int
+	Subscribed         []Podcast
+	Downloaded         []PodcastEntry
 }
 
 type Podcast struct {

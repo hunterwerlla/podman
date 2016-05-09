@@ -17,7 +17,7 @@ func main() {
 		defaultStorage = usr.HomeDir + "/" + "podman"
 	}
 	//make configurationg struct that holds default settings
-	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", make([]Podcast, 0), make([]PodcastEntry, 0)}
+	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", 30, 10, make([]Podcast, 0), make([]PodcastEntry, 0)}
 	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the TUI or not")
 	flag.Parse()
@@ -26,7 +26,8 @@ func main() {
 	//make the channels used by player
 	playerControl := make(chan int)
 	playerFile := make(chan string)
-	go play(playerFile, playerControl)
+	playerExit := make(chan bool)
+	go play(config, playerFile, playerControl, playerExit)
 	//write config on sucessful exit
 	//defer writeConfig(config)
 	//made a decision to use TUI or not
@@ -39,7 +40,9 @@ func main() {
 		//TUI
 		panic("unimplemented")
 	}
+	playerControl <- 5 //tell it to exit
 	writeConfig(config)
+	<-playerExit
 }
 
 func CliInterface(config Configuration, playerFile chan string, playerControl chan int) (Configuration, bool) {
@@ -187,12 +190,18 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 		playerControl <- 2
 	} else if command == "pause" {
 		playerControl <- 1
+	} else if command == "resume" {
+		playerControl <- 0
+	} else if command == "ff" {
+		playerControl <- 3
+	} else if command == "rewind" {
+		playerControl <- 4
 	} else if command == "ls-download" {
 		for i, podcast := range config.Downloaded {
 			fmt.Printf("%d %s %s\n", i, podcast.PodcastTitle, podcast.Title)
 		}
 	} else if command == "help" {
-		fmt.Println("Type ls to list your subscriptions, /<string> to search, exit to exit, help to show this")
+		fmt.Println("Type ls to list your subscriptions, ls-download to list downloads, start <num> to play, stop to stop, resume to resume, /<string> to search, exit to exit, help to show this")
 	} else if command == "settings" {
 		fmt.Println(config)
 	} else {
