@@ -138,7 +138,7 @@ func listPodcast(g *gocui.Gui) error {
 	if err := g.SetCurrentView("podcast"); err != nil {
 		return err
 	}
-	if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
+	if err := v.SetCursor(0, 0+yCursorOffset); err != nil {
 		return err
 	}
 	//first print the podcast description
@@ -154,12 +154,24 @@ func listPodcast(g *gocui.Gui) error {
 func printPodcastDescription(v *gocui.View) error {
 	setProperties(v)
 	//now actually print
+	fmt.Fprintf(v, "BLEH! \n %v", *selectedPodcast)
 	return nil
 }
 func printList(v *gocui.View) error {
 	setProperties(v)
+	var err error = nil
+	//if nil then cache them
+	if cachedPodcast == nil {
+		cachedPodcast, err = parseRss(selectedPodcast.FeedURL)
+	}
+	if err != nil {
+		fmt.Fprintln(v, "Cannot download podcast list, check your connection")
+		return nil
+	}
 	//now actually print
-	fmt.Fprintf(v, "BLEH! \n %v", *selectedPodcast)
+	for i, thing := range cachedPodcast {
+		fmt.Fprintf(v, "%d %s - %s\n", i+1, thing.Title, thing.Content)
+	}
 	return nil
 }
 
@@ -188,7 +200,7 @@ func cursorUpPodcast(g *gocui.Gui, v *gocui.View) error {
 		x, y := v.Cursor()
 		//if Y is 1 at the top, so don't move up again
 		//TODO fix celing
-		if y == 1 { //y=1 is the top because of the row that describes the colums
+		if y == 0 {
 			return nil
 		}
 		yCursorOffset--
@@ -201,7 +213,7 @@ func cursorUpPodcast(g *gocui.Gui, v *gocui.View) error {
 func cursorDownPodcast(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		x, y := v.Cursor()
-		if y == len(cachedPodcast) {
+		if y == len(cachedPodcast)-1 {
 			return nil
 		}
 		yCursorOffset++
