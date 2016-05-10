@@ -9,7 +9,7 @@ import (
 
 //global state
 var (
-	globals GlobalState = GlobalState{"", nil}
+	globals GlobalState = GlobalState{"", nil, nil, nil}
 )
 
 func main() {
@@ -28,17 +28,17 @@ func main() {
 	//read config file
 	config = readConfig(config)
 	//make the channels used by player
-	playerControl := make(chan int)
-	playerFile := make(chan string)
+	globals.playerControl = make(chan int)
+	globals.playerFile = make(chan string)
 	playerExit := make(chan bool)
-	go play(config, playerFile, playerControl, playerExit)
+	go play(playerExit)
 	//set up annoying global variable
 	globals.Config = &config
 	//made a decision to use TUI or not
 	if *noTui == true {
 		end := false
 		for end != true {
-			config, end = CliInterface(config, playerFile, playerControl)
+			config, end = CliInterface(config, globals.playerFile, globals.playerControl)
 			globals.Config = &config
 		}
 	} else {
@@ -47,24 +47,22 @@ func main() {
 			panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
 		}
 		defer g.Close()
-		g.SetLayout(listLayout)
+		g.SetLayout(listSubscribed)
 		//allow mouse
 		g.Mouse = true
+		//set keybinds
 		if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quitGui); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
-		if err := g.SetKeybinding("player", gocui.KeySpace, gocui.ModNone, playSelected); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
 		//TODO fix keybinds
-		if err := g.SetKeybinding("list", gocui.KeyArrowDown, gocui.ModNone, cursorDownList); err != nil {
+		if err := g.SetKeybinding("subscribed", gocui.KeyArrowDown, gocui.ModNone, cursorDownList); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
-		if err := g.SetKeybinding("list", gocui.KeyArrowUp, gocui.ModNone, cursorUpList); err != nil {
+		if err := g.SetKeybinding("subscribed", gocui.KeyArrowUp, gocui.ModNone, cursorUpList); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		//enter on list goes to the list of episodes
-		if err := g.SetKeybinding("list", gocui.KeyEnter, gocui.ModNone, switchListPodcast); err != nil {
+		if err := g.SetKeybinding("subscribed", gocui.KeyEnter, gocui.ModNone, switchListPodcast); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		//Podcast view up down
@@ -74,13 +72,19 @@ func main() {
 		if err := g.SetKeybinding("podcast", gocui.KeyArrowUp, gocui.ModNone, cursorUpPodcast); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
+		if err := g.SetKeybinding("podcast", gocui.KeyArrowLeft, gocui.ModNone, switchListSubscribed); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		if err := g.SetKeybinding("podcast", gocui.KeyEnter, gocui.ModNone, switchPlayDownload); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
 		//main loop
 		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 
 	}
-	playerControl <- 5 //tell it to exit
+	globals.playerControl <- 5 //tell it to exit
 	writeConfig(config)
 	//wait for player to clean up
 	<-playerExit

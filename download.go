@@ -52,5 +52,16 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configura
 	//file download good so add it to downloaded
 	config.Downloaded = append(config.Downloaded, ep)
 	writeConfig(config)
+	globals.Config = &config //update configuration
 	return config, nil
+}
+
+//TODO updat to use hashmap
+func isDownloaded(entry PodcastEntry) bool {
+	for _, item := range globals.Config.Downloaded {
+		if entry.Link == item.Link {
+			return true
+		}
+	}
+	return false
 }

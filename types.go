@@ -36,6 +36,8 @@ type ItunesSearch struct {
 }
 
 type GlobalState struct {
-	Playing string
-	Config  *Configuration
+	Playing       string
+	Config        *Configuration
+	playerFile    chan string
+	playerControl chan int
 }

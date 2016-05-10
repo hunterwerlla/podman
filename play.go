@@ -9,7 +9,7 @@ import (
 //this runs on its own thread to start/stop and select the media that is playing, it will also skip ahead in the future
 //TODO make it skip ahead
 //Control reference: 0 is play, 1 is pause, 2 is stop, 3 is skip ahead, 4 is reverse
-func play(config Configuration, fileNameChannel chan string, control chan int, exit chan bool) {
+func play(exit chan bool) {
 	var (
 		chain          *sox.EffectsChain = nil
 		inFile         *sox.Format       = nil
@@ -32,8 +32,8 @@ func play(config Configuration, fileNameChannel chan string, control chan int, e
 			status = -1
 			fileName = ""
 			select {
-			case fileName = <-fileNameChannel:
-			case status = <-control:
+			case fileName = <-globals.playerFile:
+			case status = <-globals.playerControl:
 			}
 		}
 		//if filname is not empty, then new filename recieved
@@ -138,7 +138,7 @@ func play(config Configuration, fileNameChannel chan string, control chan int, e
 				if position == 0 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
-					position += int(time.Since(startTime).Seconds()) + config.forwardSkipLength
+					position += int(time.Since(startTime).Seconds()) + globals.Config.forwardSkipLength
 					fileName = inFile.Filename()
 					//then stop and clear data
 					if chain != nil {
@@ -159,7 +159,7 @@ func play(config Configuration, fileNameChannel chan string, control chan int, e
 				if position == 0 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
-					position += int(time.Since(startTime).Seconds()) - config.backwardSkipLength
+					position += int(time.Since(startTime).Seconds()) - globals.Config.backwardSkipLength
 					fileName = inFile.Filename()
 					//then stop and clear data
 					if chain != nil {
