@@ -47,7 +47,7 @@ func main() {
 			panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
 		}
 		defer g.Close()
-		g.SetLayout(mainLayout)
+		g.SetLayout(listLayout)
 		//allow mouse
 		g.Mouse = true
 		if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quitGui); err != nil {
@@ -57,15 +57,28 @@ func main() {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		//TODO fix keybinds
-		if err := g.SetKeybinding("list", gocui.KeyCtrlA, gocui.ModNone, cursorDown); err != nil {
+		if err := g.SetKeybinding("list", gocui.KeyArrowDown, gocui.ModNone, cursorDownList); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
-		if err := g.SetKeybinding("list", gocui.KeyCtrlB, gocui.ModNone, cursorUp); err != nil {
+		if err := g.SetKeybinding("list", gocui.KeyArrowUp, gocui.ModNone, cursorUpList); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
+		//enter on list goes to the list of episodes
+		if err := g.SetKeybinding("list", gocui.KeyEnter, gocui.ModNone, switchListPodcast); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		//Podcast view up down
+		if err := g.SetKeybinding("podcast", gocui.KeyArrowDown, gocui.ModNone, cursorDownPodcast); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		if err := g.SetKeybinding("podcast", gocui.KeyArrowUp, gocui.ModNone, cursorUpPodcast); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		//main loop
 		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
+
 	}
 	playerControl <- 5 //tell it to exit
 	writeConfig(config)
