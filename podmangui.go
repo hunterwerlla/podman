@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jroimartin/gocui"
 	"strings"
+	"time"
 )
 
 var (
@@ -156,11 +157,22 @@ func listPodcast(g *gocui.Gui) error {
 
 func switchPlayDownload(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
+	var toPlay PodcastEntry
+	guid := cachedPodcast[position].GUID
 	if isDownloaded(cachedPodcast[position]) == false {
 		download(*globals.Config, selectedPodcast, cachedPodcast[position])
+		//point it at the new podcast
+		toPlay = globals.Config.Downloaded[len(globals.Config.Downloaded)-1]
+	}
+	//TODO fix this awful code
+	for _, thing := range globals.Config.Downloaded {
+		if thing.GUID == guid {
+			toPlay = thing
+			break
+		}
 	}
 	//now play
-	if toPlay := cachedPodcast[position].StorageLocation; toPlay != "" {
+	if toPlay := toPlay.StorageLocation; toPlay != "" {
 		globals.playerFile <- toPlay
 	}
 	return nil
@@ -231,6 +243,19 @@ func cursorDownPodcast(g *gocui.Gui, v *gocui.View) error {
 		if err := v.SetCursor(x, y+1); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func togglePlayerState(g *gocui.Gui, v *gocui.View) error {
+	//pause so will not enter invalid state
+	time.Sleep(time.Millisecond * 400)
+	if globals.playerState == 1 {
+		globals.playerControl <- 0
+		globals.playerState = 0
+	} else if globals.playerState == 0 {
+		globals.playerControl <- 1
+		globals.playerState = 1
 	}
 	return nil
 }

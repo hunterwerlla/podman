@@ -9,7 +9,7 @@ import (
 
 //global state
 var (
-	globals GlobalState = GlobalState{"", nil, nil, nil}
+	globals GlobalState = GlobalState{"", nil, nil, nil, -1}
 )
 
 func main() {
@@ -76,6 +76,10 @@ func main() {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		if err := g.SetKeybinding("podcast", gocui.KeyEnter, gocui.ModNone, switchPlayDownload); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		//player controls
+		if err := g.SetKeybinding("", gocui.KeySpace, gocui.ModNone, togglePlayerState); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		//main loop

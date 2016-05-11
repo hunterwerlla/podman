@@ -84,6 +84,7 @@ func play(exit chan bool) {
 			//start the timer which keeps track of position in the file
 			startTime = time.Now()
 			//process which also plays
+			globals.playerState = 0 //change state to play
 			go chain.Flow()
 			//reset status and filename
 			fileName = ""
@@ -104,6 +105,7 @@ func play(exit chan bool) {
 				//save time and file
 				position += int(time.Since(startTime).Seconds())
 				cachedFileName = inFile.Filename()
+				globals.playerState = 1
 				//then stop and clear data
 				if chain != nil {
 					chain.Release()
@@ -120,6 +122,7 @@ func play(exit chan bool) {
 			case 2: //case 2 stop
 				//reset position
 				position = 0
+				globals.playerState = -1
 				//then clean up
 				if chain != nil {
 					chain.Release()

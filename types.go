@@ -40,4 +40,5 @@ type GlobalState struct {
 	Config        *Configuration
 	playerFile    chan string
 	playerControl chan int
+	playerState   int
 }
