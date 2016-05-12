@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+var (
+	playerPosition int = 0
+	startTime      time.Time
+)
+
 //this runs on its own thread to start/stop and select the media that is playing, it will also skip ahead in the future
 //TODO make it skip ahead
 //Control reference: 0 is play, 1 is pause, 2 is stop, 3 is skip ahead, 4 is reverse
@@ -14,11 +19,9 @@ func play(exit chan bool) {
 		chain          *sox.EffectsChain = nil
 		inFile         *sox.Format       = nil
 		outFile        *sox.Format       = nil
-		position       int               = 0
 		cachedFileName string            = ""
 		fileName       string            = ""
 		status         int               = -1
-		startTime      time.Time
 	)
 	if !sox.Init() {
 		panic("Unable to start the player")
@@ -54,8 +57,8 @@ func play(exit chan bool) {
 			inFile = sox.OpenRead(fileName)
 			//forward to the position
 			//formula taken from example 2 of SoX
-			if position != 0 {
-				seek := uint64(float64(position)*float64(inFile.Signal().Rate())*float64((inFile.Signal().Channels())) + 0.5)
+			if playerPosition != 0 {
+				seek := uint64(float64(playerPosition)*float64(inFile.Signal().Rate())*float64((inFile.Signal().Channels())) + 0.5)
 				seek -= seek % uint64(inFile.Signal().Channels())
 				inFile.Seek(seek)
 			}
@@ -94,7 +97,7 @@ func play(exit chan bool) {
 			case -1:
 				fmt.Println("this should never happen")
 			case 0: //case 0 play, only works after pause
-				if position == 0 {
+				if playerPosition == 0 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
 					//TODO fix this channel issue which makes no sense and makes the code worse
@@ -103,7 +106,7 @@ func play(exit chan bool) {
 				}
 			case 1: //case 1 pause
 				//save time and file
-				position += int(time.Since(startTime).Seconds())
+				playerPosition += int(time.Since(startTime).Seconds())
 				cachedFileName = inFile.Filename()
 				globals.playerState = 1
 				//then stop and clear data
@@ -121,8 +124,8 @@ func play(exit chan bool) {
 				}
 			case 2: //case 2 stop
 				//reset position
-				position = 0
-				globals.playerState = -1
+				playerPosition = 0
+				globals.playerState = 0
 				//then clean up
 				if chain != nil {
 					chain.Release()
@@ -138,10 +141,10 @@ func play(exit chan bool) {
 				}
 			case 3: //case 3 skip ahead
 				//save time and file
-				if position == 0 {
+				if playerPosition == 0 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
-					position += int(time.Since(startTime).Seconds()) + globals.Config.forwardSkipLength
+					playerPosition += int(time.Since(startTime).Seconds()) + globals.Config.forwardSkipLength
 					fileName = inFile.Filename()
 					//then stop and clear data
 					if chain != nil {
@@ -159,10 +162,10 @@ func play(exit chan bool) {
 				}
 			case 4: //case 4 rewind
 				//save time and file
-				if position == 0 {
+				if playerPosition == 0 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
-					position += int(time.Since(startTime).Seconds()) - globals.Config.backwardSkipLength
+					playerPosition += int(time.Since(startTime).Seconds()) - globals.Config.backwardSkipLength
 					fileName = inFile.Filename()
 					//then stop and clear data
 					if chain != nil {

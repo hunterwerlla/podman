@@ -47,7 +47,6 @@ func main() {
 			panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
 		}
 		defer g.Close()
-		g.SetLayout(listSubscribed)
 		//allow mouse
 		g.Mouse = true
 		//set keybinds
@@ -86,7 +85,6 @@ func main() {
 		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
-
 	}
 	globals.playerControl <- 5 //tell it to exit
 	writeConfig(config)

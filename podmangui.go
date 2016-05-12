@@ -12,6 +12,7 @@ var (
 	yCursorOffset   int = 0
 	selectedPodcast Podcast
 	cachedPodcast   []PodcastEntry
+	stateView       int = 0 //0 is listSubscribed, 1 is listPodcast, 2 is listSearch, 3 is listDownload
 )
 
 func listSubscribed(g *gocui.Gui) error {
@@ -28,8 +29,8 @@ func listSubscribed(g *gocui.Gui) error {
 	if err != nil {
 		return err
 	}
-	//now print the player
-	err = printPlayer(g)
+	//print the player
+	printPlayer(g)
 	//now set current view to main view
 	if err := g.SetCurrentView("subscribed"); err != nil {
 		return err
@@ -39,6 +40,38 @@ func listSubscribed(g *gocui.Gui) error {
 	}
 	return err
 }
+
+func listPodcast(g *gocui.Gui) error {
+	maxX, maxY := g.Size()
+	//first 5 rows reserved for description
+	v, err := g.SetView("podcast", -1, 5, maxX+1, maxY-1)
+	if err != nil {
+		if err != gocui.ErrUnknownView { //if not created yet cool we make it
+			return err
+		}
+	}
+	d, err := g.SetView("podcastDescription", -1, -1, maxX+1, 5)
+	if err != nil {
+		if err != gocui.ErrUnknownView { //if not created yet cool we make it
+			return err
+		}
+	}
+	//set current view to podcast
+	if err := g.SetCurrentView("podcast"); err != nil {
+		return err
+	}
+	if err := v.SetCursor(0, 0+yCursorOffset); err != nil {
+		return err
+	}
+	//first print the podcast description
+	err = printPodcastDescription(d)
+	//print the player
+	printPlayer(g)
+	//print the list
+	err = printListPodcast(v)
+	return err
+}
+
 func printSubscribed(v *gocui.View) error {
 	//first clear
 	v.Clear()
@@ -71,8 +104,14 @@ func printPlayer(g *gocui.Gui) error {
 		}
 		err = nil
 	}
+	v.Clear()
 	setProperties(v)
-	fmt.Fprintf(v, "Play Something: [%s]", strings.Repeat("=", maxX-18))
+	if globals.playerState == -1 {
+		fmt.Fprintf(v, "Play Something\n")
+	} else {
+		playerPosition = int(time.Since(startTime).Seconds())
+		fmt.Fprintf(v, "%d %s\n", playerPosition, "[===========]")
+	}
 	return nil
 }
 
@@ -124,37 +163,6 @@ func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func listPodcast(g *gocui.Gui) error {
-	maxX, maxY := g.Size()
-	//first 5 rows reserved for description
-	v, err := g.SetView("podcast", -1, 5, maxX+1, maxY-1)
-	if err != nil {
-		if err != gocui.ErrUnknownView { //if not created yet cool we make it
-			return err
-		}
-	}
-	d, err := g.SetView("podcastDescription", -1, -1, maxX+1, 5)
-	if err != nil {
-		if err != gocui.ErrUnknownView { //if not created yet cool we make it
-			return err
-		}
-	}
-	//set current view to podcast
-	if err := g.SetCurrentView("podcast"); err != nil {
-		return err
-	}
-	if err := v.SetCursor(0, 0+yCursorOffset); err != nil {
-		return err
-	}
-	//first print the podcast description
-	err = printPodcastDescription(d)
-	//first print the list
-	err = printListPodcast(v)
-	//now print the player
-	err = printPlayer(g)
-	return err
-}
-
 func switchPlayDownload(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
 	var toPlay PodcastEntry
@@ -182,7 +190,7 @@ func switchPlayDownload(g *gocui.Gui, v *gocui.View) error {
 func printPodcastDescription(v *gocui.View) error {
 	setProperties(v)
 	//now actually print
-	fmt.Fprintf(v, "BLEH! \n %v", selectedPodcast)
+	fmt.Fprintf(v, "%v", selectedPodcast)
 	return nil
 }
 func printListPodcast(v *gocui.View) error {
@@ -249,7 +257,7 @@ func cursorDownPodcast(g *gocui.Gui, v *gocui.View) error {
 
 func togglePlayerState(g *gocui.Gui, v *gocui.View) error {
 	//pause so will not enter invalid state
-	time.Sleep(time.Millisecond * 400)
+	time.Sleep(time.Millisecond * 100)
 	if globals.playerState == 1 {
 		globals.playerControl <- 0
 		globals.playerState = 0
