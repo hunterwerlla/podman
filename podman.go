@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jroimartin/gocui"
 	"os/user"
+	"time"
 )
 
 //global state
@@ -47,6 +48,21 @@ func main() {
 			panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
 		}
 		defer g.Close()
+		//set main window
+		g.SetLayout(guiHandler)
+		//now a goroutine that updates every second
+		update := time.NewTicker(time.Millisecond * 1000).C
+		stopTick := make(chan bool)
+		go func() {
+			for {
+				select {
+				case <-update:
+					g.Execute(guiHandler)
+				case <-stopTick:
+					return
+				}
+			}
+		}()
 		//allow mouse
 		g.Mouse = true
 		//set keybinds
@@ -85,6 +101,8 @@ func main() {
 		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
+		//clean up
+		close(stopTick)
 	}
 	globals.playerControl <- 5 //tell it to exit
 	writeConfig(config)
