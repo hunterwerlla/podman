@@ -87,7 +87,9 @@ func play(exit chan bool) {
 			//start the timer which keeps track of position in the file
 			startTime = time.Now()
 			//process which also plays
-			globals.playerState = 0 //change state to play
+			globals.playerState = 0                          //change state to play
+			globals.Playing = fileName                       //set filename
+			globals.LengthOfFile = getLengthOfFile(fileName) //set length
 			go chain.Flow()
 			//reset status and filename
 			fileName = ""
@@ -107,8 +109,10 @@ func play(exit chan bool) {
 			case 1: //case 1 pause
 				//save time and file
 				playerPosition += int(time.Since(startTime).Seconds())
+				startTime = time.Now() //TODO remove test
 				cachedFileName = inFile.Filename()
 				globals.playerState = 1
+				globals.Playing = ""
 				//then stop and clear data
 				if chain != nil {
 					chain.Release()
@@ -126,6 +130,8 @@ func play(exit chan bool) {
 				//reset position
 				playerPosition = 0
 				globals.playerState = 0
+				globals.Playing = ""
+				globals.LengthOfFile = 0 //set length
 				//then clean up
 				if chain != nil {
 					chain.Release()
@@ -197,4 +203,11 @@ exit:
 		chain.Release()
 	}
 	exit <- true
+}
+
+func getLengthOfFile(fileName string) uint64 {
+	inFile := sox.OpenRead(fileName)
+	seek := uint64(float64(inFile.Signal().Length())/float64(inFile.Signal().Channels())/float64(inFile.Signal().Rate()) - 0.5)
+	seek += seek % uint64(inFile.Signal().Channels())
+	return seek
 }

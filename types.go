@@ -41,4 +41,5 @@ type GlobalState struct {
 	playerFile    chan string
 	playerControl chan int
 	playerState   int
+	LengthOfFile  uint64
 }

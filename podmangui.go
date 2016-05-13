@@ -120,14 +120,19 @@ func printPlayer(g *gocui.Gui) error {
 	if globals.playerState == -1 {
 		fmt.Fprintf(v, "Play Something\n")
 	} else {
-
 		if globals.playerState == 0 {
 			playerPosition = int(time.Since(startTime).Seconds())
 		} else {
 			//TODO update time
 			startTime.Add(time.Second) //else keep updating start time
 		}
-		fmt.Fprintf(v, "%d %s\n", playerPosition, "[===========]")
+		count := globals.LengthOfFile
+		percent := float64(playerPosition) / float64(count)
+		maxX, _ := v.Size()
+		//10 is width of numbers, 2 is width of ends
+		numFilled := int(percent * float64(maxX-10.0-2.0))
+		numEmpty := int((1.0 - float64(percent)) * float64(maxX-10.0-2.0))
+		fmt.Fprintf(v, "%d/%d%s%s%s%s\n", playerPosition, count, "[", strings.Repeat("=", numFilled), strings.Repeat("-", numEmpty), "]")
 	}
 	return nil
 }
