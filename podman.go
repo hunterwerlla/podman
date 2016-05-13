@@ -70,23 +70,18 @@ func main() {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		//TODO fix keybinds
-		if err := g.SetKeybinding("subscribed", gocui.KeyArrowDown, gocui.ModNone, cursorDownList); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("subscribed", gocui.KeyArrowUp, gocui.ModNone, cursorUpList); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
 		//enter on list goes to the list of episodes
 		if err := g.SetKeybinding("subscribed", gocui.KeyEnter, gocui.ModNone, switchListPodcast); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
-		//Podcast view up down
-		if err := g.SetKeybinding("podcast", gocui.KeyArrowDown, gocui.ModNone, cursorDownPodcast); err != nil {
+		//view up down
+		if err := g.SetKeybinding("", gocui.KeyArrowDown, gocui.ModNone, cursorDown); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
-		if err := g.SetKeybinding("podcast", gocui.KeyArrowUp, gocui.ModNone, cursorUpPodcast); err != nil {
+		if err := g.SetKeybinding("", gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
+		//switching to different views
 		if err := g.SetKeybinding("podcast", gocui.KeyArrowLeft, gocui.ModNone, switchListSubscribed); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}

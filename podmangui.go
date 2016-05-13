@@ -139,30 +139,48 @@ func printPlayer(g *gocui.Gui) error {
 
 //cursor movement functions, should consolodate
 //TODO reduce number
-func cursorUpList(g *gocui.Gui, v *gocui.View) error {
+
+func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		x, y := v.Cursor()
-		//if Y is 1 at the top, so don't move up again
-		if y == 1 {
+		if stateView == 0 {
+			//if y is equal to number subscribed+1 is at bottom
+			if y == len(globals.Config.Subscribed) {
+				return nil
+			}
+		} else if stateView == 1 {
+			if y == len(cachedPodcast)-1 {
+				return nil
+			}
+		} else {
 			return nil
 		}
-		yCursorOffset--
-		if err := v.SetCursor(x, y-1); err != nil {
+		yCursorOffset++
+		if err := v.SetCursor(x, y+1); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func cursorDownList(g *gocui.Gui, v *gocui.View) error {
+func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		x, y := v.Cursor()
-		//if y is equal to number subscribed+1 is at bottom
-		if y == len(globals.Config.Subscribed) {
+		//if Y is 1 at the top, so don't move up again
+		//TODO fix celing
+		if stateView == 0 {
+			if y == 1 {
+				return nil
+			}
+		} else if stateView == 1 {
+			if y == 0 {
+				return nil
+			}
+		} else {
 			return nil
 		}
-		yCursorOffset++
-		if err := v.SetCursor(x, y+1); err != nil {
+		yCursorOffset--
+		if err := v.SetCursor(x, y-1); err != nil {
 			return err
 		}
 	}
@@ -263,35 +281,6 @@ func setProperties(v *gocui.View) {
 
 func quitGui(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
-}
-
-func cursorUpPodcast(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		x, y := v.Cursor()
-		//if Y is 1 at the top, so don't move up again
-		//TODO fix celing
-		if y == 0 {
-			return nil
-		}
-		yCursorOffset--
-		if err := v.SetCursor(x, y-1); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-func cursorDownPodcast(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		x, y := v.Cursor()
-		if y == len(cachedPodcast)-1 {
-			return nil
-		}
-		yCursorOffset++
-		if err := v.SetCursor(x, y+1); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func togglePlayerState(g *gocui.Gui, v *gocui.View) error {
