@@ -56,7 +56,7 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configura
 	return config, nil
 }
 
-//TODO updat to use hashmap
+//TODO update to use hashtable/ not super slow n^2 implementation
 func isDownloaded(entry PodcastEntry) bool {
 	for _, item := range globals.Config.Downloaded {
 		if entry.Link == item.Link {

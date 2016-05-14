@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	yCursorOffset   int = 0
-	selectedPodcast Podcast
-	cachedPodcast   []PodcastEntry
-	stateView       int = 0 //0 is listSubscribed, 1 is listPodcast, 2 is listSearch, 3 is listDownload
+	yCursorOffset          int = 0
+	selectedPodcast        Podcast
+	selectedPodcastEntries []PodcastEntry
+	stateView              int = 0 //0 is listSubscribed, 1 is listPodcast, 2 is listSearch, 3 is listDownload
 )
 
 func guiHandler(g *gocui.Gui) error {
@@ -162,7 +162,7 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 				return nil
 			}
 		} else if stateView == 1 {
-			if y == len(cachedPodcast)-1 {
+			if y == len(selectedPodcastEntries)-1 {
 				return nil
 			}
 		} else {
@@ -206,7 +206,7 @@ func switchListPodcast(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor()                               //get cursor position to select
 	yCursorOffset = 0                                       //reset cursor
 	selectedPodcast = globals.Config.Subscribed[position-1] //select the podcast put in memory
-	cachedPodcast = nil                                     //now delete the cache from the last time
+	selectedPodcastEntries = nil                            //now delete the cache from the last time
 	//change layout
 	stateView = 1
 	//delete old views
@@ -226,9 +226,9 @@ func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 func switchPlayDownload(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
 	var toPlay PodcastEntry
-	guid := cachedPodcast[position].GUID
-	if isDownloaded(cachedPodcast[position]) == false {
-		download(*globals.Config, selectedPodcast, cachedPodcast[position])
+	guid := selectedPodcastEntries[position].GUID
+	if isDownloaded(selectedPodcastEntries[position]) == false {
+		download(*globals.Config, selectedPodcast, selectedPodcastEntries[position])
 		//point it at the new podcast
 		toPlay = globals.Config.Downloaded[len(globals.Config.Downloaded)-1]
 	}
@@ -267,15 +267,15 @@ func printListPodcast(v *gocui.View) error {
 	setProperties(v)
 	var err error = nil
 	//if nil then cache them
-	if cachedPodcast == nil {
-		cachedPodcast, err = parseRss(selectedPodcast.FeedURL)
+	if selectedPodcastEntries == nil {
+		selectedPodcastEntries, err = parseRss(selectedPodcast.FeedURL)
 	}
 	if err != nil {
 		fmt.Fprintln(v, "Cannot download podcast list, check your connection")
 		return nil
 	}
 	//now actually print
-	for i, thing := range cachedPodcast {
+	for i, thing := range selectedPodcastEntries {
 		//TODO make this efficent by adding a map
 		fmt.Fprintf(v, "%d %s - %s - Downloaded: %v\n", i+1, thing.Title, thing.Content, isDownloaded(thing))
 	}

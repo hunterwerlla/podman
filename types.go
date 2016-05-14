@@ -1,5 +1,9 @@
 package main
 
+import (
+	"time"
+)
+
 type Configuration struct {
 	StorageLocation    string
 	UpKeybind          string
@@ -12,6 +16,7 @@ type Configuration struct {
 	backwardSkipLength int
 	Subscribed         []Podcast
 	Downloaded         []PodcastEntry
+	Cached             []cachedPodcast
 }
 
 type Podcast struct {
@@ -47,4 +52,5 @@ type GlobalState struct {
 type cachedPodcast struct {
 	Type     []Podcast
 	Podcasts []PodcastEntry
+	checked  time.Time
 }
