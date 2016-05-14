@@ -108,7 +108,7 @@ func play(exit chan bool) {
 				}
 			case 1: //case 1 pause
 				//save time and file
-				//playerPosition += int(time.Since(startTime).Seconds())
+				playerPosition += int(time.Since(startTime).Seconds())
 				cachedFileName = inFile.Filename()
 				globals.playerState = 1
 				globals.Playing = ""

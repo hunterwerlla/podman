@@ -61,7 +61,6 @@ func listPodcast(g *gocui.Gui) error {
 		}
 	}
 	//clear the view
-	v.Clear()
 	d, err := g.SetView("podcastDescription", -1, -1, maxX+1, 5)
 	if err != nil {
 		if err != gocui.ErrUnknownView { //if not created yet cool we make it
@@ -70,6 +69,7 @@ func listPodcast(g *gocui.Gui) error {
 	}
 	//clear the view
 	d.Clear()
+	v.Clear()
 	//set current view to podcast
 	if err := g.SetCurrentView("podcast"); err != nil {
 		return err
@@ -248,6 +248,7 @@ func switchPlayDownload(g *gocui.Gui, v *gocui.View) error {
 //this function will print the podcast information when it goes to a podcast
 func printPodcastDescription(v *gocui.View) error {
 	setProperties(v)
+	v.Highlight = false //turn highlight off again
 	//now actually print
 	fmt.Fprintf(v, "Name: %s By: %s\n", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
 	maxX, _ := v.Size()
@@ -289,6 +290,7 @@ func setProperties(v *gocui.View) {
 	v.FgColor = gocui.ColorBlack
 	v.Wrap = false
 	v.Frame = false
+	v.Highlight = true //highlight selection
 }
 
 func quitGui(g *gocui.Gui, v *gocui.View) error {
