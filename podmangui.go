@@ -118,21 +118,34 @@ func printPlayer(g *gocui.Gui) error {
 	v.Clear()
 	setProperties(v)
 	if globals.playerState == -1 {
-		fmt.Fprintf(v, "Play Something\n")
+		fmt.Fprintf(v, "Play Something!")
 	} else {
+		playingPlayerPosition := 0
+		playingMessage := ""
 		if globals.playerState == 0 {
-			playerPosition = int(time.Since(startTime).Seconds())
+			playingPlayerPosition = playerPosition + int(time.Since(startTime).Seconds())
 		} else {
-			//TODO update time
 			startTime.Add(time.Second) //else keep updating start time
 		}
 		count := globals.LengthOfFile
-		percent := float64(playerPosition) / float64(count)
+		percent := float64(playingPlayerPosition) / float64(count)
 		maxX, _ := v.Size()
 		//10 is width of numbers, 2 is width of ends
 		numFilled := int(percent * float64(maxX-10.0-2.0))
+		if numFilled == 0 {
+			numFilled++
+		}
+		if globals.playerState == 0 {
+			playingMessage = fmt.Sprintf("%d/%d", playingPlayerPosition, count)
+		} else if globals.playerState == 1 {
+			playingMessage = "paused"
+		} else if globals.playerState == 2 {
+			playingMessage = "stopped"
+		} else {
+			playingMessage = "Play Something"
+		}
 		numEmpty := int((1.0 - float64(percent)) * float64(maxX-10.0-2.0))
-		fmt.Fprintf(v, "%d/%d%s%s%s%s\n", playerPosition, count, "[", strings.Repeat("=", numFilled), strings.Repeat("-", numEmpty), "]")
+		fmt.Fprintf(v, "%s%s%s%s%s%s\n", playingMessage, "[", strings.Repeat("=", numFilled-1), ">", strings.Repeat("-", numEmpty), "]")
 	}
 	return nil
 }
@@ -196,17 +209,17 @@ func switchListPodcast(g *gocui.Gui, v *gocui.View) error {
 	cachedPodcast = nil                                     //now delete the cache from the last time
 	//change layout
 	stateView = 1
-	//set on top
-	g.SetViewOnTop("podcast")
-	g.SetViewOnTop("podcastDescription")
+	//delete old views
+	g.DeleteView("subscribed")
 	return nil
 }
 func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 	yCursorOffset = 0 //reset cursor
 	//change layout
 	stateView = 0
-	//put on top
-	g.SetViewOnTop("subscribed")
+	//delete other views
+	g.DeleteView("podcast")
+	g.DeleteView("podcastDescription")
 	return nil
 }
 

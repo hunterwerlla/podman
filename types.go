@@ -43,3 +43,8 @@ type GlobalState struct {
 	playerState   int
 	LengthOfFile  uint64
 }
+
+type cachedPodcast struct {
+	Type     []Podcast
+	Podcasts []PodcastEntry
+}
