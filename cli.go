@@ -82,7 +82,7 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 		}
 		for i, pc := range config.Subscribed {
 			if i == num {
-				entries, err := parseRss(pc.FeedURL)
+				entries, err := getPodcastEntries(pc, pc.FeedURL)
 				if err != nil {
 					fmt.Printf("%d when attempting to parse RSS\n", err.Error())
 					break
@@ -108,7 +108,7 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 		}
 		for ii, pc := range config.Subscribed {
 			if ii == pcNum {
-				entries, err := parseRss(pc.FeedURL)
+				entries, err := getPodcastEntries(pc, pc.FeedURL)
 				if err != nil {
 					fmt.Printf("%d when attempting to parse RSS\n", err.Error())
 					break

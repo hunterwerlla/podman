@@ -50,7 +50,7 @@ type GlobalState struct {
 }
 
 type cachedPodcast struct {
-	Type     []Podcast
+	Type     Podcast
 	Podcasts []PodcastEntry
-	checked  time.Time
+	Checked  time.Time
 }

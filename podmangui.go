@@ -150,9 +150,7 @@ func printPlayer(g *gocui.Gui) error {
 	return nil
 }
 
-//cursor movement functions, should consolodate
-//TODO reduce number
-
+//TODO add scrolling beyond screen and not crash
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		x, y := v.Cursor()
@@ -223,6 +221,7 @@ func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
+//TODO null check
 func switchPlayDownload(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
 	var toPlay PodcastEntry
@@ -268,7 +267,7 @@ func printListPodcast(v *gocui.View) error {
 	var err error = nil
 	//if nil then cache them
 	if selectedPodcastEntries == nil {
-		selectedPodcastEntries, err = parseRss(selectedPodcast.FeedURL)
+		selectedPodcastEntries, err = getPodcastEntries(selectedPodcast, selectedPodcast.FeedURL)
 	}
 	if err != nil {
 		fmt.Fprintln(v, "Cannot download podcast list, check your connection")
