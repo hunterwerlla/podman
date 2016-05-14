@@ -12,7 +12,8 @@ var (
 	yCursorOffset          int = 0
 	selectedPodcast        Podcast
 	selectedPodcastEntries []PodcastEntry
-	stateView              int = 0 //0 is listSubscribed, 1 is listPodcast, 2 is listSearch, 3 is listDownload
+	selectedPodcastSearch  []Podcast
+	stateView              int = 0 //0 is listSubscribed, 1 is listPodcast, 2 is listSearch
 )
 
 func guiHandler(g *gocui.Gui) error {
@@ -106,7 +107,11 @@ func listSearch(g *gocui.Gui) error {
 	}
 	err = printSearchBar(d)
 	//set view to search
-	g.SetCurrentView("search")
+	if len(selectedPodcastSearch) == 0 {
+		g.SetCurrentView("download")
+	} else {
+		g.SetCurrentView("search")
+	}
 	//and set cursor
 	if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
 		return err
@@ -123,25 +128,23 @@ func printSubscribed(v *gocui.View) error {
 	space := strings.Repeat("-", spacing)
 	fmt.Fprintf(v, "Podcast Name %s Artist %s Description %s\n", space, space, space)
 	for _, item := range globals.Config.Subscribed {
-		strin := item.CollectionName + " - " + item.ArtistName + " - " + item.Description
-		if len(item.Description+item.CollectionName+item.ArtistName)+6 < xMax {
-			//do nothing
-		} else { //else truncate string
-			strin = strin[0:xMax]
-		}
-		fmt.Fprintf(v, "%s\n", strin)
+		fmt.Fprintf(v, "%s\n", formatPodcastPrint(item))
 	}
 	return nil
 }
+
 func printSearch(v *gocui.View) error {
 	setProperties(v)
-	fmt.Fprintf(v, "Search: \n")
-	v.Buffer()
+	fmt.Fprintf(v, "Search Results: \n")
+	for _, thing := range selectedPodcastSearch {
+		fmt.Fprintf(v, "%s\n", formatPodcastPrint(item))
+	}
 	return nil
 }
 
 func printSearchBar(v *gocui.View) error {
 	setProperties(v)
+	v.Autoscroll = true //to hide subsequent entries
 	v.Highlight = true
 	v.Editable = true
 	return nil
@@ -248,7 +251,8 @@ func switchListPodcast(g *gocui.Gui, v *gocui.View) error {
 		return nil //TODO return an actual error
 	}
 	selectedPodcast = globals.Config.Subscribed[position-1] //select the podcast put in memory
-	selectedPodcastEntries = nil                            //now delete the cache from the last time
+	selectedPodcastEntries = nil                            //now delete the cache
+	selectedPodcastSearch = nil
 	//change layout
 	stateView = 1
 	//delete old views
@@ -268,6 +272,29 @@ func switchListSearch(g *gocui.Gui, v *gocui.View) error {
 	yCursorOffset = 0 //rest cursor
 	stateView = 2     //2 is search
 	g.DeleteView("subscribed")
+	return nil
+}
+
+func switchKeyword(g *gocui.Gui, v *gocui.View) error {
+	queue := v.ViewBuffer()
+	podcasts, err := searchItunes(queue)
+	if err != nil {
+		fmt.Fprintln(v, "error searching!")
+		return nil
+	}
+	selectedPodcastSearch = podcasts
+}
+
+func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
+	_, position := v.Cursor() //get cursor position to select
+	yCursorOffset = 0         //reset cursor
+	if len(selectedPodcastSearch) == 0 {
+		return nil //TODO return an actual error
+	}
+	selectedPodcast = selectedPodcastSearch[position-1]                            //select the podcast put in memory
+	globals.Config.Subscribed = append(globals.Config.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
+	selectedPodcastEntries = nil                                                   //now delete the cache
+	selectedPodcastSearch = nil
 	return nil
 }
 func playDownload(g *gocui.Gui, v *gocui.View) error {
@@ -322,17 +349,6 @@ func printListPodcast(v *gocui.View) error {
 		fmt.Fprintf(v, "%d %s - %s - Downloaded: %v\n", i+1, thing.Title, thing.Content, isDownloaded(thing))
 	}
 	return nil
-}
-
-func setProperties(v *gocui.View) {
-	//First clear
-	v.Clear()
-	//set properties
-	v.BgColor = gocui.ColorWhite
-	v.FgColor = gocui.ColorBlack
-	v.Wrap = false
-	v.Frame = false
-	v.Highlight = true //highlight selection
 }
 
 func quitGui(g *gocui.Gui, v *gocui.View) error {

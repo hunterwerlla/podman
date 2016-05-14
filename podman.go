@@ -94,7 +94,14 @@ func main() {
 		if err := g.SetKeybinding("search", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
+		if err := g.SetKeybinding("search", gocui.KeyEnter, gocui.ModNone, switchSubscribe); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
 		if err := g.SetKeybinding("download", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		//text box controls
+		if err := g.SetKeybinding("download", gocui.KeyEnter, gocui.ModNone, searchKeyword); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		//player controls
