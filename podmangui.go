@@ -105,6 +105,7 @@ func printSubscribed(v *gocui.View) error {
 	return nil
 }
 
+//TODO fix time the frame after resume (jumps quite a lot for no reason)
 //the audio player
 func printPlayer(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
@@ -124,8 +125,6 @@ func printPlayer(g *gocui.Gui) error {
 		playingMessage := ""
 		if globals.playerState == 0 {
 			playingPlayerPosition = playerPosition + int(time.Since(startTime).Seconds())
-		} else {
-			startTime.Add(time.Second) //else keep updating start time
 		}
 		count := globals.LengthOfFile
 		percent := float64(playingPlayerPosition) / float64(count)
