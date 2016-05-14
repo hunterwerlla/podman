@@ -240,10 +240,13 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 }
 
 //the second view a list podcast
-
+//TODO add real error
 func switchListPodcast(g *gocui.Gui, v *gocui.View) error {
-	_, position := v.Cursor()                               //get cursor position to select
-	yCursorOffset = 0                                       //reset cursor
+	_, position := v.Cursor() //get cursor position to select
+	yCursorOffset = 0         //reset cursor
+	if len(globals.Config.Subscribed) == 0 {
+		return nil //TODO return an actual error
+	}
 	selectedPodcast = globals.Config.Subscribed[position-1] //select the podcast put in memory
 	selectedPodcastEntries = nil                            //now delete the cache from the last time
 	//change layout
