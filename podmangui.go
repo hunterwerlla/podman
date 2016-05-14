@@ -128,7 +128,7 @@ func printSubscribed(v *gocui.View) error {
 	space := strings.Repeat("-", spacing)
 	fmt.Fprintf(v, "Podcast Name %s Artist %s Description %s\n", space, space, space)
 	for _, item := range globals.Config.Subscribed {
-		fmt.Fprintf(v, "%s\n", formatPodcastPrint(item))
+		fmt.Fprintf(v, "%s\n", formatPodcastPrint(item, v))
 	}
 	return nil
 }
@@ -137,7 +137,7 @@ func printSearch(v *gocui.View) error {
 	setProperties(v)
 	fmt.Fprintf(v, "Search Results: \n")
 	for _, thing := range selectedPodcastSearch {
-		fmt.Fprintf(v, "%s\n", formatPodcastPrint(item))
+		fmt.Fprintf(v, "%s\n", formatPodcastPrint(thing, v))
 	}
 	return nil
 }
@@ -283,6 +283,7 @@ func switchKeyword(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 	selectedPodcastSearch = podcasts
+	return nil
 }
 
 func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
@@ -331,6 +332,7 @@ func printPodcastDescription(v *gocui.View) error {
 	fmt.Fprintf(v, "%s", descString)
 	return nil
 }
+
 func printListPodcast(v *gocui.View) error {
 	v.Clear()
 	setProperties(v)

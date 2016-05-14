@@ -101,7 +101,7 @@ func main() {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		//text box controls
-		if err := g.SetKeybinding("download", gocui.KeyEnter, gocui.ModNone, searchKeyword); err != nil {
+		if err := g.SetKeybinding("download", gocui.KeyEnter, gocui.ModNone, switchKeyword); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		//player controls
