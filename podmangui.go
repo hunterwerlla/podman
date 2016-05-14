@@ -249,16 +249,10 @@ func switchPlayDownload(g *gocui.Gui, v *gocui.View) error {
 func printPodcastDescription(v *gocui.View) error {
 	setProperties(v)
 	v.Highlight = false //turn highlight off again
+	v.Wrap = true       //turn wrap on
 	//now actually print
 	fmt.Fprintf(v, "Name: %s By: %s\n", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
-	maxX, _ := v.Size()
-	descString := ""
-	n := 0
-	for ii := len(selectedPodcast.Description); ii > maxX; ii -= maxX {
-		descString += selectedPodcast.Description[n*maxX:n*maxX+maxX] + "\n"
-		n++
-	}
-	descString += selectedPodcast.Description[maxX*n:]
+	descString := selectedPodcast.Description
 	fmt.Fprintf(v, "%s", descString)
 	return nil
 }
