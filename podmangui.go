@@ -20,6 +20,8 @@ func guiHandler(g *gocui.Gui) error {
 		listSubscribed(g)
 	} else if stateView == 1 {
 		listPodcast(g)
+	} else if stateView == 2 {
+		listSearch(g)
 	}
 	printPlayer(g)
 	return nil
@@ -84,6 +86,33 @@ func listPodcast(g *gocui.Gui) error {
 	return err
 }
 
+func listSearch(g *gocui.Gui) error {
+	maxX, maxY := g.Size()
+	v, err := g.SetView("download", -1, 1, maxX+1, maxY-1)
+	if err != nil {
+		if err != gocui.ErrUnknownView { //if not created yet cool we make it
+			return err
+		}
+	}
+	d, err := g.SetView("search", -1, -1, maxX+1, 1)
+	if err != nil {
+		if err != gocui.ErrUnknownView { //if not created yet cool we make it
+			return err
+		}
+	}
+	err = printSearch(v)
+	if err != nil {
+		return err
+	}
+	err = printSearchBar(d)
+	//set view to search
+	g.SetCurrentView("search")
+	//and set cursor
+	if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
+		return err
+	}
+	return err
+}
 func printSubscribed(v *gocui.View) error {
 	//first clear
 	v.Clear()
@@ -102,6 +131,19 @@ func printSubscribed(v *gocui.View) error {
 		}
 		fmt.Fprintf(v, "%s\n", strin)
 	}
+	return nil
+}
+func printSearch(v *gocui.View) error {
+	setProperties(v)
+	fmt.Fprintf(v, "Search: \n")
+	v.Buffer()
+	return nil
+}
+
+func printSearchBar(v *gocui.View) error {
+	setProperties(v)
+	v.Highlight = true
+	v.Editable = true
 	return nil
 }
 
@@ -155,11 +197,11 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 		x, y := v.Cursor()
 		if stateView == 0 {
 			//if y is equal to number subscribed+1 is at bottom
-			if y == len(globals.Config.Subscribed) {
+			if y >= len(globals.Config.Subscribed) {
 				return nil
 			}
 		} else if stateView == 1 {
-			if y == len(selectedPodcastEntries)-1 {
+			if y >= len(selectedPodcastEntries)-1 {
 				return nil
 			}
 		} else {
@@ -219,9 +261,13 @@ func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 	g.DeleteView("podcastDescription")
 	return nil
 }
-
-//TODO null check
-func switchPlayDownload(g *gocui.Gui, v *gocui.View) error {
+func switchListSearch(g *gocui.Gui, v *gocui.View) error {
+	yCursorOffset = 0 //rest cursor
+	stateView = 2     //2 is search
+	g.DeleteView("subscribed")
+	return nil
+}
+func playDownload(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
 	var toPlay PodcastEntry
 	guid := selectedPodcastEntries[position].GUID
