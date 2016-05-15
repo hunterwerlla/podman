@@ -89,13 +89,7 @@ func listPodcast(g *gocui.Gui) error {
 
 func listSearch(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	v, err := g.SetView("download", -1, 1, maxX+1, maxY-1)
-	if err != nil {
-		if err != gocui.ErrUnknownView { //if not created yet cool we make it
-			return err
-		}
-	}
-	d, err := g.SetView("search", -1, -1, maxX+1, 1)
+	v, err := g.SetView("searchResults", -1, 1, maxX+1, maxY-1)
 	if err != nil {
 		if err != gocui.ErrUnknownView { //if not created yet cool we make it
 			return err
@@ -105,24 +99,32 @@ func listSearch(g *gocui.Gui) error {
 	if err != nil {
 		return err
 	}
-	err = printSearchBar(d)
-	//set view to search
-	if len(selectedPodcastSearch) == 0 {
-		g.SetCurrentView("download")
-	} else {
-		g.SetCurrentView("search")
+	d, err := g.SetView("search", -1, -1, maxX+1, 1)
+	if err != nil {
+		if err != gocui.ErrUnknownView { //if not created yet cool we make it
+			return err
+		}
 	}
-	//and set cursor
-	if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
+	err = printSearchBar(d)
+	if err != nil {
 		return err
 	}
-	return err
+	//set view to search if selectedPodcasts are not null aka we have searched and have results
+	if selectedPodcastSearch == nil {
+		g.SetCurrentView("search")
+		//and set cursor
+		if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 func printSubscribed(v *gocui.View) error {
 	//first clear
 	v.Clear()
 	//then set properties
 	setProperties(v)
+	v.Highlight = true
 	xMax, _ := v.Size()
 	spacing := (xMax - 34) / 3 //43 chracters
 	space := strings.Repeat("-", spacing)
@@ -135,6 +137,7 @@ func printSubscribed(v *gocui.View) error {
 
 func printSearch(v *gocui.View) error {
 	setProperties(v)
+	v.Clear()
 	fmt.Fprintf(v, "Search Results: \n")
 	for _, thing := range selectedPodcastSearch {
 		fmt.Fprintf(v, "%s\n", formatPodcastPrint(thing, v))
@@ -145,7 +148,6 @@ func printSearch(v *gocui.View) error {
 func printSearchBar(v *gocui.View) error {
 	setProperties(v)
 	v.Autoscroll = true //to hide subsequent entries
-	v.Highlight = true
 	v.Editable = true
 	return nil
 }
@@ -199,12 +201,18 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		x, y := v.Cursor()
 		if stateView == 0 {
-			//if y is equal to number subscribed+1 is at bottom
+			//starts at 1
 			if y >= len(globals.Config.Subscribed) {
 				return nil
 			}
 		} else if stateView == 1 {
-			if y >= len(selectedPodcastEntries)-1 {
+			//starts at 0
+			if y > len(selectedPodcastEntries) {
+				return nil
+			}
+		} else if stateView == 2 {
+			//starts at 1
+			if y >= len(selectedPodcastSearch) {
 				return nil
 			}
 		} else {
@@ -223,7 +231,7 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 		x, y := v.Cursor()
 		//if Y is 1 at the top, so don't move up again
 		//TODO fix celing
-		if stateView == 0 {
+		if stateView == 0 || stateView == 3 {
 			if y == 1 {
 				return nil
 			}
@@ -272,17 +280,25 @@ func switchListSearch(g *gocui.Gui, v *gocui.View) error {
 	yCursorOffset = 0 //rest cursor
 	stateView = 2     //2 is search
 	g.DeleteView("subscribed")
+	listSearch(g)
+	g.SetCurrentView("search")
 	return nil
 }
 
 func switchKeyword(g *gocui.Gui, v *gocui.View) error {
 	queue := v.ViewBuffer()
+	queue = strings.Replace(queue, "\n", "", -1)
+	queue = strings.Trim(queue, "\n\t ")
+	queue = strings.Replace(queue, " ", "+", -1) //replace spaces with plus to not break everything
 	podcasts, err := searchItunes(queue)
 	if err != nil {
-		fmt.Fprintln(v, "error searching!")
+		fmt.Fprintln(v, "error searching! %s", err.Error())
 		return nil
 	}
+	//clear the buffer
+	v.Clear()
 	selectedPodcastSearch = podcasts
+	g.SetCurrentView("searchResults")
 	return nil
 }
 
@@ -324,8 +340,7 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 //this function will print the podcast information when it goes to a podcast
 func printPodcastDescription(v *gocui.View) error {
 	setProperties(v)
-	v.Highlight = false //turn highlight off again
-	v.Wrap = true       //turn wrap on
+	v.Wrap = true //turn wrap on
 	//now actually print
 	fmt.Fprintf(v, "Name: %s By: %s\n", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
 	descString := selectedPodcast.Description
@@ -336,6 +351,7 @@ func printPodcastDescription(v *gocui.View) error {
 func printListPodcast(v *gocui.View) error {
 	v.Clear()
 	setProperties(v)
+	v.Highlight = true
 	var err error = nil
 	//if nil then cache them
 	if selectedPodcastEntries == nil {

@@ -31,9 +31,6 @@ func searchItunes(term string) ([]Podcast, error) {
 	if err != nil {
 		return make([]Podcast, 0), errors.New("Bad data returned by Itunes")
 	}
-	for i, n := range results.Results {
-		fmt.Printf("%d \n \t artist: %s\n\t collection: %s\n\t url: %s\n", i, n.ArtistName, n.CollectionName, n.FeedURL)
-	}
 	return results.Results, nil
 }
 
