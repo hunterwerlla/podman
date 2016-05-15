@@ -6,15 +6,15 @@ import (
 	"strings"
 )
 
-func CliInterface(config Configuration, playerFile chan string, playerControl chan int) (Configuration, bool) {
+func CliInterface(playerFile chan string, playerControl chan int) bool {
 	command := ""
 	fmt.Scanf("%s", &command)
 	command = strings.ToLower(command)
 	if command == "" {
-		return config, false
+		return false
 	}
 	if command == "exit" {
-		return config, true
+		return true
 	} else if command[0] == '/' {
 		fmt.Printf("%s is your search, sub to subscribe, exit to exit search, and \n", command[1:])
 		results, err := searchItunes(string(command[1:]))
@@ -41,9 +41,10 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 							//add description to it
 							podcastAddDescription(&result)
 							//then add
-							config.Subscribed = append(config.Subscribed, result)
-							writeConfig(config) //update config on disk
-							goto searchEnd      //considered harmful
+							globals.Config.Subscribed = append(globals.Config.Subscribed, result)
+							writeConfig(*globals.Config) //update config on disk
+							fmt.Println("subscribed and written to disk")
+							goto searchEnd //considered harmful
 						}
 					}
 					fmt.Println("Number is in wrong format or too large, try again")
@@ -54,7 +55,7 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 		searchEnd:
 		}
 	} else if command == "ls" {
-		for i, entry := range config.Subscribed {
+		for i, entry := range globals.Config.Subscribed {
 			//do nothing
 			fmt.Printf("%2d\t%2s\t%15s\n", i, entry.CollectionName, entry.ArtistName)
 		}
@@ -63,14 +64,14 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 		num, err := strconv.Atoi(command)
 		if err != nil {
 			fmt.Println("please use in the form of \"rm <number>\"")
-			return config, false
+			return false
 		}
-		for i, _ := range config.Subscribed {
+		for i, _ := range globals.Config.Subscribed {
 			if i == num {
 				//then remove this one
-				fmt.Printf("Removing %s\n", config.Subscribed[i].CollectionName)
-				config.Subscribed = append(config.Subscribed[:i], config.Subscribed[i+1:]...)
-				writeConfig(config)
+				fmt.Printf("Removing %s\n", globals.Config.Subscribed[i].CollectionName)
+				globals.Config.Subscribed = append(globals.Config.Subscribed[:i], globals.Config.Subscribed[i+1:]...)
+				writeConfig(*globals.Config)
 			}
 		}
 	} else if command == "show" {
@@ -78,9 +79,9 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 		num, err := strconv.Atoi(command)
 		if err != nil {
 			fmt.Println("please use in the form of \"show <number>\"")
-			return config, false
+			return false
 		}
-		for i, pc := range config.Subscribed {
+		for i, pc := range globals.Config.Subscribed {
 			if i == num {
 				entries, err := getPodcastEntries(pc, pc.FeedURL)
 				if err != nil {
@@ -92,21 +93,21 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 				}
 			}
 		}
-		return config, false
+		return false
 	} else if command == "download" {
 		fmt.Scanf("%s", &command)
 		pcNum, err := strconv.Atoi(command)
 		if err != nil {
 			fmt.Println("please use in the form of \"download <podcast number> <episode number>\"")
-			return config, false
+			return false
 		}
 		fmt.Scanf("%s", &command)
 		epNum, err := strconv.Atoi(command)
 		if err != nil {
 			fmt.Println("please use in the form of \"download <podcast number> <episode number>\"")
-			return config, false
+			return false
 		}
-		for ii, pc := range config.Subscribed {
+		for ii, pc := range globals.Config.Subscribed {
 			if ii == pcNum {
 				entries, err := getPodcastEntries(pc, pc.FeedURL)
 				if err != nil {
@@ -115,38 +116,38 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 				}
 				for i, entry := range entries {
 					if i == epNum {
-						config, err := download(config, pc, entry)
+						_, err := download(*globals.Config, pc, entry)
 						if err != nil {
 							fmt.Printf("Error when downloading: %s\n", err.Error())
 						} else {
 							fmt.Println("Finished downloading")
 						}
-						return config, false
+						return false
 					}
 				}
 				fmt.Printf("Invalid episode number %d\n", epNum)
-				return config, false
+				return false
 			}
 		}
 		fmt.Println("Invalid subscription number")
-		return config, false
+		return false
 	} else if command == "play" {
 		//TODO make it send a message to a goroutine that runs all the time instead
 		fmt.Scanf("%s", &command)
 		pcNum, err := strconv.Atoi(command)
 		if err != nil {
 			fmt.Println("please use in the form of \"play <downloaded episode number>\"")
-			return config, false
+			return false
 		}
-		for i, item := range config.Downloaded {
+		for i, item := range globals.Config.Downloaded {
 			if i == pcNum {
 				//send storage location to player
 				playerFile <- item.StorageLocation
-				return config, false
+				return false
 			}
 		}
 		fmt.Println("episode not found")
-		return config, false
+		return false
 	} else if command == "stop" {
 		playerControl <- 2
 	} else if command == "pause" {
@@ -158,15 +159,15 @@ func CliInterface(config Configuration, playerFile chan string, playerControl ch
 	} else if command == "rewind" {
 		playerControl <- 4
 	} else if command == "ls-download" {
-		for i, podcast := range config.Downloaded {
+		for i, podcast := range globals.Config.Downloaded {
 			fmt.Printf("%d %s %s\n", i, podcast.PodcastTitle, podcast.Title)
 		}
 	} else if command == "help" {
 		fmt.Println("Type ls to list your subscriptions, ls-download to list downloads, start <num> to play, stop to stop, resume to resume, /<string> to search, exit to exit, help to show this")
 	} else if command == "settings" {
-		fmt.Println(config)
+		fmt.Println(*globals.Config)
 	} else {
 		fmt.Println("Type help for a list of commands")
 	}
-	return config, false
+	return false
 }

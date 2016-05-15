@@ -39,6 +39,7 @@ func searchItunes(term string) ([]Podcast, error) {
 
 //this function will add additional data to the podcast beyond the itunes data (a description)
 func podcastAddDescription(podcast *Podcast) error {
+	//TODO this seems to take forever
 	feed, err := rss.Read(podcast.FeedURL)
 	if err != nil {
 		fmt.Println("Unable to fetch RSS data, try again later")

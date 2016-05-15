@@ -51,8 +51,8 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configura
 	ep.StorageLocation = fullPathFile
 	//file download good so add it to downloaded
 	config.Downloaded = append(config.Downloaded, ep)
-	writeConfig(config)
 	globals.Config = &config //update configuration
+	writeConfig(*globals.Config)
 	return config, nil
 }
 

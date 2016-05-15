@@ -39,8 +39,7 @@ func main() {
 	if *noTui == true {
 		end := false
 		for end != true {
-			config, end = CliInterface(config, globals.playerFile, globals.playerControl)
-			globals.Config = &config
+			end = CliInterface(globals.playerFile, globals.playerControl)
 		}
 	} else {
 		g := gocui.NewGui()
@@ -116,7 +115,7 @@ func main() {
 		close(stopTick)
 	}
 	globals.playerControl <- 5 //tell it to exit
-	writeConfig(config)
+	writeConfig(*globals.Config)
 	//wait for player to clean up
 	<-playerExit
 }

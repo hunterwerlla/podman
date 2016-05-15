@@ -26,7 +26,6 @@ func readConfig(c Configuration) Configuration {
 				c.StorageLocation = "."
 			}
 		}
-		writeConfig(c)
 		return c
 	}
 	buffer, err := ioutil.ReadAll(config)
