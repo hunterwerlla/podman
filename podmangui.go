@@ -216,6 +216,14 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 				return nil
 			}
 		} else if stateView == 2 {
+			//never allow scroll down on search, only allow transitioning view
+			if g.CurrentView().Name() == "search" {
+				if len(selectedPodcastEntries) > 0 {
+					g.SetCurrentView("searchResults")
+				} else { //else don't allow scrolling down
+					return nil
+				}
+			}
 			//starts at 1
 			if y >= len(selectedPodcastSearch) {
 				return nil
@@ -245,13 +253,16 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 				return nil
 			}
 		} else if stateView == 2 {
-			if y < 1 { //y==0 included because search bar
-				if y == 0 { //if y is 0 set active view to search bar
+			if y < 2 { //y==0 included because search bar
+				if y == 1 || y == 0 { //if y is 0 set active view to search bar
 					g.SetCurrentView("search")
 				}
 				return nil
 			}
 		} else {
+			return nil
+		}
+		if y <= 0 || yCursorOffset <= 0 {
 			return nil
 		}
 		yCursorOffset--
