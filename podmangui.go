@@ -112,10 +112,9 @@ func listSearch(g *gocui.Gui) error {
 	//set view to search if selectedPodcasts are not null aka we have searched and have results
 	if selectedPodcastSearch == nil {
 		g.SetCurrentView("search")
-		//and set cursor
-		if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
-			return err
-		}
+	}
+	if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
+		return err
 	}
 	return nil
 }
@@ -138,7 +137,13 @@ func printSubscribed(v *gocui.View) error {
 func printSearch(v *gocui.View) error {
 	setProperties(v)
 	v.Clear()
-	fmt.Fprintf(v, "Search Results: \n")
+	if selectedPodcastSearch != nil && len(selectedPodcastSearch) > 0 {
+		fmt.Fprintf(v, "Search Results: \n")
+	} else if selectedPodcastSearch == nil {
+		fmt.Fprintf(v, "Type to search \n")
+	} else {
+		fmt.Fprintf(v, "No results \n")
+	}
 	for _, thing := range selectedPodcastSearch {
 		fmt.Fprintf(v, "%s\n", formatPodcastPrint(thing, v))
 	}
@@ -231,12 +236,19 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 		x, y := v.Cursor()
 		//if Y is 1 at the top, so don't move up again
 		//TODO fix celing
-		if stateView == 0 || stateView == 3 {
+		if stateView == 0 {
 			if y == 1 {
 				return nil
 			}
 		} else if stateView == 1 {
 			if y == 0 {
+				return nil
+			}
+		} else if stateView == 2 {
+			if y < 1 { //y==0 included because search bar
+				if y == 0 { //if y is 0 set active view to search bar
+					g.SetCurrentView("search")
+				}
 				return nil
 			}
 		} else {
@@ -310,8 +322,6 @@ func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
 	}
 	selectedPodcast = selectedPodcastSearch[position-1]                            //select the podcast put in memory
 	globals.Config.Subscribed = append(globals.Config.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
-	selectedPodcastEntries = nil                                                   //now delete the cache
-	selectedPodcastSearch = nil
 	return nil
 }
 func playDownload(g *gocui.Gui, v *gocui.View) error {
@@ -322,17 +332,18 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 		download(*globals.Config, selectedPodcast, selectedPodcastEntries[position])
 		//point it at the new podcast
 		toPlay = globals.Config.Downloaded[len(globals.Config.Downloaded)-1]
-	}
-	//TODO fix this awful code
-	for _, thing := range globals.Config.Downloaded {
-		if thing.GUID == guid {
-			toPlay = thing
-			break
+	} else {
+		//TODO fix this awful code
+		for _, thing := range globals.Config.Downloaded {
+			if thing.GUID == guid {
+				toPlay = thing
+				break
+			}
 		}
-	}
-	//now play
-	if toPlay := toPlay.StorageLocation; toPlay != "" {
-		globals.playerFile <- toPlay
+		//now play
+		if toPlay := toPlay.StorageLocation; toPlay != "" {
+			globals.playerFile <- toPlay
+		}
 	}
 	return nil
 }
