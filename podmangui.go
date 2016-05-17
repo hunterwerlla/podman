@@ -14,6 +14,7 @@ var (
 	selectedPodcastEntries []PodcastEntry
 	selectedPodcastSearch  []Podcast
 	stateView              int = 0 //0 is listSubscribed, 1 is listPodcast, 2 is listSearch
+	scrollingOffset        int = 0
 )
 
 func guiHandler(g *gocui.Gui) error {
@@ -204,6 +205,7 @@ func printPlayer(g *gocui.Gui) error {
 //TODO add scrolling beyond screen and not crash
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
+		_, maxY = v.Size()
 		x, y := v.Cursor()
 		if stateView == 0 {
 			//starts at 1
@@ -212,14 +214,16 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 			}
 		} else if stateView == 1 {
 			//starts at 0
-			if y > len(selectedPodcastEntries) {
+			if y >= len(selectedPodcastEntries)-1 {
 				return nil
 			}
 		} else if stateView == 2 {
 			//never allow scroll down on search, only allow transitioning view
 			if g.CurrentView().Name() == "search" {
-				if len(selectedPodcastEntries) > 0 {
+				if len(selectedPodcastSearch) > 0 {
 					g.SetCurrentView("searchResults")
+					yCursorOffset = 0
+					return nil
 				} else { //else don't allow scrolling down
 					return nil
 				}
@@ -228,7 +232,13 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 			if y >= len(selectedPodcastSearch) {
 				return nil
 			}
-		} else {
+		} else { //unknown state TODO return error
+			return nil
+		}
+		//go to another page
+		if y == maxY {
+			scrollingOffset += maxY //add height
+			yCursorOffset = 0
 			return nil
 		}
 		yCursorOffset++
@@ -281,9 +291,13 @@ func switchListPodcast(g *gocui.Gui, v *gocui.View) error {
 	if len(globals.Config.Subscribed) == 0 {
 		return nil //TODO return an actual error
 	}
+	if position > len(globals.Config.Subscribed) {
+		return nil
+	}
 	selectedPodcast = globals.Config.Subscribed[position-1] //select the podcast put in memory
 	selectedPodcastEntries = nil                            //now delete the cache
 	selectedPodcastSearch = nil
+	scrollingOffset = 0
 	//change layout
 	stateView = 1
 	//delete old views
@@ -292,6 +306,7 @@ func switchListPodcast(g *gocui.Gui, v *gocui.View) error {
 }
 func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 	yCursorOffset = 0 //reset cursor
+	scrollingOffset = 0
 	//change layout
 	stateView = 0
 	//delete other views
@@ -301,7 +316,8 @@ func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 }
 func switchListSearch(g *gocui.Gui, v *gocui.View) error {
 	yCursorOffset = 0 //rest cursor
-	stateView = 2     //2 is search
+	scrollingOffset = 0
+	stateView = 2 //2 is search
 	g.DeleteView("subscribed")
 	listSearch(g)
 	g.SetCurrentView("search")
@@ -327,7 +343,6 @@ func switchKeyword(g *gocui.Gui, v *gocui.View) error {
 
 func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
-	yCursorOffset = 0         //reset cursor
 	if len(selectedPodcastSearch) == 0 {
 		return nil //TODO return an actual error
 	}
@@ -390,7 +405,17 @@ func printListPodcast(v *gocui.View) error {
 	}
 	return nil
 }
-
+func switchRemoveSubscription(g *gocui.Gui, v *gocui.View) error {
+	_, position := v.Cursor() //get cursor position to select
+	if len(globals.Config.Subscribed) == 0 {
+		return nil //TODO return an actual error
+	}
+	if position > len(globals.Config.Subscribed) {
+		return nil
+	}
+	globals.Config.Subscribed = append(globals.Config.Subscribed[0:position-1], globals.Config.Subscribed[position:]...)
+	return nil
+}
 func quitGui(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }

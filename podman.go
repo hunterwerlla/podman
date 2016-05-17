@@ -83,11 +83,17 @@ func main() {
 		if err := g.SetKeybinding("podcast", gocui.KeyEnter, gocui.ModNone, playDownload); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
+		if err := g.SetKeybinding("searchResults", gocui.KeyEnter, gocui.ModNone, switchSubscribe); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
 		//switching to different views
 		if err := g.SetKeybinding("podcast", gocui.KeyArrowLeft, gocui.ModNone, switchListSubscribed); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		if err := g.SetKeybinding("subscribed", gocui.KeyArrowLeft, gocui.ModNone, switchListSearch); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		if err := g.SetKeybinding("subscribed", gocui.KeyDelete, gocui.ModNone, switchRemoveSubscription); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		if err := g.SetKeybinding("search", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {
@@ -97,9 +103,6 @@ func main() {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		if err := g.SetKeybinding("searchResults", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("searchResults", gocui.KeyEnter, gocui.ModNone, switchSubscribe); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 		//player controls
