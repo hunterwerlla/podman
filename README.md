@@ -19,10 +19,10 @@ I did not find any usable integrated podcast clients for the command line. There
 #Why Go?
 Initially I was going to write it in Rust since I really enjoy the language, but I saw this amazing HackerNews reader written in go, [go-hn](https://gitlab.com/shank/go-hn) which uses gocui which I found to be way better than any other command line interface library. 
 #TODO
-* Use a real database  
-* Cache results
-* Download orogress bar
-* Properly space playing bar
+* Cache results more intelligently
+* Download progress bar
+* Properly pad playing bar
 * Delete downloaded podcasts
 * A list of downloaded podcasts
-* Switch to using maps for everything
+* Switch to using maps for subscribed podcasts and downloads
+* more advanced searching

@@ -32,7 +32,7 @@ func guiHandler(g *gocui.Gui) error {
 func listSubscribed(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	g.Cursor = true
-	v, err := g.SetView("subscribed", -1, -1, maxX+1, maxY-2)
+	v, err := g.SetView("subscribed", -1, -1, maxX+1, maxY-1)
 	//clear the view
 	v.Clear()
 	if err != nil {
