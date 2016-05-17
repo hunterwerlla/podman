@@ -129,7 +129,7 @@ func printSubscribed(v *gocui.View) error {
 	spacing := (xMax - 34) / 3 //43 chracters
 	space := strings.Repeat("-", spacing)
 	fmt.Fprintf(v, "Podcast Name %s Artist %s Description %s\n", space, space, space)
-	for _, item := range globals.Config.Subscribed {
+	for _, item := range globals.Config.Subscribed[scrollingOffset:] {
 		fmt.Fprintf(v, "%s\n", formatPodcastPrint(item, v))
 	}
 	return nil
@@ -145,7 +145,7 @@ func printSearch(v *gocui.View) error {
 	} else {
 		fmt.Fprintf(v, "No results \n")
 	}
-	for _, thing := range selectedPodcastSearch {
+	for _, thing := range selectedPodcastSearch[scrollingOffset:] {
 		fmt.Fprintf(v, "%s\n", formatPodcastPrint(thing, v))
 	}
 	return nil
@@ -205,16 +205,16 @@ func printPlayer(g *gocui.Gui) error {
 //TODO add scrolling beyond screen and not crash
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		_, maxY = v.Size()
+		_, maxY := v.Size()
 		x, y := v.Cursor()
 		if stateView == 0 {
 			//starts at 1
-			if y >= len(globals.Config.Subscribed) {
+			if y >= len(globals.Config.Subscribed[scrollingOffset:]) {
 				return nil
 			}
 		} else if stateView == 1 {
 			//starts at 0
-			if y >= len(selectedPodcastEntries)-1 {
+			if y >= len(selectedPodcastEntries[scrollingOffset:])-1 {
 				return nil
 			}
 		} else if stateView == 2 {
@@ -229,16 +229,19 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 				}
 			}
 			//starts at 1
-			if y >= len(selectedPodcastSearch) {
+			if y >= len(selectedPodcastSearch[scrollingOffset:]) {
 				return nil
 			}
 		} else { //unknown state TODO return error
 			return nil
 		}
 		//go to another page
-		if y == maxY {
+		if y == maxY-1 {
 			scrollingOffset += maxY //add height
 			yCursorOffset = 0
+			if err := v.SetCursor(x, 0); err != nil {
+				return err
+			}
 			return nil
 		}
 		yCursorOffset++
@@ -251,19 +254,56 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 
 func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
+		_, maxY := v.Size()
 		x, y := v.Cursor()
-		//if Y is 1 at the top, so don't move up again
-		//TODO fix celing
 		if stateView == 0 {
+			//if Y is 1 at the top, so don't move up again
 			if y == 1 {
+				if scrollingOffset != 0 {
+					//this seems like some magic numbers but it's due to the way the cursor is updated
+					yCursorOffset = maxY - 2
+					//NOTE if this ever breaks, it's because the library changed something with cursor updating
+					if err := v.SetCursor(x, yCursorOffset); err != nil {
+						return err
+					}
+					scrollingOffset -= maxY //subtract height
+					//make sure it's not negative
+					if scrollingOffset < 0 {
+						scrollingOffset = 0
+					}
+				}
 				return nil
 			}
 		} else if stateView == 1 {
 			if y == 0 {
+				if scrollingOffset != 0 {
+					yCursorOffset = maxY - 1
+					if err := v.SetCursor(x, 1); err != nil {
+						return err
+					}
+					scrollingOffset -= maxY //subtract height
+					//make sure it's not negative
+					if scrollingOffset < 0 {
+						scrollingOffset = 0
+					}
+				}
 				return nil
 			}
 		} else if stateView == 2 {
 			if y < 2 { //y==0 included because search bar
+				if scrollingOffset != 0 {
+					//NOTE this is the same magic as list podcast
+					yCursorOffset = maxY - 2
+					if err := v.SetCursor(x, yCursorOffset); err != nil {
+						return err
+					}
+					scrollingOffset -= maxY //subtract height
+					//make sure it's not negative
+					if scrollingOffset < 0 {
+						scrollingOffset = 0
+					}
+					return nil
+				}
 				if y == 1 || y == 0 { //if y is 0 set active view to search bar
 					g.SetCurrentView("search")
 				}
@@ -360,7 +400,7 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 		toPlay = globals.Config.Downloaded[len(globals.Config.Downloaded)-1]
 	} else {
 		//TODO fix this awful code
-		for _, thing := range globals.Config.Downloaded {
+		for _, thing := range globals.Config.Downloaded[scrollingOffset:] {
 			if thing.GUID == guid {
 				toPlay = thing
 				break
@@ -399,9 +439,9 @@ func printListPodcast(v *gocui.View) error {
 		return nil
 	}
 	//now actually print
-	for i, thing := range selectedPodcastEntries {
+	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
 		//TODO make this efficent by adding a map
-		fmt.Fprintf(v, "%d %s - %s - Downloaded: %v\n", i+1, thing.Title, thing.Content, isDownloaded(thing))
+		fmt.Fprintf(v, "%d %s - %s - Downloaded: %v\n", i+1+scrollingOffset, thing.Title, thing.Content, isDownloaded(thing))
 	}
 	return nil
 }
