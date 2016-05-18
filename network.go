@@ -4,7 +4,6 @@ import (
 	"encoding/json" //for reading itunes data
 	"errors"
 	"fmt"
-	//"github.com/SlyMarbo/rss"
 	"github.com/kennygrant/sanitize" //for stripping html tags
 	"github.com/ungerik/go-rss"      //test differnt kind
 	"io/ioutil"
@@ -36,7 +35,6 @@ func searchItunes(term string) ([]Podcast, error) {
 
 //this function will add additional data to the podcast beyond the itunes data (a description)
 func podcastAddDescription(podcast *Podcast) error {
-	//TODO this seems to take forever
 	feed, err := rss.Read(podcast.FeedURL)
 	if err != nil {
 		fmt.Println("Unable to fetch RSS data, try again later")
@@ -77,10 +75,7 @@ func getPodcastEntries(podcast Podcast, input string) ([]PodcastEntry, error) {
 		//TODO sanitize input
 		//change it from Item type from RSS to built in PodcastEntry type, while also removing whitespace
 		//it also strips HTML tags because a lot of podcasts include them in their RSS data
-		//content := sanitize.HTML(strings.Replace(item.Content, "\n", " ", -1))
-		content := item.Content
-		//title := sanitize.HTML(strings.Replace(item.Title, "\n", " ", -1))
-		//title = strings.Replace(content, "\n", "", -1)
+		content := sanitize.HTML(strings.Replace(item.Content, "\n", " ", -1))
 		title := sanitize.HTML(strings.Replace(item.Title, "\n", " ", -1))
 		description := strings.Replace(item.Description, "\n", "", -1)
 		url := ""
@@ -92,9 +87,9 @@ func getPodcastEntries(podcast Podcast, input string) ([]PodcastEntry, error) {
 		}
 		guid := ""
 		if strings.TrimSpace(item.GUID) == "" {
-			guid = "-1"
+			guid = content + title
 		} else {
-			guid = item.GUID
+			guid = content + title + item.GUID
 		}
 		entries = append(entries, PodcastEntry{feed.Title, title, description, url, content, guid, ""})
 	}

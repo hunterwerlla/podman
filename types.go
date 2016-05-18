@@ -15,7 +15,7 @@ type Configuration struct {
 	forwardSkipLength  int
 	backwardSkipLength int
 	Subscribed         []Podcast
-	Downloaded         []PodcastEntry
+	Downloaded         map[string]PodcastEntry
 	Cached             []cachedPodcast
 }
 

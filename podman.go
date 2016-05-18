@@ -22,7 +22,7 @@ func main() {
 		defaultStorage = usr.HomeDir + "/" + "podman"
 	}
 	//make configurationg struct that holds default settings
-	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", 30, 10, make([]Podcast, 0), make([]PodcastEntry, 0), make([]cachedPodcast, 0)}
+	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", 30, 10, make([]Podcast, 0), make(map[string]PodcastEntry, 0), make([]cachedPodcast, 0)}
 	//read command line flags
 	noTui := flag.Bool("no-gui", false, "Select whether to use the GUI or not")
 	flag.Parse()

@@ -139,12 +139,14 @@ func CliInterface(playerFile chan string, playerControl chan int) bool {
 			fmt.Println("please use in the form of \"play <downloaded episode number>\"")
 			return false
 		}
-		for i, item := range globals.Config.Downloaded {
+		i := 0
+		for _, value := range globals.Config.Downloaded {
 			if i == pcNum {
 				//send storage location to player
-				playerFile <- item.StorageLocation
+				playerFile <- value.StorageLocation
 				return false
 			}
+			i++
 		}
 		fmt.Println("episode not found")
 		return false

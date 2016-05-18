@@ -58,7 +58,7 @@ func listSubscribed(g *gocui.Gui) error {
 func listPodcast(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	//first 5 rows reserved for description
-	v, err := g.SetView("podcast", -1, 5, maxX+1, maxY-1)
+	v, err := g.SetView("podcast", -1, 4, maxX+1, maxY-1)
 	if err != nil {
 		if err != gocui.ErrUnknownView { //if not created yet cool we make it
 			return err
@@ -396,15 +396,11 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 	guid := selectedPodcastEntries[position].GUID
 	if isDownloaded(selectedPodcastEntries[position]) == false {
 		download(*globals.Config, selectedPodcast, selectedPodcastEntries[position])
-		//point it at the new podcast
-		toPlay = globals.Config.Downloaded[len(globals.Config.Downloaded)-1]
 	} else {
-		//TODO fix this awful code
-		for _, thing := range globals.Config.Downloaded[scrollingOffset:] {
-			if thing.GUID == guid {
-				toPlay = thing
-				break
-			}
+		if thing := globals.Config.Downloaded[guid]; thing != (PodcastEntry{}) {
+			toPlay = thing
+		} else {
+			return nil //TODO real error
 		}
 		//now play
 		if toPlay := toPlay.StorageLocation; toPlay != "" {
