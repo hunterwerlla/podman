@@ -54,3 +54,18 @@ type cachedPodcast struct {
 	Podcasts []PodcastEntry
 	Checked  time.Time
 }
+type PodcastEntrySlice []PodcastEntry
+
+//TODO make this better
+//now functions on slice of podcast entry
+func (entries PodcastEntrySlice) Len() int {
+	return len(entries)
+}
+
+func (entries PodcastEntrySlice) Less(i, j int) bool {
+	return entries[i].Title < entries[j].Title
+}
+
+func (entries PodcastEntrySlice) Swap(i, j int) {
+	entries[i], entries[j] = entries[j], entries[i]
+}

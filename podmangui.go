@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
+	"sort"
 	"strings"
 	"time"
 )
@@ -24,6 +25,8 @@ func guiHandler(g *gocui.Gui) error {
 		listPodcast(g)
 	} else if stateView == 2 {
 		listSearch(g)
+	} else if stateView == 3 {
+		listDownloaded(g)
 	}
 	printPlayer(g)
 	return nil
@@ -119,16 +122,51 @@ func listSearch(g *gocui.Gui) error {
 	}
 	return nil
 }
+
+func listDownloaded(g *gocui.Gui) error {
+	maxX, maxY := g.Size()
+	v, err := g.SetView("downloads", -1, 1, maxX+1, maxY-1)
+	if err != nil {
+		if err != gocui.ErrUnknownView { //if not created yet cool we make it
+			return err
+		}
+	}
+	err = printDownloaded(v)
+	if err != nil {
+		return err
+	}
+	if err = v.SetCursor(0, 0+yCursorOffset); err != nil {
+		return err
+	}
+	return nil
+}
+
+func printDownloaded(v *gocui.View) error {
+	//first clear
+	v.Clear()
+	//then set properties
+	setProperties(v)
+	v.Highlight = true
+	//dump them into an array and sort for consistancy
+	var tmp []PodcastEntry
+	for _, thing := range globals.Config.Downloaded {
+		tmp = append(tmp, thing)
+	}
+	sort.Sort(PodcastEntrySlice(tmp))
+	for i, thing := range tmp[scrollingOffset:] {
+		//TODO make this a function
+		fmt.Fprintf(v, "%d %s -  Dl:%v - %s\n", i+1+scrollingOffset, thing.Title, isDownloaded(thing), thing.Summary)
+	}
+	return nil
+}
+
 func printSubscribed(v *gocui.View) error {
 	//first clear
 	v.Clear()
 	//then set properties
 	setProperties(v)
 	v.Highlight = true
-	xMax, _ := v.Size()
-	spacing := (xMax - 34) / 3 //43 chracters
-	space := strings.Repeat("-", spacing)
-	fmt.Fprintf(v, "Podcast Name %s Artist %s Description %s\n", space, space, space)
+	fmt.Fprintf(v, "Podcast Name - Artist - Description\n")
 	for _, item := range globals.Config.Subscribed[scrollingOffset:] {
 		fmt.Fprintf(v, "%s\n", formatPodcastPrint(item, v))
 	}
@@ -212,7 +250,7 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 			if y >= len(globals.Config.Subscribed[scrollingOffset:]) {
 				return nil
 			}
-		} else if stateView == 1 {
+		} else if stateView == 1 || stateView == 3 {
 			//starts at 0
 			if y >= len(selectedPodcastEntries[scrollingOffset:])-1 {
 				return nil
@@ -274,7 +312,7 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 				}
 				return nil
 			}
-		} else if stateView == 1 {
+		} else if stateView == 1 || stateView == 3 {
 			if y == 0 {
 				if scrollingOffset != 0 {
 					yCursorOffset = maxY - 1
@@ -350,8 +388,11 @@ func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 	//change layout
 	stateView = 0
 	//delete other views
+	g.DeleteView("subscribed")
 	g.DeleteView("podcast")
+	g.DeleteView("downloads")
 	g.DeleteView("podcastDescription")
+	listSubscribed(g)
 	return nil
 }
 func switchListSearch(g *gocui.Gui, v *gocui.View) error {
@@ -359,11 +400,26 @@ func switchListSearch(g *gocui.Gui, v *gocui.View) error {
 	scrollingOffset = 0
 	stateView = 2 //2 is search
 	g.DeleteView("subscribed")
+	g.DeleteView("podcast")
+	g.DeleteView("downloads")
+	g.DeleteView("podcastDescription")
 	listSearch(g)
 	g.SetCurrentView("search")
 	return nil
 }
 
+func switchListDownloads(g *gocui.Gui, v *gocui.View) error {
+	yCursorOffset = 0 //rest cursor
+	scrollingOffset = 0
+	stateView = 3 //3 is downloads
+	g.DeleteView("subscribed")
+	g.DeleteView("podcast")
+	g.DeleteView("downloads")
+	g.DeleteView("podcastDescription")
+	listDownloaded(g)
+	g.SetCurrentView("downloads")
+	return nil
+}
 func switchKeyword(g *gocui.Gui, v *gocui.View) error {
 	queue := v.ViewBuffer()
 	queue = strings.Replace(queue, "\n", "", -1)
@@ -386,8 +442,16 @@ func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
 	if len(selectedPodcastSearch) == 0 {
 		return nil //TODO return an actual error
 	}
-	selectedPodcast = selectedPodcastSearch[position-1]                            //select the podcast put in memory
+	selectedPodcast = selectedPodcastSearch[position-1] //select the podcast put in memory
+	//now check if already added
+	for _, thing := range globals.Config.Subscribed {
+		if selectedPodcast.ArtistName == thing.ArtistName && selectedPodcast.CollectionName == thing.CollectionName {
+			//already subscribed
+			return nil
+		}
+	}
 	globals.Config.Subscribed = append(globals.Config.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
+	writeConfig(*globals.Config)
 	return nil
 }
 func playDownload(g *gocui.Gui, v *gocui.View) error {
@@ -415,7 +479,7 @@ func printPodcastDescription(v *gocui.View) error {
 	setProperties(v)
 	v.Wrap = true //turn wrap on
 	//now actually print
-	fmt.Fprintf(v, "Name: %s By: %s\n", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
+	fmt.Fprintf(v, "Name: %s \nBy: %s\n", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
 	descString := selectedPodcast.Description
 	fmt.Fprintf(v, "%s", descString)
 	return nil
@@ -436,8 +500,7 @@ func printListPodcast(v *gocui.View) error {
 	}
 	//now actually print
 	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
-		//TODO make this efficent by adding a map
-		fmt.Fprintf(v, "%d %s - %s - Downloaded: %v\n", i+1+scrollingOffset, thing.Title, thing.Content, isDownloaded(thing))
+		fmt.Fprintf(v, "%d %s -  Dl:%v - %s\n", i+1+scrollingOffset, thing.Title, isDownloaded(thing), thing.Summary)
 	}
 	return nil
 }
