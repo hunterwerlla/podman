@@ -135,6 +135,10 @@ func listDownloaded(g *gocui.Gui) error {
 	if err != nil {
 		return err
 	}
+	err = g.SetCurrentView("downloads")
+	if err != nil {
+		return err
+	}
 	if err = v.SetCursor(0, 0+yCursorOffset); err != nil {
 		return err
 	}
@@ -148,12 +152,7 @@ func printDownloaded(v *gocui.View) error {
 	setProperties(v)
 	v.Highlight = true
 	//dump them into an array and sort for consistancy
-	var tmp []PodcastEntry
-	for _, thing := range globals.Config.Downloaded {
-		tmp = append(tmp, thing)
-	}
-	sort.Sort(PodcastEntrySlice(tmp))
-	for i, thing := range tmp[scrollingOffset:] {
+	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
 		//TODO make this a function
 		fmt.Fprintf(v, "%d %s -  Dl:%v - %s\n", i+1+scrollingOffset, thing.Title, isDownloaded(thing), thing.Summary)
 	}
@@ -418,6 +417,13 @@ func switchListDownloads(g *gocui.Gui, v *gocui.View) error {
 	g.DeleteView("podcastDescription")
 	listDownloaded(g)
 	g.SetCurrentView("downloads")
+	//now sort the map and put in selectedPodcastEntries
+	var tmp []PodcastEntry
+	for _, thing := range globals.Config.Downloaded {
+		tmp = append(tmp, thing)
+	}
+	sort.Sort(PodcastEntrySlice(tmp))
+	selectedPodcastEntries = tmp
 	return nil
 }
 func switchKeyword(g *gocui.Gui, v *gocui.View) error {
