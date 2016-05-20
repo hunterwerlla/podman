@@ -152,7 +152,7 @@ func printDownloaded(v *gocui.View) error {
 	setProperties(v)
 	v.Highlight = true
 	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
-		fmt.Fprintf(v, "%d %s - %s\n", i+1+scrollingOffset, thing.Title, thing.Summary)
+		fmt.Fprintf(v, "%d %s - %s - %s\n", i+1+scrollingOffset, thing.PodcastTitle, thing.Title, thing.Summary)
 	}
 	return nil
 }

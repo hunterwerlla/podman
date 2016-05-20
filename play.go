@@ -97,7 +97,7 @@ func play(exit chan bool) {
 		} else if status != -1 {
 			switch status {
 			case -1:
-				fmt.Println("this should never happen")
+				//should not happen TODO error
 			case 0: //case 0 play, only works after pause
 				if playerPosition == -1 {
 					fmt.Println("Have to select a file to play to resume playback")

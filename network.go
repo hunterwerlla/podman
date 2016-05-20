@@ -37,7 +37,7 @@ func searchItunes(term string) ([]Podcast, error) {
 func podcastAddDescription(podcast *Podcast) error {
 	feed, err := rss.Read(podcast.FeedURL)
 	if err != nil {
-		fmt.Println("Unable to fetch RSS data, try again later")
+		//fmt.Println("Unable to fetch RSS data, try again later")
 		return err
 	}
 	podcast.Description = feed.Description
@@ -64,7 +64,6 @@ func getPodcastEntries(podcast Podcast, input string) ([]PodcastEntry, error) {
 	if err != nil {
 		if cacheEntry != nil {
 			//TODO return an error that isn't null
-			fmt.Println("Unable to fetch RSS data, using cached data")
 			return cacheEntry.Podcasts, nil
 		}
 		fmt.Println("Unable to fetch RSS data, try again later")
