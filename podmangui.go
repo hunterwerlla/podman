@@ -125,7 +125,7 @@ func listSearch(g *gocui.Gui) error {
 
 func listDownloaded(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	v, err := g.SetView("downloads", -1, 1, maxX+1, maxY-1)
+	v, err := g.SetView("downloads", -1, -1, maxX+1, maxY-1)
 	if err != nil {
 		if err != gocui.ErrUnknownView { //if not created yet cool we make it
 			return err
@@ -151,10 +151,8 @@ func printDownloaded(v *gocui.View) error {
 	//then set properties
 	setProperties(v)
 	v.Highlight = true
-	//dump them into an array and sort for consistancy
 	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
-		//TODO make this a function
-		fmt.Fprintf(v, "%d %s -  Dl:%v - %s\n", i+1+scrollingOffset, thing.Title, isDownloaded(thing), thing.Summary)
+		fmt.Fprintf(v, "%d %s - %s\n", i+1+scrollingOffset, thing.Title, thing.Summary)
 	}
 	return nil
 }
