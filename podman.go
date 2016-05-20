@@ -74,11 +74,17 @@ func main() {
 		if err := g.SetKeybinding("", gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
-		//actions that are not switching views
 		//player controls
 		if err := g.SetKeybinding("", gocui.KeySpace, gocui.ModNone, togglePlayerState); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
+		if err := g.SetKeybinding("", gocui.KeyPgup, gocui.ModNone, skipPlayerForward); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		if err := g.SetKeybinding("", gocui.KeyPgdn, gocui.ModNone, skipPlayerBackward); err != nil {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}
+		//actions that are not switching views
 		if err := g.SetKeybinding("podcast", gocui.KeyEnter, gocui.ModNone, playDownload); err != nil {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}

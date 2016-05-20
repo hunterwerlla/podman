@@ -71,12 +71,11 @@ func getPodcastEntries(podcast Podcast, input string) ([]PodcastEntry, error) {
 	}
 	entries := make([]PodcastEntry, 0)
 	for _, item := range feed.Item {
-		//TODO sanitize input
 		//change it from Item type from RSS to built in PodcastEntry type, while also removing whitespace
 		//it also strips HTML tags because a lot of podcasts include them in their RSS data
 		content := sanitize.HTML(strings.Replace(item.Content, "\n", " ", -1))
 		title := sanitize.HTML(strings.Replace(item.Title, "\n", " ", -1))
-		description := strings.Replace(item.Description, "\n", "", -1)
+		description := sanitize.HTML(strings.Replace(item.Description, "\n", "", -1))
 		url := ""
 		for _, enc := range item.Enclosure {
 			if enc.URL != "" {
