@@ -130,15 +130,34 @@ func listDownloaded(g *gocui.Gui) error {
 	return nil
 }
 
-func printDownloaded(v *gocui.View) error {
-	//first clear
+func printListPodcast(v *gocui.View) error {
 	v.Clear()
-	//then set properties
 	setProperties(v)
 	v.Highlight = true
-	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
-		fmt.Fprintf(v, "%d %s - %s - %s\n", i+1+scrollingOffset, thing.PodcastTitle, thing.Title, thing.Summary)
+	var err error = nil
+	//if nil then cache them
+	if selectedPodcastEntries == nil {
+		selectedPodcastEntries, err = getPodcastEntries(selectedPodcast, selectedPodcast.FeedURL)
 	}
+	if err != nil {
+		fmt.Fprintln(v, "Cannot download podcast list, check your connection")
+		return nil
+	}
+	//now actually print
+	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
+		fmt.Fprintf(v, "%d %s -  Dl:%v - %s\n", i+1+scrollingOffset, thing.Title, isDownloaded(thing), thing.Summary)
+	}
+	return nil
+}
+
+//this function will print the podcast information when it goes to a podcast
+func printPodcastDescription(v *gocui.View) error {
+	setProperties(v)
+	v.Wrap = true //turn wrap on
+	//now actually print
+	fmt.Fprintf(v, "Name: %s \nBy: %s\n", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
+	descString := selectedPodcast.Description
+	fmt.Fprintf(v, "%s", descString)
 	return nil
 }
 
@@ -170,11 +189,22 @@ func printSearch(v *gocui.View) error {
 	}
 	return nil
 }
-
 func printSearchBar(v *gocui.View) error {
 	setProperties(v)
 	v.Autoscroll = true //to hide subsequent entries
 	v.Editable = true
+	return nil
+}
+
+func printDownloaded(v *gocui.View) error {
+	//first clear
+	v.Clear()
+	//then set properties
+	setProperties(v)
+	v.Highlight = true
+	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
+		fmt.Fprintf(v, "%d %s - %s - %s\n", i+1+scrollingOffset, thing.PodcastTitle, thing.Title, thing.Summary)
+	}
 	return nil
 }
 
@@ -218,37 +248,6 @@ func printPlayer(g *gocui.Gui) error {
 		}
 		numEmpty := int((1.0 - float64(percent)) * float64(maxX-10.0-2.0))
 		fmt.Fprintf(v, "%s%s%s%s%s%s\n", playingMessage, "[", strings.Repeat("=", numFilled-1), ">", strings.Repeat("-", numEmpty), "]")
-	}
-	return nil
-}
-
-//this function will print the podcast information when it goes to a podcast
-func printPodcastDescription(v *gocui.View) error {
-	setProperties(v)
-	v.Wrap = true //turn wrap on
-	//now actually print
-	fmt.Fprintf(v, "Name: %s \nBy: %s\n", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
-	descString := selectedPodcast.Description
-	fmt.Fprintf(v, "%s", descString)
-	return nil
-}
-
-func printListPodcast(v *gocui.View) error {
-	v.Clear()
-	setProperties(v)
-	v.Highlight = true
-	var err error = nil
-	//if nil then cache them
-	if selectedPodcastEntries == nil {
-		selectedPodcastEntries, err = getPodcastEntries(selectedPodcast, selectedPodcast.FeedURL)
-	}
-	if err != nil {
-		fmt.Fprintln(v, "Cannot download podcast list, check your connection")
-		return nil
-	}
-	//now actually print
-	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
-		fmt.Fprintf(v, "%d %s -  Dl:%v - %s\n", i+1+scrollingOffset, thing.Title, isDownloaded(thing), thing.Summary)
 	}
 	return nil
 }
