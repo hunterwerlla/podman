@@ -275,6 +275,17 @@ func switchRemoveSubscription(g *gocui.Gui, v *gocui.View) error {
 	globals.Config.Subscribed = append(globals.Config.Subscribed[0:position-1], globals.Config.Subscribed[position:]...)
 	return nil
 }
+func switchDeleteDownloaded(g *gocui.Gui, v *gocui.View) error {
+	if !(stateView == 1 || stateView == 2) { //if not in subscribed or download list, exit
+		return nil
+	}
+	//_, position := v.Cursor() //get cursor position to select
+	if stateView == 1 { //in subscribed is very different from in download list
+
+	}
+	return nil
+}
+
 func quitGui(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }

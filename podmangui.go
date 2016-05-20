@@ -167,6 +167,11 @@ func printSubscribed(v *gocui.View) error {
 	//then set properties
 	setProperties(v)
 	v.Highlight = true
+	//if none print message and return
+	if len(globals.Config.Subscribed) == 0 {
+		fmt.Fprintln(v, "Scroll left to search for podcasts to subscribe to.")
+		return nil
+	}
 	fmt.Fprintf(v, "Podcast Name - Artist - Description\n")
 	for _, item := range globals.Config.Subscribed[scrollingOffset:] {
 		fmt.Fprintf(v, "%s\n", formatPodcastPrint(item, v))
@@ -202,6 +207,10 @@ func printDownloaded(v *gocui.View) error {
 	//then set properties
 	setProperties(v)
 	v.Highlight = true
+	if len(selectedPodcastEntries) == 0 {
+		fmt.Fprintln(v, "Subscribe to some podcasts and download episodes")
+		return nil
+	}
 	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
 		fmt.Fprintf(v, "%d %s - %s - %s\n", i+1+scrollingOffset, thing.PodcastTitle, thing.Title, thing.Summary)
 	}

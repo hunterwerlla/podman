@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/krig/go-sox"
+	"os"
 	"time"
 )
 
@@ -15,6 +16,9 @@ var (
 //TODO make it skip ahead
 //Control reference: 0 is play, 1 is pause, 2 is stop, 3 is skip ahead, 4 is reverse
 func play(exit chan bool) {
+	//get rid of all stderr data
+	_, w, _ := os.Pipe()
+	os.Stderr = w
 	var (
 		chain          *sox.EffectsChain = nil
 		inFile         *sox.Format       = nil
