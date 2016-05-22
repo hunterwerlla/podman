@@ -273,6 +273,14 @@ func switchRemoveSubscription(g *gocui.Gui, v *gocui.View) error {
 	if position > len(globals.Config.Subscribed) {
 		return nil
 	}
+	item := globals.Config.Subscribed[position-1]
+	//now remove from cache
+	for i, thing := range globals.Config.Cached {
+		if thing.Type.ArtistName == item.ArtistName && thing.Type.CollectionName == item.CollectionName {
+			globals.Config.Cached = append(globals.Config.Cached[0:i], globals.Config.Cached[i+1:]...)
+			break
+		}
+	}
 	globals.Config.Subscribed = append(globals.Config.Subscribed[0:position-1], globals.Config.Subscribed[position:]...)
 	return nil
 }
