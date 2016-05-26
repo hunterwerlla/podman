@@ -116,7 +116,7 @@ func CliInterface(playerFile chan string, playerControl chan int) bool {
 				}
 				for i, entry := range entries {
 					if i == epNum {
-						_, err := download(*globals.Config, pc, entry)
+						_, err := download(*globals.Config, pc, entry, nil)
 						if err != nil {
 							fmt.Printf("Error when downloading: %s\n", err.Error())
 						} else {

@@ -10,7 +10,7 @@ import (
 
 //global state
 var (
-	globals GlobalState = GlobalState{"", nil, nil, nil, -1, 0}
+	globals GlobalState = GlobalState{"", nil, nil, nil, -1, 0, nil}
 )
 
 func main() {

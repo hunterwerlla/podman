@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"github.com/jroimartin/gocui"
+	"gopkg.in/cheggaaa/pb.v1"
 	"io"
 	"net/http"
 	"os"
@@ -9,7 +11,10 @@ import (
 	"strings"
 )
 
-func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configuration, error) {
+func download(config Configuration, podcast Podcast, ep PodcastEntry, g *gocui.Gui) (Configuration, error) {
+	//get rid of all stdout data
+	_, w, _ := os.Pipe()
+	os.Stdout = w
 	folder := strings.Replace(podcast.CollectionName, " ", "", -1) //remove spaces
 	fullPath := config.StorageLocation + "/" + folder
 	fullPathFile := ""
@@ -43,7 +48,22 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configura
 	if err != nil {
 		return config, err
 	}
-	_, err = io.Copy(file, link.Body)
+	//actually download
+	//make a progress bar length of the content
+	globals.downloadProgress = pb.New(int(link.ContentLength))
+	globals.downloadProgress.SetUnits(pb.U_BYTES)
+	globals.downloadProgress.Format("[=-]")
+	globals.downloadProgress.Start()
+	defer globals.downloadProgress.Finish()
+	//TODO break this up and fix it
+	if g != nil {
+		view, _ := g.View("player")
+		globals.downloadProgress.Output = view
+	}
+	writeTo := io.MultiWriter(file, globals.downloadProgress)
+	_, err = io.Copy(writeTo, link.Body)
+	//stop download progress bar
+	globals.downloadProgress = nil
 	if err != nil {
 		return config, err
 	}
@@ -56,7 +76,6 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry) (Configura
 	return config, nil
 }
 
-//TODO update to use hashtable/ not super slow n^2 implementation
 func isDownloaded(entry PodcastEntry) bool {
 	for _, item := range globals.Config.Downloaded {
 		if entry.Link == item.Link {

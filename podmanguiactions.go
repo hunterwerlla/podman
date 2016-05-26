@@ -250,7 +250,7 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 	var toPlay PodcastEntry
 	guid := selectedPodcastEntries[position].GUID
 	if isDownloaded(selectedPodcastEntries[position]) == false {
-		download(*globals.Config, selectedPodcast, selectedPodcastEntries[position])
+		go download(*globals.Config, selectedPodcast, selectedPodcastEntries[position], g) //download async
 	} else {
 		if thing := globals.Config.Downloaded[guid]; thing != (PodcastEntry{}) {
 			toPlay = thing

@@ -228,11 +228,13 @@ func printPlayer(g *gocui.Gui) error {
 		}
 		err = nil
 	}
-	v.Clear()
 	setProperties(v)
-	if globals.playerState == -1 {
+	//have to clear inside to not clear progress bar
+	if globals.playerState == -1 && globals.downloadProgress == nil {
+		v.Clear()
 		fmt.Fprintf(v, "Play Something!")
-	} else {
+	} else if globals.downloadProgress == nil {
+		v.Clear()
 		playingPlayerPosition := 0
 		playingMessage := ""
 		if globals.playerState == 0 {
@@ -257,6 +259,6 @@ func printPlayer(g *gocui.Gui) error {
 		}
 		numEmpty := int((1.0 - float64(percent)) * float64(maxX-10.0-2.0))
 		fmt.Fprintf(v, "%s%s%s%s%s%s\n", playingMessage, "[", strings.Repeat("=", numFilled-1), ">", strings.Repeat("-", numEmpty), "]")
-	}
+	} //else do nothing and let the pb print
 	return nil
 }

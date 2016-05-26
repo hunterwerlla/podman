@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gopkg.in/cheggaaa/pb.v1"
 	"time"
 )
 
@@ -41,12 +42,13 @@ type ItunesSearch struct {
 }
 
 type GlobalState struct {
-	Playing       string
-	Config        *Configuration
-	playerFile    chan string
-	playerControl chan int
-	playerState   int
-	LengthOfFile  uint64
+	Playing          string
+	Config           *Configuration
+	playerFile       chan string
+	playerControl    chan int
+	playerState      int
+	LengthOfFile     uint64
+	downloadProgress *pb.ProgressBar
 }
 
 type cachedPodcast struct {
