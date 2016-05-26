@@ -107,8 +107,31 @@ func play(exit chan bool) {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
 					//TODO fix this channel issue which makes no sense and makes the code worse
-					//fileNameChannel <- cachedFileName
-					fileName = cachedFileName
+					//globals.playerFile <- cachedFileName
+					//only work when it is downloaded
+					if isDownloadedPath(cachedFileName) {
+						fileName = cachedFileName
+					} else { //else reset
+						cachedFileName = ""
+						//TODO fix channel issue again to not duplicate code
+						playerPosition = 0
+						globals.playerState = -1
+						globals.Playing = ""
+						globals.LengthOfFile = 0 //set length
+						//then clean up
+						if chain != nil {
+							chain.Release()
+							chain = nil
+						}
+						if inFile != nil {
+							inFile.Release()
+							inFile = nil
+						}
+						if outFile != nil {
+							outFile.Release()
+							outFile = nil
+						}
+					}
 				}
 			case 1: //case 1 pause
 				//save time and file
@@ -134,6 +157,7 @@ func play(exit chan bool) {
 				playerPosition = 0
 				globals.playerState = -1
 				globals.Playing = ""
+				cachedFileName = ""
 				globals.LengthOfFile = 0 //set length
 				//then clean up
 				if chain != nil {

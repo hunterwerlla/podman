@@ -77,8 +77,16 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry, g *gocui.G
 }
 
 func isDownloaded(entry PodcastEntry) bool {
+	_, ok := globals.Config.Downloaded[entry.GUID]
+	if ok {
+		return true
+	}
+	return false
+}
+
+func isDownloadedPath(path string) bool {
 	for _, item := range globals.Config.Downloaded {
-		if entry.Link == item.Link {
+		if item.Link == path {
 			return true
 		}
 	}
