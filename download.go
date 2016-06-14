@@ -49,21 +49,22 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry, g *gocui.G
 		return config, err
 	}
 	//actually download
-	//make a progress bar length of the content
-	globals.downloadProgress = pb.New(int(link.ContentLength))
-	globals.downloadProgress.SetUnits(pb.U_BYTES)
-	globals.downloadProgress.Format("[=-]")
-	globals.downloadProgress.Start()
-	defer globals.downloadProgress.Finish()
-	//TODO break this up and fix it
-	if g != nil {
-		view, _ := g.View("player")
-		globals.downloadProgress.Output = view
+	if globals.downloadProgress != nil {
+		//make a progress bar length of the content
+		globals.downloadProgress.Add(int(link.ContentLength))
+	} else {
+		globals.downloadProgress = pb.New(int(link.ContentLength))
+		globals.downloadProgress.SetUnits(pb.U_BYTES)
+		globals.downloadProgress.Format("[=-]")
+		globals.downloadProgress.Start()
+		defer globals.downloadProgress.Finish()
+		globals.downloadProgress.Output = &downloadProgressText
 	}
 	writeTo := io.MultiWriter(file, globals.downloadProgress)
 	_, err = io.Copy(writeTo, link.Body)
 	//stop download progress bar
 	globals.downloadProgress = nil
+	downloadProgressText.Truncate(0)
 	if err != nil {
 		return config, err
 	}
@@ -86,7 +87,7 @@ func isDownloaded(entry PodcastEntry) bool {
 
 func isDownloadedPath(path string) bool {
 	for _, item := range globals.Config.Downloaded {
-		if item.Link == path {
+		if strings.Contains(item.Link, path) {
 			return true
 		}
 	}

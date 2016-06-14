@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	playerPosition int = 0
+	playerPosition int = -1
 	startTime      time.Time
 )
 
@@ -20,53 +20,39 @@ func play(exit chan bool) {
 	_, w, _ := os.Pipe()
 	os.Stderr = w
 	var (
-		chain          *sox.EffectsChain = nil
-		inFile         *sox.Format       = nil
-		outFile        *sox.Format       = nil
-		cachedFileName string            = ""
-		fileName       string            = ""
-		status         int               = -1
+		chain   *sox.EffectsChain = nil
+		inFile  *sox.Format       = nil
+		outFile *sox.Format       = nil
+		status  int               = _nothing
 	)
 	if !sox.Init() {
 		panic("Unable to start the player")
 	}
 	defer sox.Quit()
 	for {
-		//wait for a signal or go if we already have a file name
-		if fileName != "" {
-			status = -1
-		} else {
-			status = -1
-			fileName = ""
-			select {
-			case fileName = <-globals.playerFile:
-			case status = <-globals.playerControl:
-			}
+		status = _nothing
+		toPlay := ""
+		select {
+		case toPlay = <-globals.playerFile:
+		case status = <-globals.playerControl:
 		}
 		//if filname is not empty, then new filename recieved
-		if fileName != "" && status == -1 {
-			//when switching stop before playing new file
-			if chain != nil {
-				chain.Release()
-				chain = nil
+		if toPlay != "" || globals.playerState == _play {
+			if toPlay != "" {
+				globals.Playing = toPlay
 			}
-			if inFile != nil {
-				inFile.Release()
-				inFile = nil
+			globals.playerState = _play
+			inFile = sox.OpenRead(globals.Playing)
+			if playerPosition == -1 {
+				playerPosition = 0
 			}
-			if outFile != nil {
-				outFile.Release()
-				outFile = nil
-			}
-			inFile = sox.OpenRead(fileName)
 			//forward to the position
-			//formula taken from example 2 of SoX
+			//formula taken from example 2 of goSoX
 			if playerPosition != 0 {
 				seek := uint64(float64(playerPosition)*float64(inFile.Signal().Rate())*float64((inFile.Signal().Channels())) + 0.5)
 				seek -= seek % uint64(inFile.Signal().Channels())
 				inFile.Seek(seek)
 			}
-			//TODO make it work on windows too
 			outFile = sox.OpenWrite("default", inFile.Signal(), nil, "alsa")
 			if outFile == nil {
 				outFile = sox.OpenWrite("default", inFile.Signal(), nil, "pulseaudio")
@@ -75,6 +61,7 @@ func play(exit chan bool) {
 				}
 			}
 			//Now actually play
+			//play block
 			chain = sox.CreateEffectsChain(inFile.Encoding(), outFile.Encoding())
 			//make it output
 			interm_signal := inFile.Signal().Copy()
@@ -90,55 +77,24 @@ func play(exit chan bool) {
 			e.Release()
 			//start the timer which keeps track of position in the file
 			startTime = time.Now()
+			globals.LengthOfFile = getLengthOfFile(globals.Playing) //set length
 			//process which also plays
-			globals.playerState = 0                          //change state to play
-			globals.Playing = fileName                       //set filename
-			globals.LengthOfFile = getLengthOfFile(fileName) //set length
 			go chain.Flow()
-			//reset status and filename
-			fileName = ""
-			status = -1
-		} else if status != -1 {
+		} else {
 			switch status {
-			case -1:
-				//should not happen TODO error
-			case 0: //case 0 play, only works after pause
+			case _nothing:
+				//should not happen
+			case _play: //case 0 play, only works after pause
 				if playerPosition == -1 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
-					//TODO fix this channel issue which makes no sense and makes the code worse
-					//globals.playerFile <- cachedFileName
-					//only work when it is downloaded
-					if isDownloadedPath(cachedFileName) {
-						fileName = cachedFileName
-					} else { //else reset
-						cachedFileName = ""
-						//TODO fix channel issue again to not duplicate code
-						playerPosition = 0
-						globals.playerState = -1
-						globals.Playing = ""
-						globals.LengthOfFile = 0 //set length
-						//then clean up
-						if chain != nil {
-							chain.Release()
-							chain = nil
-						}
-						if inFile != nil {
-							inFile.Release()
-							inFile = nil
-						}
-						if outFile != nil {
-							outFile.Release()
-							outFile = nil
-						}
-					}
+					globals.playerState = _play
+					globals.playerFile <- globals.Playing
 				}
-			case 1: //case 1 pause
+			case _pause: //case 1 pause
 				//save time and file
 				playerPosition += int(time.Since(startTime).Seconds())
-				cachedFileName = inFile.Filename()
-				globals.playerState = 1
-				globals.Playing = ""
+				globals.playerState = _pause
 				//then stop and clear data
 				if chain != nil {
 					chain.Release()
@@ -152,12 +108,11 @@ func play(exit chan bool) {
 					outFile.Release()
 					outFile = nil
 				}
-			case 2: //case 2 stop
+			case _stop:
 				//reset position
-				playerPosition = 0
-				globals.playerState = -1
+				playerPosition = -1
+				globals.playerState = _nothing
 				globals.Playing = ""
-				cachedFileName = ""
 				globals.LengthOfFile = 0 //set length
 				//then clean up
 				if chain != nil {
@@ -172,13 +127,12 @@ func play(exit chan bool) {
 					outFile.Release()
 					outFile = nil
 				}
-			case 3: //case 3 skip ahead
+			case _ff: //case 3 skip ahead
 				//save time and file
 				if playerPosition == -1 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
 					playerPosition += int(time.Since(startTime).Seconds()) + globals.Config.forwardSkipLength
-					fileName = inFile.Filename()
 					//then stop and clear data
 					if chain != nil {
 						chain.Release()
@@ -193,13 +147,12 @@ func play(exit chan bool) {
 						outFile = nil
 					}
 				}
-			case 4: //case 4 rewind
+			case _rw: //case 4 rewind
 				//save time and file
 				if playerPosition == -1 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
 					playerPosition += int(time.Since(startTime).Seconds()) - globals.Config.backwardSkipLength
-					fileName = inFile.Filename()
 					//then stop and clear data
 					if chain != nil {
 						chain.Release()
@@ -214,7 +167,7 @@ func play(exit chan bool) {
 						outFile = nil
 					}
 				}
-			case 5: //exit
+			case _exit:
 				goto exit //break out of loop for cleanup
 			}
 		}

@@ -52,6 +52,7 @@ func main() {
 		//now a goroutine that updates every second
 		update := time.NewTicker(time.Millisecond * 1000).C
 		stopTick := make(chan bool)
+		defer close(stopTick)
 		go func() {
 			for {
 				select {
@@ -129,8 +130,6 @@ func main() {
 		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
-		//clean up on exit
-		close(stopTick)
 	}
 	globals.playerControl <- 5   //tell it to exit
 	writeConfig(*globals.Config) //update config

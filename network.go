@@ -21,6 +21,10 @@ func searchItunes(term string) ([]Podcast, error) {
 		return make([]Podcast, 0), errors.New("error cannot connect to itunes server")
 	}
 	defer resp.Body.Close()
+	//empty body is also error
+	if resp.ContentLength == 0 {
+		return make([]Podcast, 0), errors.New("error cannot connect to itunes server")
+	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return make([]Podcast, 0), errors.New("Error cannot read web page")

@@ -5,6 +5,25 @@ import (
 	"time"
 )
 
+//player consts
+const (
+	_nothing = iota
+	_play    = iota
+	_pause   = iota
+	_stop    = iota
+	_ff      = iota
+	_rw      = iota
+	_exit    = iota
+)
+
+//view constants
+const (
+	_subscribed = iota
+	_podcast    = iota
+	_search     = iota
+	_downloaded = iota
+)
+
 type Configuration struct {
 	StorageLocation    string
 	UpKeybind          string
@@ -56,6 +75,7 @@ type cachedPodcast struct {
 	Podcasts []PodcastEntry
 	Checked  time.Time
 }
+
 type PodcastEntrySlice []PodcastEntry
 
 //TODO make this better
