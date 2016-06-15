@@ -303,10 +303,6 @@ func switchDeleteDownloaded(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func quitGui(g *gocui.Gui, v *gocui.View) error {
-	return gocui.ErrQuit
-}
-
 func togglePlayerState(g *gocui.Gui, v *gocui.View) error {
 	//pause so will not enter invalid state when pressing the spacebar a lot
 	time.Sleep(time.Millisecond * 50)
@@ -332,4 +328,8 @@ func skipPlayerBackward(g *gocui.Gui, v *gocui.View) error {
 	time.Sleep(time.Millisecond * 50)
 	globals.playerControl <- _rw
 	return nil
+}
+
+func quitGui(g *gocui.Gui, v *gocui.View) error {
+	return gocui.ErrQuit
 }

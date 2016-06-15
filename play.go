@@ -13,12 +13,11 @@ var (
 )
 
 //this runs on its own thread to start/stop and select the media that is playing, it will also skip ahead in the future
-//TODO make it skip ahead
-//Control reference: 0 is play, 1 is pause, 2 is stop, 3 is skip ahead, 4 is reverse
 func play(exit chan bool) {
-	//get rid of all stderr data
+	//get rid of all stderr and stdout data
 	_, w, _ := os.Pipe()
 	os.Stderr = w
+	os.Stdout = w
 	var (
 		chain   *sox.EffectsChain = nil
 		inFile  *sox.Format       = nil
@@ -37,7 +36,20 @@ func play(exit chan bool) {
 		case status = <-globals.playerControl:
 		}
 		//if filname is not empty, then new filename recieved
-		if toPlay != "" || globals.playerState == _play {
+		if toPlay != "" {
+			//first clean up
+			if chain != nil {
+				chain.Release()
+				chain = nil
+			}
+			if inFile != nil {
+				inFile.Release()
+				inFile = nil
+			}
+			if outFile != nil {
+				outFile.Release()
+				outFile = nil
+			}
 			if toPlay != "" {
 				globals.Playing = toPlay
 			}

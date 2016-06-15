@@ -131,8 +131,7 @@ func main() {
 			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 		}
 	}
-	globals.playerControl <- 5   //tell it to exit
-	writeConfig(*globals.Config) //update config
-	//wait for player to clean up
+	writeConfig(*globals.Config)   //update config
+	globals.playerControl <- _exit //tell it to exit
 	<-playerExit
 }
