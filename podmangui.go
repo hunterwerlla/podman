@@ -14,9 +14,9 @@ var (
 	selectedPodcast        Podcast
 	selectedPodcastEntries []PodcastEntry
 	selectedPodcastSearch  []Podcast
-	stateView              int = 0 //0 is listSubscribed, 1 is listPodcast, 2 is listSearch
+	stateView              int = _subscribed
 	scrollingOffset        int = 0
-	playerOutputState      int = 0 //0 is show player, 1 is show downloading, only used when playing and downloading
+	playerOutputState      int = _show_player
 	downloadProgressText   bytes.Buffer
 )
 
@@ -247,7 +247,8 @@ func printPlayer(g *gocui.Gui) error {
 		numFilled = 1 //have to have at least 1
 	}
 	//actually print player
-	if (downloadProgressText.Len() == 0) || (playerOutputState == 0 && downloadProgressText.Len() != 0) {
+	if (downloadProgressText.Len() == 0) || (playerOutputState == _show_player && downloadProgressText.Len() != 0) {
+		//if playing and valid length of file
 		if globals.playerState == _play && globals.LengthOfFile != 0 {
 			playingMessage = fmt.Sprintf("%d/%d", playingPlayerPosition, count)
 			numEmpty := int((1.0 - float64(percent)) * float64(maxX-10.0-2.0))
@@ -261,13 +262,13 @@ func printPlayer(g *gocui.Gui) error {
 		}
 		fmt.Fprintf(v, playingMessage)
 		if globals.downloadProgress != nil {
-			playerOutputState = 1 //alternate state
+			playerOutputState = _show_download //alternate state
 		}
 	} else { //else print progress bar
 		fmt.Fprintf(v, "%s", downloadProgressText.String())
 		//only alternate if playing
 		if globals.playerState == _play {
-			playerOutputState = 0
+			playerOutputState = _show_player
 		}
 	}
 	return nil

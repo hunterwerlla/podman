@@ -164,20 +164,6 @@ func play(exit chan bool) {
 					if playerPosition > int(globals.LengthOfFile) {
 						playerPosition = int(globals.LengthOfFile) - 1
 					}
-					//then stop and clear data
-					if chain != nil {
-						chain.DeleteAll()
-						chain.Release()
-						chain = nil
-					}
-					if inFile != nil {
-						inFile.Release()
-						inFile = nil
-					}
-					if outFile != nil {
-						outFile.Release()
-						outFile = nil
-					}
 					globals.playerState = _resume
 					toPlay = globals.Playing
 				}
@@ -189,20 +175,6 @@ func play(exit chan bool) {
 					playerPosition += int(time.Since(startTime).Seconds()) - globals.Config.backwardSkipLength
 					if playerPosition < 0 {
 						playerPosition = 0
-					}
-					//then stop and clear data
-					if chain != nil {
-						chain.DeleteAll()
-						chain.Release()
-						chain = nil
-					}
-					if inFile != nil {
-						inFile.Release()
-						inFile = nil
-					}
-					if outFile != nil {
-						outFile.Release()
-						outFile = nil
 					}
 					globals.playerState = _resume
 					toPlay = globals.Playing

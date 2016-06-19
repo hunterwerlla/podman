@@ -25,6 +25,12 @@ const (
 	_downloaded = iota
 )
 
+//player output states
+const (
+	_show_player   = iota
+	_show_download = iota
+)
+
 type Configuration struct {
 	StorageLocation    string
 	UpKeybind          string
