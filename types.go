@@ -8,6 +8,7 @@ import (
 //player consts
 const (
 	_nothing = iota
+	_resume  = iota
 	_play    = iota
 	_pause   = iota
 	_stop    = iota

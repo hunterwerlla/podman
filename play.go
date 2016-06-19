@@ -31,8 +31,9 @@ func play(exit chan bool) {
 	defer sox.Quit()
 	for {
 		status = _nothing
-		//this is to make resume work properly
-		if toPlay != globals.Playing || toPlay == "" {
+		//this is to make resume work properly, if toplay is the same we are resuming, if toplay is blank we are strting
+		//and if the state is anything other than resuming
+		if toPlay == "" || globals.playerState != _resume {
 			toPlay = ""
 			select {
 			case toPlay = <-globals.playerFile:
@@ -59,10 +60,9 @@ func play(exit chan bool) {
 				globals.Playing = toPlay
 				toPlay = ""
 			}
-			globals.playerState = _play
 			inFile = sox.OpenRead(globals.Playing)
 			//we changed files
-			if toPlay != globals.Playing {
+			if globals.playerState != _resume {
 				playerPosition = 0
 			}
 			if playerPosition == -1 {
@@ -102,6 +102,10 @@ func play(exit chan bool) {
 			globals.LengthOfFile = getLengthOfFile(globals.Playing) //set length
 			//process which also plays
 			go chain.Flow()
+			//clear toplay
+			toPlay = ""
+			//set state to playing
+			globals.playerState = _play
 		} else {
 			switch status {
 			case _nothing:
@@ -110,8 +114,8 @@ func play(exit chan bool) {
 				if playerPosition == -1 {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
-					globals.playerState = _play
-					globals.playerFile <- globals.Playing
+					globals.playerState = _resume
+					toPlay = globals.Playing
 				}
 			case _pause: //case 1 pause
 				//save time and file
@@ -174,7 +178,8 @@ func play(exit chan bool) {
 						outFile.Release()
 						outFile = nil
 					}
-					globals.playerFile <- globals.Playing
+					globals.playerState = _resume
+					toPlay = globals.Playing
 				}
 			case _rw: //case 4 rewind
 				//save time and file
@@ -199,7 +204,8 @@ func play(exit chan bool) {
 						outFile.Release()
 						outFile = nil
 					}
-					globals.playerFile <- globals.Playing
+					globals.playerState = _resume
+					toPlay = globals.Playing
 				}
 			case _exit:
 				goto exit //break out of loop for cleanup
