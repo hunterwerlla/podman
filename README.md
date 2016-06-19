@@ -14,14 +14,15 @@ PgUp to skip forward
 
 PgDown to skip backward
 
-&gt;spacebar&lt; to pause and resume
+&lt;spacebar&gt; to pause and resume
 
-&gt;enter&lt; to do actions (play, download, switch to detailed view, subscribe)
+&lt;enter&gt; to do actions (play, download, switch to detailed view, subscribe)
 
 
 #Dependencies
-Podman requires [gocui](https://github.com/jroimartin/gocui) for the interface, [go-sox](https://github.com/krig/go-sox) to play audio files, [sanitize](https://github.com/kennygrant/sanitize), [go-rss](https://github.com/ungerik/go-rss), and [pb](https://github.com/cheggaaa/pb). 
-Searching is based on ITunes the largest source of podcasts
+Podman requires [gocui](https://github.com/jroimartin/gocui) for the interface, [go-sox](https://github.com/krig/go-sox) to play audio files, [sanitize](https://github.com/kennygrant/sanitize), [go-rss](https://github.com/ungerik/go-rss), and [pb](https://github.com/cheggaaa/pb).
+
+Searching is based on ITunes, the largest source of podcasts.
 #Why?
 I did not find any usable integrated podcast clients for the command line. There are a few that rely on RSS, but none that integrate searching and playback as well. I wanted a complete package like gPodder for the command line, but better.
 #TODO
