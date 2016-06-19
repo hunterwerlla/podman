@@ -3,13 +3,21 @@ Podman is a terminal based podcast client written in Go.
 
 #Default Key Binds
 ∧ to scroll up 
+
 ∨ to scroll down
-< to search
-> to see downloaded
+
+&lt; to search
+
+&gt; to see downloaded
+
 PgUp to skip forward
+
 PgDown to skip backward
-<spacebar> to pause and resume
-<enter> to do actions (play, download, switch to detailed view, subscribe)
+
+&gt;spacebar&lt; to pause and resume
+
+&gt;enter&lt; to do actions (play, download, switch to detailed view, subscribe)
+
 
 #Dependencies
 Podman requires [gocui](https://github.com/jroimartin/gocui) for the interface, [go-sox](https://github.com/krig/go-sox) to play audio files, [sanitize](https://github.com/kennygrant/sanitize), [go-rss](https://github.com/ungerik/go-rss), and [pb](https://github.com/cheggaaa/pb). 
