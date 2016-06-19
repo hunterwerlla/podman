@@ -23,6 +23,7 @@ func play(exit chan bool) {
 		inFile  *sox.Format       = nil
 		outFile *sox.Format       = nil
 		status  int               = _nothing
+		toPlay  string            = ""
 	)
 	if !sox.Init() {
 		panic("Unable to start the player")
@@ -30,15 +31,19 @@ func play(exit chan bool) {
 	defer sox.Quit()
 	for {
 		status = _nothing
-		toPlay := ""
-		select {
-		case toPlay = <-globals.playerFile:
-		case status = <-globals.playerControl:
+		//this is to make resume work properly
+		if toPlay != globals.Playing || toPlay == "" {
+			toPlay = ""
+			select {
+			case toPlay = <-globals.playerFile:
+			case status = <-globals.playerControl:
+			}
 		}
 		//if filname is not empty, then new filename recieved
 		if toPlay != "" {
 			//first clean up
 			if chain != nil {
+				chain.DeleteAll()
 				chain.Release()
 				chain = nil
 			}
@@ -52,9 +57,14 @@ func play(exit chan bool) {
 			}
 			if toPlay != "" {
 				globals.Playing = toPlay
+				toPlay = ""
 			}
 			globals.playerState = _play
 			inFile = sox.OpenRead(globals.Playing)
+			//we changed files
+			if toPlay != globals.Playing {
+				playerPosition = 0
+			}
 			if playerPosition == -1 {
 				playerPosition = 0
 			}
@@ -109,6 +119,7 @@ func play(exit chan bool) {
 				globals.playerState = _pause
 				//then stop and clear data
 				if chain != nil {
+					chain.DeleteAll()
 					chain.Release()
 					chain = nil
 				}
@@ -128,6 +139,7 @@ func play(exit chan bool) {
 				globals.LengthOfFile = 0 //set length
 				//then clean up
 				if chain != nil {
+					chain.DeleteAll()
 					chain.Release()
 					chain = nil
 				}
@@ -145,8 +157,12 @@ func play(exit chan bool) {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
 					playerPosition += int(time.Since(startTime).Seconds()) + globals.Config.forwardSkipLength
+					if playerPosition > int(globals.LengthOfFile) {
+						playerPosition = int(globals.LengthOfFile) - 1
+					}
 					//then stop and clear data
 					if chain != nil {
+						chain.DeleteAll()
 						chain.Release()
 						chain = nil
 					}
@@ -158,6 +174,7 @@ func play(exit chan bool) {
 						outFile.Release()
 						outFile = nil
 					}
+					globals.playerFile <- globals.Playing
 				}
 			case _rw: //case 4 rewind
 				//save time and file
@@ -165,8 +182,12 @@ func play(exit chan bool) {
 					fmt.Println("Have to select a file to play to resume playback")
 				} else {
 					playerPosition += int(time.Since(startTime).Seconds()) - globals.Config.backwardSkipLength
+					if playerPosition < 0 {
+						playerPosition = 0
+					}
 					//then stop and clear data
 					if chain != nil {
+						chain.DeleteAll()
 						chain.Release()
 						chain = nil
 					}
@@ -178,6 +199,7 @@ func play(exit chan bool) {
 						outFile.Release()
 						outFile = nil
 					}
+					globals.playerFile <- globals.Playing
 				}
 			case _exit:
 				goto exit //break out of loop for cleanup
