@@ -248,6 +248,9 @@ func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
 func playDownload(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
 	var toPlay PodcastEntry
+	if len(selectedPodcastEntries) <= position {
+		return nil
+	}
 	guid := selectedPodcastEntries[position].GUID
 	if isDownloaded(selectedPodcastEntries[position]) == false {
 		go download(*globals.Config, selectedPodcast, selectedPodcastEntries[position], g) //download async
