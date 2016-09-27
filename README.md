@@ -28,4 +28,4 @@ I did not find any usable integrated podcast clients for the command line. There
 #TODO
 * Fix total length of download progress bar
 * more advanced searching (categories, etc)
-* strip HTML from descriptions again
+* store data in a database to make it make more sense and to make scrolling make more sense
