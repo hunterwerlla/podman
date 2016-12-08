@@ -9,8 +9,9 @@ import (
 )
 
 //global state
+//TODO get rid of this whole awful thing
 var (
-	globals GlobalState = GlobalState{"", nil, nil, nil, -1, 0, nil}
+	globals GlobalState = GlobalState{"", nil, nil, nil, -1, 0, nil, 0}
 )
 
 func main() {
@@ -41,97 +42,103 @@ func main() {
 		for end != true {
 			end = CliInterface(globals.playerFile, globals.playerControl)
 		}
-	} else {
-		g := gocui.NewGui()
-		if err := g.Init(); err != nil {
-			panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
-		}
-		defer g.Close()
-		//set main window
-		g.SetLayout(guiHandler)
-		//now a goroutine that updates every second
-		update := time.NewTicker(time.Millisecond * 1000).C
-		stopTick := make(chan bool)
-		defer close(stopTick)
-		go func() {
-			for {
-				select {
-				case <-update:
-					g.Execute(guiHandler)
-				case <-stopTick:
-					return
-				}
-			}
-		}()
-		//allow mouse
-		g.Mouse = true
-		//global keybinds
-		if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quitGui); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("", gocui.KeyArrowDown, gocui.ModNone, cursorDown); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("", gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		//player controls
-		if err := g.SetKeybinding("", gocui.KeySpace, gocui.ModNone, togglePlayerState); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("", gocui.KeyPgup, gocui.ModNone, skipPlayerForward); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("", gocui.KeyPgdn, gocui.ModNone, skipPlayerBackward); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		//actions that are not switching views
-		if err := g.SetKeybinding("", gocui.KeyDelete, gocui.ModNone, switchDeleteDownloaded); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("podcast", gocui.KeyEnter, gocui.ModNone, playDownload); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("downloads", gocui.KeyEnter, gocui.ModNone, playDownload); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("searchResults", gocui.KeyEnter, gocui.ModNone, switchSubscribe); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		//switching views
-		if err := g.SetKeybinding("subscribed", gocui.KeyArrowLeft, gocui.ModNone, switchListSearch); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("subscribed", gocui.KeyArrowRight, gocui.ModNone, switchListDownloads); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("subscribed", gocui.KeyEnter, gocui.ModNone, switchListPodcast); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("subscribed", gocui.KeyDelete, gocui.ModNone, switchRemoveSubscription); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("podcast", gocui.KeyArrowLeft, gocui.ModNone, switchListSubscribed); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("search", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("search", gocui.KeyEnter, gocui.ModNone, switchKeyword); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("searchResults", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		if err := g.SetKeybinding("downloads", gocui.KeyArrowLeft, gocui.ModNone, switchListSubscribed); err != nil {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
-		//main loop
-		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}
+		return
 	}
-	writeConfig(*globals.Config)   //update config
-	globals.playerControl <- _exit //tell it to exit
-	<-playerExit
+	g, err := gocui.NewGui(gocui.OutputNormal)
+	if err != nil {
+		fmt.Println(err)
+		panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
+	}
+	defer g.Close()
+	g.SetManagerFunc(guiHandler)
+	setKeybinds(g)
+	g.Mouse = true
+	refreshGui(g)
+	//main loop
+	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	writeConfig(*globals.Config)   //update config on exit
+	globals.playerControl <- _exit //tell player to exit
+	<-playerExit                   //wait for player to exit to finally exit
+}
+
+func refreshGui(g *gocui.Gui) {
+	update := time.NewTicker(time.Millisecond * 500).C
+	stopTick := make(chan bool)
+	defer close(stopTick)
+	go func() {
+		for {
+			select {
+			case <-update:
+				g.Execute(guiHandler)
+			case <-stopTick:
+				return
+			}
+		}
+	}()
+}
+
+func setKeybinds(g *gocui.Gui) {
+	//global keybinds
+	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quitGui); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("", gocui.KeyArrowDown, gocui.ModNone, cursorDown); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("", gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	//player controls
+	if err := g.SetKeybinding("", gocui.KeySpace, gocui.ModNone, togglePlayerState); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("", gocui.KeyPgup, gocui.ModNone, skipPlayerForward); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("", gocui.KeyPgdn, gocui.ModNone, skipPlayerBackward); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	//actions that are not switching views
+	if err := g.SetKeybinding("", gocui.KeyDelete, gocui.ModNone, switchDeleteDownloaded); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("podcast", gocui.KeyEnter, gocui.ModNone, playDownload); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("downloads", gocui.KeyEnter, gocui.ModNone, playDownload); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("searchResults", gocui.KeyEnter, gocui.ModNone, switchSubscribe); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	//switching views
+	if err := g.SetKeybinding("subscribed", gocui.KeyArrowLeft, gocui.ModNone, switchListSearch); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("subscribed", gocui.KeyArrowRight, gocui.ModNone, switchListDownloads); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("subscribed", gocui.KeyEnter, gocui.ModNone, switchListPodcast); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("subscribed", gocui.KeyDelete, gocui.ModNone, switchRemoveSubscription); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("podcast", gocui.KeyArrowLeft, gocui.ModNone, switchListSubscribed); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("search", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("search", gocui.KeyEnter, gocui.ModNone, switchKeyword); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("searchResults", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
+	if err := g.SetKeybinding("downloads", gocui.KeyArrowLeft, gocui.ModNone, switchListSubscribed); err != nil {
+		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+	}
 }

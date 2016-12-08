@@ -75,6 +75,7 @@ type GlobalState struct {
 	playerState      int
 	LengthOfFile     uint64
 	downloadProgress *pb.ProgressBar
+	playerPosition   int
 }
 
 type cachedPodcast struct {

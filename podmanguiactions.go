@@ -245,28 +245,6 @@ func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
 	writeConfig(*globals.Config)
 	return nil
 }
-func playDownload(g *gocui.Gui, v *gocui.View) error {
-	_, position := v.Cursor() //get cursor position to select
-	var toPlay PodcastEntry
-	if len(selectedPodcastEntries) <= position {
-		return nil
-	}
-	guid := selectedPodcastEntries[position].GUID
-	if isDownloaded(selectedPodcastEntries[position]) == false {
-		go download(*globals.Config, selectedPodcast, selectedPodcastEntries[position], g) //download async
-	} else {
-		if thing := globals.Config.Downloaded[guid]; thing != (PodcastEntry{}) {
-			toPlay = thing
-		} else {
-			return nil //TODO real error
-		}
-		//now play
-		if toPlay := toPlay.StorageLocation; toPlay != "" {
-			globals.playerFile <- toPlay
-		}
-	}
-	return nil
-}
 
 func switchRemoveSubscription(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
@@ -301,6 +279,29 @@ func switchDeleteDownloaded(g *gocui.Gui, v *gocui.View) error {
 		//update if stateview is downloads, update due to custom sort
 		if stateView == _downloaded {
 			switchListDownloads(g, v)
+		}
+	}
+	return nil
+}
+
+func playDownload(g *gocui.Gui, v *gocui.View) error {
+	_, position := v.Cursor() //get cursor position to select
+	var toPlay PodcastEntry
+	if len(selectedPodcastEntries) <= position {
+		return nil
+	}
+	guid := selectedPodcastEntries[position].GUID
+	if isDownloaded(selectedPodcastEntries[position]) == false {
+		go download(*globals.Config, selectedPodcast, selectedPodcastEntries[position], g) //download async
+	} else {
+		if podcast := globals.Config.Downloaded[guid]; podcast != (PodcastEntry{}) { //if it is not empty
+			globals.Playing = podcast.StorageLocation
+		} else {
+			return nil //TODO real error
+		}
+		//now play
+		if toPlay := toPlay.StorageLocation; toPlay != "" {
+			globals.playerControl <- _play
 		}
 	}
 	return nil

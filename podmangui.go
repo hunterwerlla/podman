@@ -37,7 +37,7 @@ func listSubscribed(g *gocui.Gui) error {
 		return err
 	}
 	//now set current view to main view
-	if err := g.SetCurrentView("subscribed"); err != nil {
+	if _, err := g.SetCurrentView("subscribed"); err != nil {
 		return err
 	}
 	if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
@@ -66,7 +66,7 @@ func listPodcast(g *gocui.Gui) error {
 	d.Clear()
 	v.Clear()
 	//set current view to podcast
-	if err := g.SetCurrentView("podcast"); err != nil {
+	if _, err := g.SetCurrentView("podcast"); err != nil {
 		return err
 	}
 	if err := v.SetCursor(0, 0+yCursorOffset); err != nil {
@@ -103,7 +103,10 @@ func listSearch(g *gocui.Gui) error {
 	}
 	//set view to search if selectedPodcasts are not null aka we have searched and have results
 	if selectedPodcastSearch == nil {
-		g.SetCurrentView("search")
+		_, err = g.SetCurrentView("search")
+		if err != nil {
+			return err
+		}
 	}
 	if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
 		return err
@@ -123,7 +126,7 @@ func listDownloaded(g *gocui.Gui) error {
 	if err != nil {
 		return err
 	}
-	err = g.SetCurrentView("downloads")
+	_, err = g.SetCurrentView("downloads")
 	if err != nil {
 		return err
 	}
