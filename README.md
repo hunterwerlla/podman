@@ -1,7 +1,7 @@
-#Podman - a terminal based podcast client
+# Podman - a terminal based podcast client
 Podman is a terminal based podcast client written in Go.
 
-#Default Key Binds
+# Default Key Binds
 ∧ to scroll up 
 
 ∨ to scroll down
@@ -19,13 +19,13 @@ PgDown to skip backward
 &lt;enter&gt; to do actions (play, download, switch to detailed view, subscribe)
 
 
-#Dependencies
+# Dependencies
 Podman requires [gocui](https://github.com/jroimartin/gocui) for the interface, [go-sox](https://github.com/krig/go-sox) to play audio files, [sanitize](https://github.com/kennygrant/sanitize), [go-rss](https://github.com/ungerik/go-rss), and [pb](https://github.com/cheggaaa/pb).
 
 Searching utilizes ITunes becuase it is the largest repository of podcasts.
-#Why?
+# Why?
 I did not find any usable integrated podcast clients for the command line. There are a few that rely on RSS, but none that integrate searching and playback as well. I wanted a complete package like gPodder for the command line, but better.
-#TODO
+# TODO
 * Fix total length of download progress bar
 * more advanced searching (categories, etc)
 * store data in a database
