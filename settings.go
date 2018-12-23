@@ -44,12 +44,12 @@ func writeConfig(c Configuration) {
 		//using default settings because cannot write settings
 		panic("could not save settings, cannot continue")
 	}
-	defer func(){
+	defer func() {
 		err := config.Close()
 		if err != nil {
 
 		}
-		}()
+	}()
 	jsonSettings, err := json.Marshal(&c)
 	if err != nil {
 		panic("could not save settings, cannot continue")

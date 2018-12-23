@@ -22,7 +22,7 @@ func main() {
 	if err == nil {
 		defaultStorage = usr.HomeDir + "/" + "podman"
 	}
-	//make configurationg struct that holds default settings
+	//make configuration struct that holds default settings
 	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", 30, 10, make([]Podcast, 0), make(map[string]PodcastEntry, 0), make([]cachedPodcast, 0)}
 	//read command line flags
 	noTui := flag.Bool("no-gui", false, "Select whether to use the GUI or not")
@@ -40,7 +40,7 @@ func main() {
 	if *noTui == true {
 		end := false
 		for end != true {
-			end = CliInterface(globals.playerFile, globals.playerControl)
+			end = CliCommand(globals.playerFile, globals.playerControl)
 		}
 		return
 	}
