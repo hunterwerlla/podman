@@ -6,13 +6,14 @@ import (
 	"strings"
 )
 
-func CliInterface(playerFile chan string, playerControl chan int) bool {
+func CliCommand(playerFile chan string, playerControl chan int) bool {
 	command := ""
-	fmt.Scanf("%s", &command)
-	command = strings.ToLower(command)
-	if command == "" {
+	_, err := fmt.Scanf("%s", &command)
+	if err != nil {
+		fmt.Printf("error reading from command line %s", err)
 		return false
 	}
+	command = strings.ToLower(command)
 	if command == "exit" {
 		return true
 	} else if command[0] == '/' {
