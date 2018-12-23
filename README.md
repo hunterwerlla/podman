@@ -20,13 +20,16 @@ PgDown to skip backward
 
 
 # Dependencies
-Podman requires [gocui](https://github.com/jroimartin/gocui) for the interface, [go-sox](https://github.com/krig/go-sox) to play audio files, [sanitize](https://github.com/kennygrant/sanitize), [go-rss](https://github.com/ungerik/go-rss), and [pb](https://github.com/cheggaaa/pb).
+Podman requires:
 
-Searching utilizes ITunes becuase it is the largest repository of podcasts.
+[gocui](https://github.com/jroimartin/gocui) for the interface, [go-sox](https://github.com/krig/go-sox) to play audio files, [sanitize](https://github.com/kennygrant/sanitize), [go-rss](https://github.com/ungerik/go-rss), and [pb](https://github.com/cheggaaa/pb).
+
+
+Searching utilizes ITunes.
+
 # Why?
 I did not find any usable integrated podcast clients for the command line. There are a few that rely on RSS, but none that integrate searching and playback as well. I wanted a complete package like gPodder for the command line, but better.
 # TODO
 * Fix total length of download progress bar
 * more advanced searching (categories, etc)
 * store data in a database
-* continue code cleanup removing awful messes

@@ -261,7 +261,7 @@ func printPlayer(g *gocui.Gui) error {
 		} else if globals.playerState == _stop {
 			playingMessage = "stopped"
 		} else {
-			playingMessage = "Play Something"
+			playingMessage = "Nothing playing"
 		}
 		fmt.Fprintf(v, playingMessage)
 		if globals.downloadProgress != nil {
