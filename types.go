@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gopkg.in/cheggaaa/pb.v1"
+	"github.com/cheggaaa/pb"
 	"time"
 )
 

@@ -71,7 +71,7 @@ func refreshGui(g *gocui.Gui) {
 		for {
 			select {
 			case <-update:
-				g.Execute(guiHandler)
+				g.Update(guiHandler)
 			case <-stopTick:
 				return
 			}
