@@ -38,7 +38,7 @@ func readConfig(c Configuration) Configuration {
 }
 
 //save current config to file
-func writeConfig(c Configuration) {
+func writeConfig(c *Configuration) {
 	config, err := os.Create("./config.json")
 	if err != nil {
 		//using default settings because cannot write settings

@@ -17,7 +17,7 @@ var (
 	downloadProgress *pb.ProgressBar
 )
 
-func download(configuration Configuration, podcast Podcast, ep PodcastEpisode, g *gocui.Gui) (Configuration, error) {
+func download(configuration *Configuration, podcast Podcast, ep PodcastEpisode, g *gocui.Gui) (*Configuration, error) {
 	atomic.AddInt32(&downloading, 1)
 	defer func() { atomic.AddInt32(&downloading, -1) }()
 	//get rid of all stdout data
@@ -80,8 +80,6 @@ func download(configuration Configuration, podcast Podcast, ep PodcastEpisode, g
 	ep.StorageLocation = fullPathFile
 	//file download good so add it to downloaded
 	configuration.Downloaded[ep.GUID] = ep
-	config = &configuration //update configuration
-	writeConfig(*config)
 	return configuration, nil
 }
 

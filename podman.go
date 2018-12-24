@@ -66,7 +66,7 @@ func runTui(playerExit chan bool) {
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
-	writeConfig(*config)   //update config on exit
+	writeConfig(config)    //update config on exit
 	player.DisposePlayer() //tell player to exit
 	<-playerExit           //wait for player to exit to finally exit
 }

@@ -45,7 +45,7 @@ func CliCommand(config *Configuration) bool {
 							podcastAddDescription(&result)
 							//then add
 							config.Subscribed = append(config.Subscribed, result)
-							writeConfig(*config) //update config on disk
+							writeConfig(config) //update config on disk
 							fmt.Println("subscribed and written to disk")
 							goto searchEnd //considered harmful
 						}
@@ -74,7 +74,7 @@ func CliCommand(config *Configuration) bool {
 				//then remove this one
 				fmt.Printf("Removing %s\n", config.Subscribed[i].CollectionName)
 				config.Subscribed = append(config.Subscribed[:i], config.Subscribed[i+1:]...)
-				writeConfig(*config)
+				writeConfig(config)
 			}
 		}
 	} else if command == "show" {
@@ -119,7 +119,8 @@ func CliCommand(config *Configuration) bool {
 				}
 				for i, entry := range entries {
 					if i == epNum {
-						_, err := download(*config, pc, entry, nil)
+						_, err := download(config, pc, entry, nil)
+						writeConfig(config)
 						if err != nil {
 							fmt.Printf("Error when downloading: %s\n", err.Error())
 						} else {
