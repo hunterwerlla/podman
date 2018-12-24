@@ -14,8 +14,8 @@ import (
 
 //search itunes for a podcast with the string given, then returns an array of Podcast
 func searchItunes(term string) ([]Podcast, error) {
-	const itunesUrl string = "https://itunes.apple.com/search?entity=podcast&term="
-	searchURL := itunesUrl + "\"" + term + "\""
+	const itunesURL string = "https://itunes.apple.com/search?entity=podcast&term="
+	searchURL := itunesURL + "\"" + term + "\""
 	resp, err := http.Get(searchURL)
 	if err != nil {
 		return make([]Podcast, 0), errors.New("error cannot connect to itunes server")
@@ -49,9 +49,9 @@ func podcastAddDescription(podcast *Podcast) error {
 }
 
 //TODO strip HTML
-func getPodcastEntries(podcast Podcast, input string) ([]PodcastEntry, error) {
-	var cacheEntry *cachedPodcast = nil
-	for _, thing := range globals.Config.Cached {
+func getPodcastEntries(podcast Podcast, input string) ([]PodcastEpisode, error) {
+	var cacheEntry *cachedPodcast
+	for _, thing := range config.Cached {
 		if podcast.CollectionName == thing.Type.CollectionName && podcast.ArtistName == thing.Type.ArtistName {
 			cacheEntry = &thing
 			break
@@ -71,11 +71,11 @@ func getPodcastEntries(podcast Podcast, input string) ([]PodcastEntry, error) {
 			return cacheEntry.Podcasts, nil
 		}
 		fmt.Println("Unable to fetch RSS data, try again later")
-		return make([]PodcastEntry, 0), nil
+		return make([]PodcastEpisode, 0), nil
 	}
-	entries := make([]PodcastEntry, 0)
+	entries := make([]PodcastEpisode, 0)
 	for _, item := range feed.Item {
-		//change it from Item type from RSS to built in PodcastEntry type, while also removing whitespace
+		//change it from Item type from RSS to built in PodcastEpisode type, while also removing whitespace
 		//it also strips HTML tags because a lot of podcasts include them in their RSS data
 		content := sanitize.HTML(strings.Replace(item.Content, "\n", " ", -1))
 		title := sanitize.HTML(strings.Replace(item.Title, "\n", " ", -1))
@@ -93,13 +93,13 @@ func getPodcastEntries(podcast Podcast, input string) ([]PodcastEntry, error) {
 		} else {
 			guid = content + title + item.GUID
 		}
-		entries = append(entries, PodcastEntry{feed.Title, title, description, url, content, guid, ""})
+		entries = append(entries, PodcastEpisode{feed.Title, title, description, url, content, guid, ""})
 	}
 	//if it's not nil we are updating
 	if cacheEntry != nil {
 		*cacheEntry = cachedPodcast{podcast, entries, time.Now()}
 	} else { //otherwise we are creating
-		globals.Config.Cached = append(globals.Config.Cached, cachedPodcast{podcast, entries, time.Now()})
+		config.Cached = append(config.Cached, cachedPodcast{podcast, entries, time.Now()})
 	}
 	return entries, nil
 }

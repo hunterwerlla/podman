@@ -37,7 +37,7 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 		x, y := v.Cursor()
 		if stateView == tui.Subscribed {
 			//starts at 1
-			if y >= len(globals.Config.Subscribed[scrollingOffset:]) {
+			if y >= len(config.Subscribed[scrollingOffset:]) {
 				return nil
 			}
 		} else if stateView == tui.Podcast || stateView == tui.Downloaded {
@@ -52,9 +52,9 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 					g.SetCurrentView("searchResults")
 					yCursorOffset = 0
 					return nil
-				} else { //else don't allow scrolling down
-					return nil
 				}
+				// don't allow scrolling down
+				return nil
 			}
 			//starts at 1
 			if y >= len(selectedPodcastSearch[scrollingOffset:]) {
@@ -156,14 +156,14 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 func switchListPodcast(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
 	yCursorOffset = 0         //reset cursor
-	if len(globals.Config.Subscribed) == 0 {
+	if len(config.Subscribed) == 0 {
 		return nil //TODO return an actual error
 	}
-	if position > len(globals.Config.Subscribed) {
+	if position > len(config.Subscribed) {
 		return nil
 	}
-	selectedPodcast = globals.Config.Subscribed[position-1] //select the podcast put in memory
-	selectedPodcastEntries = nil                            //now delete the cache
+	selectedPodcast = config.Subscribed[position-1] //select the podcast put in memory
+	selectedPodcastEntries = nil                    //now delete the cache
 	selectedPodcastSearch = nil
 	scrollingOffset = 0
 	//change layout
@@ -211,11 +211,11 @@ func switchListDownloads(g *gocui.Gui, v *gocui.View) error {
 	listDownloaded(g)
 	g.SetCurrentView("downloads")
 	//now sort the map and put in selectedPodcastEntries
-	var tmp []PodcastEntry
-	for _, thing := range globals.Config.Downloaded {
+	var tmp []PodcastEpisode
+	for _, thing := range config.Downloaded {
 		tmp = append(tmp, thing)
 	}
-	sort.Sort(PodcastEntrySlice(tmp))
+	sort.Sort(PodcastEpisodeSlice(tmp))
 	selectedPodcastEntries = tmp
 	return nil
 }
@@ -243,34 +243,34 @@ func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
 	}
 	selectedPodcast = selectedPodcastSearch[position-1] //select the podcast put in memory
 	//now check if already added
-	for _, thing := range globals.Config.Subscribed {
+	for _, thing := range config.Subscribed {
 		if selectedPodcast.ArtistName == thing.ArtistName && selectedPodcast.CollectionName == thing.CollectionName {
 			//already subscribed
 			return nil
 		}
 	}
-	globals.Config.Subscribed = append(globals.Config.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
-	writeConfig(*globals.Config)
+	config.Subscribed = append(config.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
+	writeConfig(*config)
 	return nil
 }
 
 func switchRemoveSubscription(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
-	if len(globals.Config.Subscribed) == 0 {
+	if len(config.Subscribed) == 0 {
 		return nil //TODO return an actual error
 	}
-	if position > len(globals.Config.Subscribed) {
+	if position > len(config.Subscribed) {
 		return nil
 	}
-	item := globals.Config.Subscribed[position-1]
+	item := config.Subscribed[position-1]
 	//now remove from cache
-	for i, thing := range globals.Config.Cached {
+	for i, thing := range config.Cached {
 		if thing.Type.ArtistName == item.ArtistName && thing.Type.CollectionName == item.CollectionName {
-			globals.Config.Cached = append(globals.Config.Cached[0:i], globals.Config.Cached[i+1:]...)
+			config.Cached = append(config.Cached[0:i], config.Cached[i+1:]...)
 			break
 		}
 	}
-	globals.Config.Subscribed = append(globals.Config.Subscribed[0:position-1], globals.Config.Subscribed[position:]...)
+	config.Subscribed = append(config.Subscribed[0:position-1], config.Subscribed[position:]...)
 	return nil
 }
 func switchDeleteDownloaded(g *gocui.Gui, v *gocui.View) error {
@@ -278,10 +278,10 @@ func switchDeleteDownloaded(g *gocui.Gui, v *gocui.View) error {
 	if stateView == tui.Subscribed || stateView == tui.Downloaded { //in subscribed is very different from in download list
 		if isDownloaded(selectedPodcastEntries[position]) {
 			//remove entry in list, then remove entry on disk
-			toDelete, ok := globals.Config.Downloaded[selectedPodcastEntries[position].GUID]
+			toDelete, ok := config.Downloaded[selectedPodcastEntries[position].GUID]
 			if ok {
 				os.Remove(toDelete.StorageLocation)
-				delete(globals.Config.Downloaded, toDelete.GUID)
+				delete(config.Downloaded, toDelete.GUID)
 			}
 		}
 		//update if stateview is downloads, update due to custom sort
@@ -294,15 +294,15 @@ func switchDeleteDownloaded(g *gocui.Gui, v *gocui.View) error {
 
 func playDownload(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
-	var toPlay PodcastEntry
+	var toPlay PodcastEpisode
 	if len(selectedPodcastEntries) <= position {
 		return nil
 	}
 	guid := selectedPodcastEntries[position].GUID
 	if isDownloaded(selectedPodcastEntries[position]) == false {
-		go download(*globals.Config, selectedPodcast, selectedPodcastEntries[position], g) //download async
+		go download(*config, selectedPodcast, selectedPodcastEntries[position], g) //download async
 	} else {
-		if podcast := globals.Config.Downloaded[guid]; podcast != (PodcastEntry{}) { //if it is not empty
+		if podcast := config.Downloaded[guid]; podcast != (PodcastEpisode{}) { //if it is not empty
 			player.SetPlaying(podcast.StorageLocation)
 		} else {
 			return nil //TODO real error

@@ -13,11 +13,11 @@ import (
 var (
 	yCursorOffset          = 0
 	selectedPodcast        Podcast
-	selectedPodcastEntries []PodcastEntry
+	selectedPodcastEntries []PodcastEpisode
 	selectedPodcastSearch  []Podcast
 	stateView              = tui.Subscribed
 	scrollingOffset        = 0
-	playerOutputState      = _show_player
+	playerOutputState      = ShowPlayer
 	downloadProgressText   bytes.Buffer
 )
 
@@ -41,7 +41,7 @@ func listSubscribed(g *gocui.Gui) error {
 	if _, err = g.SetCurrentView("subscribed"); err != nil {
 		return err
 	}
-	if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
+	if err = v.SetCursor(0, 1+yCursorOffset); err != nil {
 		return err
 	}
 	return err
@@ -67,16 +67,16 @@ func listPodcast(g *gocui.Gui) error {
 	d.Clear()
 	v.Clear()
 	//set current view to podcast
-	if _, err := g.SetCurrentView("podcast"); err != nil {
+	if _, err = g.SetCurrentView("podcast"); err != nil {
 		return err
 	}
-	if err := v.SetCursor(0, 0+yCursorOffset); err != nil {
+	if err = v.SetCursor(0, 0+yCursorOffset); err != nil {
 		return err
 	}
 	//first print the podcast description
-	err = printPodcastDescription(d)
+	_ = printPodcastDescription(d)
 	//print the list
-	err = printListPodcast(v)
+	_ = printListPodcast(v)
 	return err
 }
 
@@ -141,7 +141,7 @@ func printListPodcast(v *gocui.View) error {
 	v.Clear()
 	setProperties(v)
 	v.Highlight = true
-	var err error = nil
+	var err error
 	//if nil then cache them
 	if selectedPodcastEntries == nil {
 		selectedPodcastEntries, err = getPodcastEntries(selectedPodcast, selectedPodcast.FeedURL)
@@ -175,12 +175,12 @@ func printSubscribed(v *gocui.View) error {
 	setProperties(v)
 	v.Highlight = true
 	//if none print message and return
-	if len(globals.Config.Subscribed) == 0 {
+	if len(config.Subscribed) == 0 {
 		fmt.Fprintln(v, "Scroll left to search for podcasts to subscribe to.")
 		return nil
 	}
 	fmt.Fprintf(v, "Podcast Name - Artist - Description\n")
-	for _, item := range globals.Config.Subscribed[scrollingOffset:] {
+	for _, item := range config.Subscribed[scrollingOffset:] {
 		_, xWidth := v.Size()
 		fmt.Fprintf(v, "%s\n", formatPodcast(item, xWidth))
 	}
@@ -235,9 +235,8 @@ func printPlayer(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		err = nil
 	}
-	maxX, maxY = v.Size()
+	maxX, _ = v.Size()
 	setProperties(v)
 	v.Clear()
 	playingPlayerPosition := 0
@@ -254,7 +253,7 @@ func printPlayer(g *gocui.Gui) error {
 		numFilled = 1 //have to have at least 1
 	}
 	//actually print player
-	if (downloadProgressText.Len() == 0) || (playerOutputState == _show_player && downloadProgressText.Len() != 0) {
+	if (downloadProgressText.Len() == 0) || (playerOutputState == ShowPlayer && downloadProgressText.Len() != 0) {
 		//if playing and valid length of file
 		if player.GetPlayerState() == player.Play && playingFileLength != 0 {
 			playingMessage = fmt.Sprintf("%d/%d", playingPlayerPosition, playingFileLength)
@@ -269,13 +268,13 @@ func printPlayer(g *gocui.Gui) error {
 		}
 		fmt.Fprintf(v, playingMessage)
 		if downloadInProgress() {
-			playerOutputState = _show_download //alternate state
+			playerOutputState = ShowDownload //alternate state
 		}
 	} else { //else print progress bar
 		fmt.Fprintf(v, "%s", downloadProgressText.String())
 		//only alternate if playing
 		if player.GetPlayerState() == player.Play {
-			playerOutputState = _show_player
+			playerOutputState = ShowPlayer
 		}
 	}
 	return nil

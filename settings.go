@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"encoding/json" //for settings
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -16,10 +16,10 @@ func readConfig(c Configuration) Configuration {
 	if err != nil {
 		//config does not exist so build one out of the defult settings
 		//first check if the storage location is ok
-		if _, err := os.Stat(c.StorageLocation); os.IsNotExist(err) {
+		if _, err = os.Stat(c.StorageLocation); os.IsNotExist(err) {
 			//path does not exist try to make
 			fmt.Printf("making folder at:%s\n", c.StorageLocation)
-			err := os.MkdirAll(c.StorageLocation, 0700)
+			err = os.MkdirAll(c.StorageLocation, 0700)
 			if err != nil {
 				fmt.Println("cannot make folder everyting kill")
 				//failed to create folder to store, store files in same directory as program
@@ -45,9 +45,9 @@ func writeConfig(c Configuration) {
 		panic("could not save settings, cannot continue")
 	}
 	defer func() {
-		err := config.Close()
+		err = config.Close()
 		if err != nil {
-
+			fmt.Printf("Unable to save config!")
 		}
 	}()
 	jsonSettings, err := json.Marshal(&c)

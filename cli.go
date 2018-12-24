@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// CliCommand runs the main loop for a CLI based session
 func CliCommand(playerFile chan string, playerControl chan player.PlayerState) bool {
 	command := ""
 	_, err := fmt.Scanf("%s", &command)
@@ -43,8 +44,8 @@ func CliCommand(playerFile chan string, playerControl chan player.PlayerState) b
 							//add description to it
 							podcastAddDescription(&result)
 							//then add
-							globals.Config.Subscribed = append(globals.Config.Subscribed, result)
-							writeConfig(*globals.Config) //update config on disk
+							config.Subscribed = append(config.Subscribed, result)
+							writeConfig(*config) //update config on disk
 							fmt.Println("subscribed and written to disk")
 							goto searchEnd //considered harmful
 						}
@@ -57,7 +58,7 @@ func CliCommand(playerFile chan string, playerControl chan player.PlayerState) b
 		searchEnd:
 		}
 	} else if command == "ls" {
-		for i, entry := range globals.Config.Subscribed {
+		for i, entry := range config.Subscribed {
 			//do nothing
 			fmt.Printf("%2d\t%2s\t%15s\n", i, entry.CollectionName, entry.ArtistName)
 		}
@@ -68,12 +69,12 @@ func CliCommand(playerFile chan string, playerControl chan player.PlayerState) b
 			fmt.Println("please use in the form of \"rm <number>\"")
 			return false
 		}
-		for i := range globals.Config.Subscribed {
+		for i := range config.Subscribed {
 			if i == num {
 				//then remove this one
-				fmt.Printf("Removing %s\n", globals.Config.Subscribed[i].CollectionName)
-				globals.Config.Subscribed = append(globals.Config.Subscribed[:i], globals.Config.Subscribed[i+1:]...)
-				writeConfig(*globals.Config)
+				fmt.Printf("Removing %s\n", config.Subscribed[i].CollectionName)
+				config.Subscribed = append(config.Subscribed[:i], config.Subscribed[i+1:]...)
+				writeConfig(*config)
 			}
 		}
 	} else if command == "show" {
@@ -83,7 +84,7 @@ func CliCommand(playerFile chan string, playerControl chan player.PlayerState) b
 			fmt.Println("please use in the form of \"show <number>\"")
 			return false
 		}
-		for i, pc := range globals.Config.Subscribed {
+		for i, pc := range config.Subscribed {
 			if i == num {
 				entries, err := getPodcastEntries(pc, pc.FeedURL)
 				if err != nil {
@@ -109,7 +110,7 @@ func CliCommand(playerFile chan string, playerControl chan player.PlayerState) b
 			fmt.Println("please use in the form of \"download <podcast number> <episode number>\"")
 			return false
 		}
-		for ii, pc := range globals.Config.Subscribed {
+		for ii, pc := range config.Subscribed {
 			if ii == pcNum {
 				entries, err := getPodcastEntries(pc, pc.FeedURL)
 				if err != nil {
@@ -118,7 +119,7 @@ func CliCommand(playerFile chan string, playerControl chan player.PlayerState) b
 				}
 				for i, entry := range entries {
 					if i == epNum {
-						_, err := download(*globals.Config, pc, entry, nil)
+						_, err := download(*config, pc, entry, nil)
 						if err != nil {
 							fmt.Printf("Error when downloading: %s\n", err.Error())
 						} else {
@@ -142,7 +143,7 @@ func CliCommand(playerFile chan string, playerControl chan player.PlayerState) b
 			return false
 		}
 		i := 0
-		for _, value := range globals.Config.Downloaded {
+		for _, value := range config.Downloaded {
 			if i == pcNum {
 				//send storage location to player
 				playerFile <- value.StorageLocation
@@ -163,13 +164,13 @@ func CliCommand(playerFile chan string, playerControl chan player.PlayerState) b
 	} else if command == "rewind" {
 		playerControl <- player.Rewind
 	} else if command == "ls-download" {
-		for i, podcast := range globals.Config.Downloaded {
+		for i, podcast := range config.Downloaded {
 			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)
 		}
 	} else if command == "help" {
 		fmt.Println("Type ls to list your subscriptions, ls-download to list downloads, start <num> to play, stop to stop, resume to resume, /<string> to search, exit to exit, help to show this")
 	} else if command == "settings" {
-		fmt.Println(*globals.Config)
+		fmt.Println(*config)
 	} else {
 		fmt.Println("Type help for a list of commands")
 	}

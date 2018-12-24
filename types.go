@@ -6,10 +6,11 @@ import (
 
 //player output states
 const (
-	_show_player   = iota
-	_show_download = iota
+	ShowPlayer   = iota
+	ShowDownload = iota
 )
 
+// Configuration Stores the application configuration
 type Configuration struct {
 	StorageLocation    string
 	UpKeybind          string
@@ -21,10 +22,11 @@ type Configuration struct {
 	forwardSkipLength  int
 	backwardSkipLength int
 	Subscribed         []Podcast
-	Downloaded         map[string]PodcastEntry
+	Downloaded         map[string]PodcastEpisode
 	Cached             []cachedPodcast
 }
 
+// Podcast Holds one podcast
 type Podcast struct {
 	ArtistName     string
 	CollectionName string
@@ -32,7 +34,8 @@ type Podcast struct {
 	Description    string
 }
 
-type PodcastEntry struct {
+// PodcastEpisode Holds one episode of a podcast
+type PodcastEpisode struct {
 	// The title of the podcast according to ITunes
 	PodcastTitle    string
 	Title           string
@@ -43,34 +46,30 @@ type PodcastEntry struct {
 	StorageLocation string
 }
 
+// ItunesSearch returns an array of podcasts that are found by itunes
 type ItunesSearch struct {
 	Results []Podcast
 }
 
-type GlobalState struct {
-	Playing    string
-	Config     *Configuration
-	playerFile chan string
-}
-
 type cachedPodcast struct {
 	Type     Podcast
-	Podcasts []PodcastEntry
+	Podcasts []PodcastEpisode
 	Checked  time.Time
 }
 
-type PodcastEntrySlice []PodcastEntry
+// PodcastEpisodeSlice takes a slice of a list of podcasts
+type PodcastEpisodeSlice []PodcastEpisode
 
 //TODO make this better
 //now functions on slice of podcast entry
-func (entries PodcastEntrySlice) Len() int {
+func (entries PodcastEpisodeSlice) Len() int {
 	return len(entries)
 }
 
-func (entries PodcastEntrySlice) Less(i, j int) bool {
+func (entries PodcastEpisodeSlice) Less(i, j int) bool {
 	return entries[i].Title < entries[j].Title
 }
 
-func (entries PodcastEntrySlice) Swap(i, j int) {
+func (entries PodcastEpisodeSlice) Swap(i, j int) {
 	entries[i], entries[j] = entries[j], entries[i]
 }

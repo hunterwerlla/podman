@@ -122,7 +122,7 @@ func FastForwardPlayer() {
 		fmt.Println("Have to select a file to play to resume playback")
 	} else {
 		// TODO fix forward skip length
-		// playerPosition += int(time.Since(startTime).Seconds()) + globals.Config.forwardSkipLength
+		// playerPosition += int(time.Since(startTime).Seconds()) + config.forwardSkipLength
 		if playerPosition > int(lengthOfFile) {
 			playerPosition = int(lengthOfFile) - 1
 		}
@@ -136,7 +136,7 @@ func rewind() {
 		fmt.Println("Have to select a file to play to resume playback")
 	} else {
 		// TODO fix rewind skip length
-		// playerPosition += int(time.Since(startTime).Seconds()) - globals.Config.backwardSkipLength
+		// playerPosition += int(time.Since(startTime).Seconds()) - config.backwardSkipLength
 		if playerPosition < 0 {
 			playerPosition = 0
 		}
