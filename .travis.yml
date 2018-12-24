@@ -8,9 +8,19 @@ os:
 dist: xenial
 
 before_install:
-  - sudo apt-get install -y sox libsox-dev
+    - sudo apt-get install -y sox libsox-dev
 
 env:
-  - GO111MODULE=on
+    - GO111MODULE=on
 
 install: true
+
+jobs:
+    include:
+        deploy:
+            provider: releases
+            api_key: $GITHUB_OAUTH_TOKEN
+            file: podman
+            skip_cleanup: true
+            on:
+                tags: true
