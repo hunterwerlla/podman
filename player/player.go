@@ -12,11 +12,15 @@ var (
 	lengthOfFile   uint64
 	playerControl  chan PlayerState
 	fileChannel    chan string
+	exitChannel    chan bool
 	playing        string
 	playerState    PlayerState
 )
 
-func StartPlayer(playerState chan PlayerState, fileChannel chan string, exit chan bool) {
+func StartPlayer() {
+	playerState := make(chan PlayerState)
+	fileChannel := make(chan string)
+	exit := make(chan bool)
 	go startPlayer(playerState, fileChannel, exit)
 }
 
@@ -29,6 +33,7 @@ func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string,
 	// os.Stdout = unused
 	playerControl = playerState
 	fileChannel = fileSelectionChannel
+	exitChannel = exit
 	var (
 		chain      *sox.EffectsChain = nil
 		inputFile  *sox.Format       = nil
@@ -75,6 +80,7 @@ func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string,
 
 func DisposePlayer() {
 	playerControl <- ExitPlayer
+	<-exitChannel
 }
 
 func changePlayerPosition(inputFile *sox.Format) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	. "github.com/hunterwerlla/podman/configuration"
 	"github.com/hunterwerlla/podman/player"
 	"strconv"
 	"strings"
@@ -10,9 +11,8 @@ import (
 // CliCommand runs the main loop for a CLI based session
 func CliCommand(config *Configuration) bool {
 	command := ""
-	_, err := fmt.Scanf("%s\n", &command)
+	_, err := fmt.Scanf("%s", &command)
 	if err != nil {
-		fmt.Printf("error reading from command line %s", err)
 		return false
 	}
 	command = strings.ToLower(command)
@@ -86,7 +86,7 @@ func CliCommand(config *Configuration) bool {
 		}
 		for i, pc := range config.Subscribed {
 			if i == num {
-				entries, err := getPodcastEntries(pc, pc.FeedURL)
+				entries, err := getPodcastEntries(pc, pc.FeedURL, &config.Cached)
 				if err != nil {
 					fmt.Printf("%s when attempting to parse RSS\n", err.Error())
 					break
@@ -112,7 +112,7 @@ func CliCommand(config *Configuration) bool {
 		}
 		for ii, pc := range config.Subscribed {
 			if ii == pcNum {
-				entries, err := getPodcastEntries(pc, pc.FeedURL)
+				entries, err := getPodcastEntries(pc, pc.FeedURL, &config.Cached)
 				if err != nil {
 					fmt.Printf("%s when attempting to parse RSS\n", err.Error())
 					break

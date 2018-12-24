@@ -2,6 +2,7 @@ package main
 
 //this holds things that really have no other place
 import (
+	. "github.com/hunterwerlla/podman/configuration"
 	"github.com/jroimartin/gocui"
 )
 

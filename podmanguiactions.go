@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	. "github.com/hunterwerlla/podman/configuration"
 	"github.com/hunterwerlla/podman/player"
 	"github.com/hunterwerlla/podman/tui"
 	"github.com/jroimartin/gocui"

@@ -4,22 +4,33 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/hunterwerlla/podman/configuration"
 	"github.com/hunterwerlla/podman/player"
 	"github.com/hunterwerlla/podman/tui"
 	"github.com/jroimartin/gocui"
 	"strings"
 )
 
+const (
+	ShowPlayer   = iota
+	ShowDownload = iota
+)
+
 var (
 	yCursorOffset          = 0
-	selectedPodcast        Podcast
-	selectedPodcastEntries []PodcastEpisode
-	selectedPodcastSearch  []Podcast
+	selectedPodcast        configuration.Podcast
+	selectedPodcastEntries []configuration.PodcastEpisode
+	selectedPodcastSearch  []configuration.Podcast
 	stateView              = tui.Subscribed
 	scrollingOffset        = 0
 	playerOutputState      = ShowPlayer
 	downloadProgressText   bytes.Buffer
+	config                 *configuration.Configuration
 )
+
+func SetTuiConfiguration(configuration *configuration.Configuration) {
+	config = configuration
+}
 
 func listSubscribed(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
@@ -144,7 +155,7 @@ func printListPodcast(v *gocui.View) error {
 	var err error
 	//if nil then cache them
 	if selectedPodcastEntries == nil {
-		selectedPodcastEntries, err = getPodcastEntries(selectedPodcast, selectedPodcast.FeedURL)
+		selectedPodcastEntries, err = getPodcastEntries(selectedPodcast, selectedPodcast.FeedURL, &config.Cached)
 	}
 	if err != nil {
 		fmt.Fprintln(v, "Cannot download podcast list, check your connection")

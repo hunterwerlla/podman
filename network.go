@@ -4,6 +4,7 @@ import (
 	"encoding/json" //for reading itunes data
 	"errors"
 	"fmt"
+	. "github.com/hunterwerlla/podman/configuration"
 	"github.com/kennygrant/sanitize" //for stripping html tags
 	"github.com/ungerik/go-rss"
 	"io/ioutil"
@@ -49,9 +50,9 @@ func podcastAddDescription(podcast *Podcast) error {
 }
 
 //TODO strip HTML
-func getPodcastEntries(podcast Podcast, input string) ([]PodcastEpisode, error) {
-	var cacheEntry *cachedPodcast
-	for _, thing := range config.Cached {
+func getPodcastEntries(podcast Podcast, input string, podcastCache *[]CachedPodcast) ([]PodcastEpisode, error) {
+	var cacheEntry *CachedPodcast
+	for _, thing := range *podcastCache {
 		if podcast.CollectionName == thing.Type.CollectionName && podcast.ArtistName == thing.Type.ArtistName {
 			cacheEntry = &thing
 			break
@@ -97,9 +98,9 @@ func getPodcastEntries(podcast Podcast, input string) ([]PodcastEpisode, error) 
 	}
 	//if it's not nil we are updating
 	if cacheEntry != nil {
-		*cacheEntry = cachedPodcast{podcast, entries, time.Now()}
+		*cacheEntry = CachedPodcast{podcast, entries, time.Now()}
 	} else { //otherwise we are creating
-		config.Cached = append(config.Cached, cachedPodcast{podcast, entries, time.Now()})
+		*podcastCache = append(*podcastCache, CachedPodcast{podcast, entries, time.Now()})
 	}
 	return entries, nil
 }

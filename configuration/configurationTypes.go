@@ -1,14 +1,6 @@
-package main
+package configuration
 
-import (
-	"time"
-)
-
-//player output states
-const (
-	ShowPlayer   = iota
-	ShowDownload = iota
-)
+import "time"
 
 // Configuration Stores the application configuration
 type Configuration struct {
@@ -23,7 +15,7 @@ type Configuration struct {
 	backwardSkipLength int
 	Subscribed         []Podcast
 	Downloaded         map[string]PodcastEpisode
-	Cached             []cachedPodcast
+	Cached             []CachedPodcast
 }
 
 // Podcast Holds one podcast
@@ -46,30 +38,17 @@ type PodcastEpisode struct {
 	StorageLocation string
 }
 
-// ItunesSearch returns an array of podcasts that are found by itunes
-type ItunesSearch struct {
-	Results []Podcast
-}
-
-type cachedPodcast struct {
+// CachedPodcast a struct that holds podcasts cached in memory/on disk
+type CachedPodcast struct {
 	Type     Podcast
 	Podcasts []PodcastEpisode
 	Checked  time.Time
 }
 
+// ItunesSearch returns an array of podcasts that are found by itunes
+type ItunesSearch struct {
+	Results []Podcast
+}
+
 // PodcastEpisodeSlice takes a slice of a list of podcasts
 type PodcastEpisodeSlice []PodcastEpisode
-
-//TODO make this better
-//now functions on slice of podcast entry
-func (entries PodcastEpisodeSlice) Len() int {
-	return len(entries)
-}
-
-func (entries PodcastEpisodeSlice) Less(i, j int) bool {
-	return entries[i].Title < entries[j].Title
-}
-
-func (entries PodcastEpisodeSlice) Swap(i, j int) {
-	entries[i], entries[j] = entries[j], entries[i]
-}

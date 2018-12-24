@@ -3,55 +3,48 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/hunterwerlla/podman/configuration"
 	"github.com/hunterwerlla/podman/player"
 	"github.com/jroimartin/gocui"
 	"os/user"
 	"time"
 )
 
-//global state
-//TODO get rid of this global config
-var (
-	config *Configuration
-)
-
 func main() {
 	//get users home dir, the default storage
 	usr, err := user.Current()
+	// TODO fix this
 	defaultStorage := "."
 	//if no error, sore in home directory
 	if err == nil {
-		defaultStorage = usr.HomeDir + "/" + "podman"
+		defaultStorage = usr.HomeDir + "/.config" + "/podman"
 	}
 	//read config file
-	// TODO move to own package and add a make default
-	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", 30, 10, make([]Podcast, 0), make(map[string]PodcastEpisode, 0), make([]cachedPodcast, 0)}
+	config := configuration.CreateDefault()
+	config.StorageLocation = defaultStorage
 	config = readConfig(config)
 	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the GUI or not")
 	flag.Parse()
 	//make the channels used by player
-	playerState := make(chan player.PlayerState)
-	playerFile := make(chan string)
-	playerExit := make(chan bool)
-	player.StartPlayer(playerState, playerFile, playerExit)
+	player.StartPlayer()
 	//made a decision to use TUI or not
 	if *noTui == true {
 		runCui(&config)
-		return
 	} else {
-		runTui(playerExit)
+		runTui(&config)
 	}
 }
 
-func runCui(configuration *Configuration) {
+func runCui(config *configuration.Configuration) {
 	end := false
 	for end != true {
-		end = CliCommand(configuration)
+		end = CliCommand(config)
 	}
 }
 
-func runTui(playerExit chan bool) {
+func runTui(config *configuration.Configuration) {
+	SetTuiConfiguration(config)
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
 		fmt.Println(err)
@@ -67,8 +60,7 @@ func runTui(playerExit chan bool) {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
 	writeConfig(config)    //update config on exit
-	player.DisposePlayer() //tell player to exit
-	<-playerExit           //wait for player to exit to finally exit
+	player.DisposePlayer() //tell player to exit + wait
 }
 
 func refreshGui(g *gocui.Gui) {
