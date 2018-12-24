@@ -18,14 +18,6 @@ const (
 	ExitPlayer     PlayerState = iota
 )
 
-//view constants
-const (
-	_subscribed = iota
-	_podcast    = iota
-	_search     = iota
-	_downloaded = iota
-)
-
 //player output states
 const (
 	_show_player   = iota

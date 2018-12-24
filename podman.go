@@ -138,7 +138,7 @@ func setKeybinds(g *gocui.Gui) {
 	if err := g.SetKeybinding("search", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
-	if err := g.SetKeybinding("search", gocui.KeyEnter, gocui.ModNone, switchKeyword); err != nil {
+	if err := g.SetKeybinding("search", gocui.KeyEnter, gocui.ModNone, searchKeyword); err != nil {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
 	if err := g.SetKeybinding("searchResults", gocui.KeyArrowRight, gocui.ModNone, switchListSubscribed); err != nil {

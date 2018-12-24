@@ -14,6 +14,5 @@ require (
 	github.com/ungerik/go-rss v0.0.0-20180730053843-e6dab863fc93
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
 	golang.org/x/sys v0.0.0-20181221143128-b4a75ba826a6 // indirect
-	golang.org/x/tools v0.0.0-20181221235234-d00ac6d27372 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.27 // indirect
 )

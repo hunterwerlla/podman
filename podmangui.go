@@ -4,19 +4,20 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/hunterwerlla/podman/tui"
 	"github.com/jroimartin/gocui"
 	"strings"
 	"time"
 )
 
 var (
-	yCursorOffset          int = 0
+	yCursorOffset          = 0
 	selectedPodcast        Podcast
 	selectedPodcastEntries []PodcastEntry
 	selectedPodcastSearch  []Podcast
-	stateView              int = _subscribed
-	scrollingOffset        int = 0
-	playerOutputState      int = _show_player
+	stateView              = tui.Subscribed
+	scrollingOffset        = 0
+	playerOutputState      = _show_player
 	downloadProgressText   bytes.Buffer
 )
 
