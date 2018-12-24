@@ -8,9 +8,9 @@ import (
 )
 
 // CliCommand runs the main loop for a CLI based session
-func CliCommand(playerFile chan string, playerControl chan player.PlayerState) bool {
+func CliCommand(playerFile chan string) bool {
 	command := ""
-	_, err := fmt.Scanf("%s", &command)
+	_, err := fmt.Scanf("%s\n", &command)
 	if err != nil {
 		fmt.Printf("error reading from command line %s", err)
 		return false
@@ -154,15 +154,15 @@ func CliCommand(playerFile chan string, playerControl chan player.PlayerState) b
 		fmt.Println("episode not found")
 		return false
 	} else if command == "stop" {
-		playerControl <- player.Stop
+		player.SetPlayerState(player.Stop)
 	} else if command == "pause" {
-		playerControl <- player.Pause
+		player.SetPlayerState(player.Pause)
 	} else if command == "resume" {
-		playerControl <- player.Resume
+		player.SetPlayerState(player.Resume)
 	} else if command == "ff" {
-		playerControl <- player.FastForward
+		player.SetPlayerState(player.FastForward)
 	} else if command == "rewind" {
-		playerControl <- player.Rewind
+		player.SetPlayerState(player.Rewind)
 	} else if command == "ls-download" {
 		for i, podcast := range config.Downloaded {
 			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)

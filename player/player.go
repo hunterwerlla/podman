@@ -12,18 +12,24 @@ var (
 	startTime      time.Time
 	lengthOfFile   uint64
 	playerControl  chan PlayerState
+	fileChannel    chan string
 	playing        string
 	playerState    PlayerState
 )
 
+func StartPlayer(playerState chan PlayerState, fileChannel chan string, exit chan bool) {
+	go startPlayer(playerState, fileChannel, exit)
+}
+
 //this runs on its own thread to start/stop and select the media that is playing
-func StartPlayer(exit chan bool) {
+func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string, exit chan bool) {
 	//get rid of all stderr and stdout data
 	//due to SOX outputting error messages
 	_, unused, _ := os.Pipe()
 	os.Stderr = unused
 	os.Stdout = unused
-	playerControl = make(chan PlayerState)
+	playerControl = playerState
+	fileChannel = fileSelectionChannel
 	var (
 		chain      *sox.EffectsChain = nil
 		inputFile  *sox.Format       = nil
@@ -37,12 +43,18 @@ func StartPlayer(exit chan bool) {
 	defer sox.Quit()
 	for stopToExit != true {
 		status = NothingPlaying //reset status
-		status = <-playerControl
+
+		select {
+		case status = <-playerControl:
+		case playing = <-fileChannel:
+			continue
+		}
+
 		switch status {
 		case NothingPlaying:
 			panic("invalid state when switching status, this should never happen")
 		case Play:
-			startPlayer(chain, inputFile, outputFile)
+			playFile(chain, inputFile, outputFile)
 		case Pause: //case 1 pause
 			//save time and file
 			PausePlayer()
@@ -51,15 +63,19 @@ func StartPlayer(exit chan bool) {
 			StopPlayer()
 			cleanupSoxData(chain, inputFile, outputFile)
 		case FastForward:
-			FastForwardPlayer()
+			fastForwardPlayer()
 		case Rewind:
-			rewind()
+			rewindPlayer()
 		case ExitPlayer:
 			cleanupSoxData(chain, inputFile, outputFile)
 			stopToExit = true
 		}
 	}
 	exit <- true
+}
+
+func DisposePlayer() {
+	playerControl <- ExitPlayer
 }
 
 func changePlayerPosition(inputFile *sox.Format) {
@@ -72,7 +88,8 @@ func changePlayerPosition(inputFile *sox.Format) {
 	inputFile.Seek(seek)
 }
 
-func startPlayer(chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Format) {
+func playFile(chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Format) {
+	playerState = Play
 	inputFile = sox.OpenRead(playing)
 	changePlayerPosition(inputFile)
 	//try two audio output methods
@@ -103,6 +120,7 @@ func startPlayer(chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox
 	//process which also plays
 	go chain.Flow()
 }
+
 func PausePlayer() {
 	playerPosition += int(time.Since(startTime).Seconds())
 	playerState = Pause
@@ -116,7 +134,7 @@ func StopPlayer() {
 	lengthOfFile = 0 //set length
 }
 
-func FastForwardPlayer() {
+func fastForwardPlayer() {
 	//save time and file
 	if playerPosition == -1 {
 		fmt.Println("Have to select a file to play to resume playback")
@@ -130,7 +148,7 @@ func FastForwardPlayer() {
 	}
 }
 
-func rewind() {
+func rewindPlayer() {
 	//save time and file
 	if playerPosition == -1 {
 		fmt.Println("Have to select a file to play to resume playback")
@@ -172,15 +190,11 @@ func GetPlayerState() PlayerState {
 }
 
 func SetPlayerState(state PlayerState) {
-	playerState = state
+	playerControl <- state
 }
 
 func SetPlaying(filename string) {
-	playing = filename
-}
-
-func GetControl() chan PlayerState {
-	return playerControl
+	fileChannel <- filename
 }
 
 func GetPlayerPosition() int {

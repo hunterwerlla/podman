@@ -26,19 +26,20 @@ func main() {
 	//make configuration struct that holds default settings
 	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", 30, 10, make([]Podcast, 0), make(map[string]PodcastEpisode, 0), make([]cachedPodcast, 0)}
 	//read command line flags
-	noTui := flag.Bool("no-gui", false, "Select whether to use the GUI or not")
+	noTui := flag.Bool("no-tui", false, "Select whether to use the GUI or not")
 	flag.Parse()
 	//read config file
 	config = readConfig(config)
 	//make the channels used by player
+	playerState := make(chan player.PlayerState)
 	playerFile := make(chan string)
 	playerExit := make(chan bool)
-	go player.StartPlayer(playerExit)
+	player.StartPlayer(playerState, playerFile, playerExit)
 	//made a decision to use TUI or not
 	if *noTui == true {
 		end := false
 		for end != true {
-			end = CliCommand(playerFile, player.GetControl())
+			end = CliCommand(playerFile)
 		}
 		return
 	}
@@ -56,9 +57,9 @@ func main() {
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
-	writeConfig(config)                      //update config on exit
-	player.GetControl() <- player.ExitPlayer //tell player to exit
-	<-playerExit                             //wait for player to exit to finally exit
+	writeConfig(config)    //update config on exit
+	player.DisposePlayer() //tell player to exit
+	<-playerExit           //wait for player to exit to finally exit
 }
 
 func refreshGui(g *gocui.Gui) {

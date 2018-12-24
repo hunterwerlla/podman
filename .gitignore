@@ -1,4 +1,4 @@
 *.json
 .idea
 *_string.go
-podman
+./podman

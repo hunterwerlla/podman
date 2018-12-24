@@ -9,11 +9,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"sync"
-)
-
-var (
-	playerLock sync.Mutex
 )
 
 func guiHandler(g *gocui.Gui) error {
@@ -309,37 +304,29 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 		}
 		//now play
 		if toPlay := toPlay.StorageLocation; toPlay != "" {
-			player.GetControl() <- player.Play
+			player.SetPlayerState(player.Play)
 		}
 	}
 	return nil
 }
 
 func togglePlayerState(g *gocui.Gui, v *gocui.View) error {
-	playerLock.Lock()
 	if player.GetPlayerState() == player.Play {
 		player.SetPlayerState(player.Pause)
-		player.GetControl() <- player.Pause
 	} else if player.GetPlayerState() == player.Pause {
 		player.SetPlayerState(player.Play)
-		player.GetControl() <- player.Play
 	}
-	playerLock.Unlock()
 	// needed for gocui
 	return nil
 }
 
 func skipPlayerForward(g *gocui.Gui, v *gocui.View) error {
-	playerLock.Lock()
-	player.GetControl() <- player.FastForward
-	playerLock.Unlock()
+	player.SetPlayerState(player.FastForward)
 	return nil
 }
 
 func skipPlayerBackward(g *gocui.Gui, v *gocui.View) error {
-	playerLock.Lock()
-	player.GetControl() <- player.Rewind
-	playerLock.Unlock()
+	player.SetPlayerState(player.Rewind)
 	return nil
 }
 
