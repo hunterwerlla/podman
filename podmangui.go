@@ -4,10 +4,10 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/hunterwerlla/podman/player"
 	"github.com/hunterwerlla/podman/tui"
 	"github.com/jroimartin/gocui"
 	"strings"
-	"time"
 )
 
 var (
@@ -38,7 +38,7 @@ func listSubscribed(g *gocui.Gui) error {
 		return err
 	}
 	//now set current view to main view
-	if _, err := g.SetCurrentView("subscribed"); err != nil {
+	if _, err = g.SetCurrentView("subscribed"); err != nil {
 		return err
 	}
 	if err := v.SetCursor(0, 1+yCursorOffset); err != nil {
@@ -242,11 +242,12 @@ func printPlayer(g *gocui.Gui) error {
 	v.Clear()
 	playingPlayerPosition := 0
 	playingMessage := ""
-	if globals.playerState == Play {
-		playingPlayerPosition = playerPosition + int(time.Since(startTime).Seconds())
+	if player.GetPlayerState() == player.Play {
+		// TODO fix this logic
+		playingPlayerPosition = player.GetPlayerPosition()
 	}
-	count := getLengthOfPlayingFile()
-	percent := float64(playingPlayerPosition) / float64(count)
+	playingFileLength := player.GetLengthOfPlayingFile()
+	percent := float64(playingPlayerPosition) / float64(playingFileLength)
 	//10 is width of numbers, 2 is width of ends
 	numFilled := int(percent * float64(maxX-10.0-2.0))
 	if numFilled == 0 {
@@ -255,13 +256,13 @@ func printPlayer(g *gocui.Gui) error {
 	//actually print player
 	if (downloadProgressText.Len() == 0) || (playerOutputState == _show_player && downloadProgressText.Len() != 0) {
 		//if playing and valid length of file
-		if globals.playerState == Play && getLengthOfPlayingFile() != 0 {
-			playingMessage = fmt.Sprintf("%d/%d", playingPlayerPosition, count)
+		if player.GetPlayerState() == player.Play && playingFileLength != 0 {
+			playingMessage = fmt.Sprintf("%d/%d", playingPlayerPosition, playingFileLength)
 			numEmpty := int((1.0 - float64(percent)) * float64(maxX-10.0-2.0))
 			playingMessage = fmt.Sprintf("%s%s%s%s%s%s\n", playingMessage, "[", strings.Repeat("=", numFilled-1), ">", strings.Repeat("-", numEmpty), "]")
-		} else if globals.playerState == Pause {
+		} else if player.GetPlayerState() == player.Pause {
 			playingMessage = "paused"
-		} else if globals.playerState == Stop {
+		} else if player.GetPlayerState() == player.Stop {
 			playingMessage = "stopped"
 		} else {
 			playingMessage = "Nothing playing"
@@ -273,7 +274,7 @@ func printPlayer(g *gocui.Gui) error {
 	} else { //else print progress bar
 		fmt.Fprintf(v, "%s", downloadProgressText.String())
 		//only alternate if playing
-		if globals.playerState == Play {
+		if player.GetPlayerState() == player.Play {
 			playerOutputState = _show_player
 		}
 	}

@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/hunterwerlla/podman/player"
 	"strconv"
 	"strings"
 )
 
-func CliCommand(playerFile chan string, playerControl chan PlayerState) bool {
+func CliCommand(playerFile chan string, playerControl chan player.PlayerState) bool {
 	command := ""
 	_, err := fmt.Scanf("%s", &command)
 	if err != nil {
@@ -67,7 +68,7 @@ func CliCommand(playerFile chan string, playerControl chan PlayerState) bool {
 			fmt.Println("please use in the form of \"rm <number>\"")
 			return false
 		}
-		for i, _ := range globals.Config.Subscribed {
+		for i := range globals.Config.Subscribed {
 			if i == num {
 				//then remove this one
 				fmt.Printf("Removing %s\n", globals.Config.Subscribed[i].CollectionName)
@@ -152,15 +153,15 @@ func CliCommand(playerFile chan string, playerControl chan PlayerState) bool {
 		fmt.Println("episode not found")
 		return false
 	} else if command == "stop" {
-		playerControl <- Stop
+		playerControl <- player.Stop
 	} else if command == "pause" {
-		playerControl <- Pause
+		playerControl <- player.Pause
 	} else if command == "resume" {
-		playerControl <- Resume
+		playerControl <- player.Resume
 	} else if command == "ff" {
-		playerControl <- FastForward
+		playerControl <- player.FastForward
 	} else if command == "rewind" {
-		playerControl <- Rewind
+		playerControl <- player.Rewind
 	} else if command == "ls-download" {
 		for i, podcast := range globals.Config.Downloaded {
 			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)

@@ -15,8 +15,8 @@ import (
 //search itunes for a podcast with the string given, then returns an array of Podcast
 func searchItunes(term string) ([]Podcast, error) {
 	const itunesUrl string = "https://itunes.apple.com/search?entity=podcast&term="
-	searchUrl := itunesUrl + "\"" + term + "\""
-	resp, err := http.Get(searchUrl)
+	searchURL := itunesUrl + "\"" + term + "\""
+	resp, err := http.Get(searchURL)
 	if err != nil {
 		return make([]Podcast, 0), errors.New("error cannot connect to itunes server")
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/hunterwerlla/podman/player"
 	"github.com/jroimartin/gocui"
 	"os/user"
 	"time"
@@ -12,11 +13,9 @@ import (
 //TODO get rid of this whole awful thing
 var (
 	globals = GlobalState{
-		Playing:       "",
-		Config:        nil,
-		playerFile:    nil,
-		playerControl: nil,
-		playerState:   NothingPlaying,
+		Playing:    "",
+		Config:     nil,
+		playerFile: nil,
 	}
 )
 
@@ -36,17 +35,16 @@ func main() {
 	//read config file
 	config = readConfig(config)
 	//make the channels used by player
-	globals.playerControl = make(chan PlayerState)
 	globals.playerFile = make(chan string)
 	playerExit := make(chan bool)
-	go play(playerExit)
+	go player.StartPlayer(playerExit)
 	//set up annoying global variable
 	globals.Config = &config
 	//made a decision to use TUI or not
 	if *noTui == true {
 		end := false
 		for end != true {
-			end = CliCommand(globals.playerFile, globals.playerControl)
+			end = CliCommand(globals.playerFile, player.GetControl())
 		}
 		return
 	}
@@ -64,9 +62,9 @@ func main() {
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
-	writeConfig(*globals.Config)        //update config on exit
-	globals.playerControl <- ExitPlayer //tell player to exit
-	<-playerExit                        //wait for player to exit to finally exit
+	writeConfig(*globals.Config)             //update config on exit
+	player.GetControl() <- player.ExitPlayer //tell player to exit
+	<-playerExit                             //wait for player to exit to finally exit
 }
 
 func refreshGui(g *gocui.Gui) {

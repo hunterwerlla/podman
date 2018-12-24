@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/hunterwerlla/podman/player"
 	"github.com/hunterwerlla/podman/tui"
 	"github.com/jroimartin/gocui"
 	"os"
@@ -302,13 +303,13 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 		go download(*globals.Config, selectedPodcast, selectedPodcastEntries[position], g) //download async
 	} else {
 		if podcast := globals.Config.Downloaded[guid]; podcast != (PodcastEntry{}) { //if it is not empty
-			globals.Playing = podcast.StorageLocation
+			player.SetPlaying(podcast.StorageLocation)
 		} else {
 			return nil //TODO real error
 		}
 		//now play
 		if toPlay := toPlay.StorageLocation; toPlay != "" {
-			globals.playerControl <- Play
+			player.GetControl() <- player.Play
 		}
 	}
 	return nil
@@ -316,12 +317,12 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 
 func togglePlayerState(g *gocui.Gui, v *gocui.View) error {
 	playerLock.Lock()
-	if globals.playerState == Play {
-		globals.playerState = Pause
-		globals.playerControl <- Pause
-	} else if globals.playerState == Pause {
-		globals.playerState = Play
-		globals.playerControl <- Play
+	if player.GetPlayerState() == player.Play {
+		player.SetPlayerState(player.Pause)
+		player.GetControl() <- player.Pause
+	} else if player.GetPlayerState() == player.Pause {
+		player.SetPlayerState(player.Play)
+		player.GetControl() <- player.Play
 	}
 	playerLock.Unlock()
 	// needed for gocui
@@ -330,14 +331,14 @@ func togglePlayerState(g *gocui.Gui, v *gocui.View) error {
 
 func skipPlayerForward(g *gocui.Gui, v *gocui.View) error {
 	playerLock.Lock()
-	globals.playerControl <- FastForward
+	player.GetControl() <- player.FastForward
 	playerLock.Unlock()
 	return nil
 }
 
 func skipPlayerBackward(g *gocui.Gui, v *gocui.View) error {
 	playerLock.Lock()
-	globals.playerControl <- Rewind
+	player.GetControl() <- player.Rewind
 	playerLock.Unlock()
 	return nil
 }

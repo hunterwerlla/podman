@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	downloading      int32 = 0
+	downloading      int32
 	downloadProgress *pb.ProgressBar
 )
 
