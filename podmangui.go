@@ -180,7 +180,8 @@ func printSubscribed(v *gocui.View) error {
 	}
 	fmt.Fprintf(v, "Podcast Name - Artist - Description\n")
 	for _, item := range globals.Config.Subscribed[scrollingOffset:] {
-		fmt.Fprintf(v, "%s\n", formatPodcastPrint(item, v))
+		_, xWidth := v.Size()
+		fmt.Fprintf(v, "%s\n", formatPodcast(item, xWidth))
 	}
 	return nil
 }
@@ -196,7 +197,8 @@ func printSearch(v *gocui.View) error {
 		fmt.Fprintf(v, "No results \n")
 	}
 	for _, thing := range selectedPodcastSearch[scrollingOffset:] {
-		fmt.Fprintf(v, "%s\n", formatPodcastPrint(thing, v))
+		_, xWidth := v.Size()
+		fmt.Fprintf(v, "%s\n", formatPodcast(thing, xWidth))
 	}
 	return nil
 }

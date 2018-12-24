@@ -86,7 +86,7 @@ func CliCommand(playerFile chan string, playerControl chan int) bool {
 			if i == num {
 				entries, err := getPodcastEntries(pc, pc.FeedURL)
 				if err != nil {
-					fmt.Printf("%d when attempting to parse RSS\n", err.Error())
+					fmt.Printf("%s when attempting to parse RSS\n", err.Error())
 					break
 				}
 				for i, entry := range entries {
@@ -112,7 +112,7 @@ func CliCommand(playerFile chan string, playerControl chan int) bool {
 			if ii == pcNum {
 				entries, err := getPodcastEntries(pc, pc.FeedURL)
 				if err != nil {
-					fmt.Printf("%d when attempting to parse RSS\n", err.Error())
+					fmt.Printf("%s when attempting to parse RSS\n", err.Error())
 					break
 				}
 				for i, entry := range entries {
@@ -163,7 +163,7 @@ func CliCommand(playerFile chan string, playerControl chan int) bool {
 		playerControl <- _rw
 	} else if command == "ls-download" {
 		for i, podcast := range globals.Config.Downloaded {
-			fmt.Printf("%d %s %s\n", i, podcast.PodcastTitle, podcast.Title)
+			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)
 		}
 	} else if command == "help" {
 		fmt.Println("Type ls to list your subscriptions, ls-download to list downloads, start <num> to play, stop to stop, resume to resume, /<string> to search, exit to exit, help to show this")

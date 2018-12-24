@@ -5,13 +5,12 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-func formatPodcastPrint(p Podcast, v *gocui.View) string {
-	xMax, _ := v.Size()
+func formatPodcast(p Podcast, max int) string {
 	strin := p.CollectionName + " - " + p.ArtistName + " - " + p.Description
-	if len(p.Description+p.CollectionName+p.ArtistName)+6 < xMax {
+	if len(p.Description+p.CollectionName+p.ArtistName)+6 < max {
 		//do nothing
 	} else { //else truncate string
-		strin = strin[0:xMax]
+		strin = strin[0:max]
 	}
 	return strin
 }
