@@ -49,6 +49,14 @@ func podcastAddDescription(podcast *Podcast) error {
 	return nil
 }
 
+func sanitizeRss(entry string) string {
+	entry = strings.Replace(entry, "\n", " ", -1)
+	entry = strings.Replace(entry, "\r", " ", -1)
+	entry = strings.Trim(entry, "\r\n ")
+	entry = sanitize.HTML(entry)
+	return entry
+}
+
 //TODO strip HTML
 func getPodcastEntries(podcast Podcast, input string, podcastCache *[]CachedPodcast) ([]PodcastEpisode, error) {
 	var cacheEntry *CachedPodcast
@@ -76,12 +84,12 @@ func getPodcastEntries(podcast Podcast, input string, podcastCache *[]CachedPodc
 	}
 	entries := make([]PodcastEpisode, 0)
 	for _, item := range feed.Item {
-		//change it from Item type from RSS to built in PodcastEpisode type, while also removing whitespace
-		//it also strips HTML tags because a lot of podcasts include them in their RSS data
-		content := sanitize.HTML(strings.Replace(item.Content, "\n", " ", -1))
-		title := sanitize.HTML(strings.Replace(item.Title, "\n", " ", -1))
-		description := sanitize.HTML(strings.Replace(item.Description, "\n", "", -1))
+		// change it from Item type from RSS to built in PodcastEpisode type,
+		// while also removing whitespace and stripping HTML tags
 		url := ""
+		content := sanitizeRss(item.Content)
+		title := sanitizeRss(item.Title)
+		description := sanitizeRss(item.Description)
 		for _, enc := range item.Enclosure {
 			if enc.URL != "" {
 				url = enc.URL

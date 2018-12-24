@@ -12,17 +12,17 @@ import (
 
 func main() {
 	//get users home dir, the default storage
-	usr, err := user.Current()
 	// TODO fix this
 	defaultStorage := "."
-	//if no error, sore in home directory
+	usr, err := user.Current()
+	//if no error, store in home directory
 	if err == nil {
-		defaultStorage = usr.HomeDir + "/.config" + "/podman"
+		defaultStorage = usr.HomeDir + "/.config/podman"
 	}
 	//read config file
 	config := configuration.CreateDefault()
 	config.StorageLocation = defaultStorage
-	config = readConfig(config)
+	config = configuration.ReadConfig(config)
 	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the GUI or not")
 	flag.Parse()
@@ -59,8 +59,8 @@ func runTui(config *configuration.Configuration) {
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
-	writeConfig(config)    //update config on exit
-	player.DisposePlayer() //tell player to exit + wait
+	configuration.WriteConfig(config) //update config on exit
+	player.DisposePlayer()            //tell player to exit + wait
 }
 
 func refreshGui(g *gocui.Gui) {

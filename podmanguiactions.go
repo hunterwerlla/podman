@@ -246,7 +246,7 @@ func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
 		}
 	}
 	config.Subscribed = append(config.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
-	writeConfig(config)
+	WriteConfig(config)
 	return nil
 }
 
@@ -298,7 +298,7 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 	if isDownloaded(selectedPodcastEntries[position]) == false {
 		go func() {
 			download(config, selectedPodcast, selectedPodcastEntries[position], g)
-			writeConfig(config)
+			WriteConfig(config)
 		}() //download async
 	} else {
 		if podcast := config.Downloaded[guid]; podcast != (PodcastEpisode{}) { //if it is not empty

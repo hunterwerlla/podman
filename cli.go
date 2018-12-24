@@ -45,7 +45,7 @@ func CliCommand(config *Configuration) bool {
 							podcastAddDescription(&result)
 							//then add
 							config.Subscribed = append(config.Subscribed, result)
-							writeConfig(config) //update config on disk
+							WriteConfig(config) //update config on disk
 							fmt.Println("subscribed and written to disk")
 							goto searchEnd //considered harmful
 						}
@@ -74,7 +74,7 @@ func CliCommand(config *Configuration) bool {
 				//then remove this one
 				fmt.Printf("Removing %s\n", config.Subscribed[i].CollectionName)
 				config.Subscribed = append(config.Subscribed[:i], config.Subscribed[i+1:]...)
-				writeConfig(config)
+				WriteConfig(config)
 			}
 		}
 	} else if command == "show" {
@@ -84,17 +84,22 @@ func CliCommand(config *Configuration) bool {
 			fmt.Println("please use in the form of \"show <number>\"")
 			return false
 		}
+		found := false
 		for i, pc := range config.Subscribed {
 			if i == num {
+				found = true
 				entries, err := getPodcastEntries(pc, pc.FeedURL, &config.Cached)
 				if err != nil {
 					fmt.Printf("%s when attempting to parse RSS\n", err.Error())
 					break
 				}
 				for i, entry := range entries {
-					fmt.Printf("%d Title: %s\n Summary: %s\n Content: %s\n", i, entry.Title, entry.Summary, entry.Content)
+					fmt.Printf("%d Title: %s\n    Summary: %s \n    Content: %s\n\n", i, entry.Title, entry.Summary, entry.Content)
 				}
 			}
+		}
+		if found == false {
+			fmt.Printf("Num %d not found \n", num)
 		}
 		return false
 	} else if command == "download" {
@@ -120,7 +125,7 @@ func CliCommand(config *Configuration) bool {
 				for i, entry := range entries {
 					if i == epNum {
 						_, err := download(config, pc, entry, nil)
-						writeConfig(config)
+						WriteConfig(config)
 						if err != nil {
 							fmt.Printf("Error when downloading: %s\n", err.Error())
 						} else {
@@ -170,7 +175,7 @@ func CliCommand(config *Configuration) bool {
 			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)
 		}
 	} else if command == "help" {
-		fmt.Println("Type ls to list your subscriptions, ls-downloaded to list downloads, start <num> to play, stop to stop, resume to resume, /<string> to search, exit to exit, help to show this")
+		fmt.Println("Type ls to list your subscriptions, ls-downloaded to list downloads, start <num> to play, stop to stop, resume to resume, show <num> to show subscribed, /<string> to search, exit to exit, help to show this")
 	} else if command == "settings" {
 		fmt.Println(*config)
 	} else {

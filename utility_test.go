@@ -1,6 +1,7 @@
 package main
 
 import (
+	. "github.com/hunterwerlla/podman/configuration"
 	"testing"
 )
 

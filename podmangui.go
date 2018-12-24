@@ -158,12 +158,12 @@ func printListPodcast(v *gocui.View) error {
 		selectedPodcastEntries, err = getPodcastEntries(selectedPodcast, selectedPodcast.FeedURL, &config.Cached)
 	}
 	if err != nil {
-		fmt.Fprintln(v, "Cannot download podcast list, check your connection")
+		fmt.Fprintf(v, "Cannot download podcast list, check your connection")
 		return nil
 	}
 	//now actually print
 	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
-		fmt.Fprintf(v, "%d %s -  Dl:%v - %s\n", i+1+scrollingOffset, thing.Title, isDownloaded(thing), thing.Summary)
+		fmt.Fprintf(v, "%d %s -  Dl:%t - %s\n", i+1+scrollingOffset, thing.Title, isDownloaded(thing), thing.Summary)
 	}
 	return nil
 }
@@ -173,7 +173,7 @@ func printPodcastDescription(v *gocui.View) error {
 	setProperties(v)
 	v.Wrap = true //turn wrap on
 	//now actually print
-	fmt.Fprintf(v, "Name: %s \nBy: %s\n", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
+	fmt.Fprintf(v, "Name: %s \nBy: %s", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
 	descString := selectedPodcast.Description
 	fmt.Fprintf(v, "%s", descString)
 	return nil
@@ -190,9 +190,9 @@ func printSubscribed(v *gocui.View) error {
 		fmt.Fprintln(v, "Scroll left to search for podcasts to subscribe to.")
 		return nil
 	}
-	fmt.Fprintf(v, "Podcast Name - Artist - Description\n")
+	fmt.Fprintf(v, "Podcast Name - Artist - Description \n")
 	for _, item := range config.Subscribed[scrollingOffset:] {
-		_, xWidth := v.Size()
+		xWidth, _ := v.Size()
 		fmt.Fprintf(v, "%s\n", formatPodcast(item, xWidth))
 	}
 	return nil
@@ -209,7 +209,7 @@ func printSearch(v *gocui.View) error {
 		fmt.Fprintf(v, "No results \n")
 	}
 	for _, thing := range selectedPodcastSearch[scrollingOffset:] {
-		_, xWidth := v.Size()
+		xWidth, _ := v.Size()
 		fmt.Fprintf(v, "%s\n", formatPodcast(thing, xWidth))
 	}
 	return nil
@@ -228,11 +228,11 @@ func printDownloaded(v *gocui.View) error {
 	setProperties(v)
 	v.Highlight = true
 	if len(selectedPodcastEntries) == 0 {
-		fmt.Fprintln(v, "Subscribe to some podcasts and download episodes")
+		fmt.Fprintf(v, "Subscribe to some podcasts and download episodes")
 		return nil
 	}
 	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
-		fmt.Fprintf(v, "%d %s - %s - %s\n", i+1+scrollingOffset, thing.PodcastTitle, thing.Title, thing.Summary)
+		fmt.Fprintf(v, "%d %s - %s - %s", i+1+scrollingOffset, thing.PodcastTitle, thing.Title, thing.Summary)
 	}
 	return nil
 }
