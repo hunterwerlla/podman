@@ -52,7 +52,8 @@ func podcastAddDescription(podcast *Podcast) error {
 func sanitizeRss(entry string) string {
 	entry = strings.Replace(entry, "\n", " ", -1)
 	entry = strings.Replace(entry, "\r", " ", -1)
-	entry = strings.Trim(entry, "\r\n ")
+	entry = strings.TrimSpace(entry)
+	entry = strings.Trim(entry, "\n")
 	entry = sanitize.HTML(entry)
 	return entry
 }
@@ -97,6 +98,7 @@ func getPodcastEntries(podcast Podcast, input string, podcastCache *[]CachedPodc
 			}
 		}
 		guid := ""
+		// If the GUID is empty, make one up
 		if strings.TrimSpace(item.GUID) == "" {
 			guid = content + title
 		} else {

@@ -232,7 +232,7 @@ func searchKeyword(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func switchSubscribe(g *gocui.Gui, v *gocui.View) error {
+func actionSubscribe(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor() //get cursor position to select
 	if len(selectedPodcastSearch) == 0 {
 		return nil //TODO return an actual error
