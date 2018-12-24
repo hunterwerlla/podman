@@ -10,6 +10,7 @@ import (
 var (
 	playerPosition int = -1
 	startTime      time.Time
+	lengthOfFile   uint64
 )
 
 //this runs on its own thread to start/stop and select the media that is playing
@@ -23,7 +24,7 @@ func play(exit chan bool) {
 		chain      *sox.EffectsChain = nil
 		inputFile  *sox.Format       = nil
 		outputFile *sox.Format       = nil
-		status     int               = _nothing
+		status     PlayerState       = NothingPlaying
 		stopToExit bool              = false
 	)
 	const (
@@ -35,25 +36,25 @@ func play(exit chan bool) {
 	}
 	defer sox.Quit()
 	for stopToExit != true {
-		status = _nothing //reset status
+		status = NothingPlaying //reset status
 		status = <-globals.playerControl
 		switch status {
-		case _nothing:
+		case NothingPlaying:
 			panic("invalid state when switching status, this should never happen")
-		case _play:
+		case Play:
 			startPlayer(chain, inputFile, outputFile)
-		case _pause: //case 1 pause
+		case Pause: //case 1 pause
 			//save time and file
 			pausePlayer()
 			cleanupSoxData(chain, inputFile, outputFile)
-		case _stop:
+		case Stop:
 			stopPlayer()
 			cleanupSoxData(chain, inputFile, outputFile)
-		case _ff:
+		case FastForward:
 			fastforward()
-		case _rw:
+		case Rewind:
 			rewind()
-		case _exit:
+		case ExitPlayer:
 			cleanupSoxData(chain, inputFile, outputFile)
 			stopToExit = true
 		}
@@ -62,14 +63,15 @@ func play(exit chan bool) {
 }
 
 func changePlayerPosition(inputFile *sox.Format) {
-	if globals.playerPosition < 0 {
-		globals.playerPosition = 0
+	if playerPosition < 0 {
+		playerPosition = 0
 	}
 	//formula taken from example 2 of goSoX
 	seek := uint64(float64(playerPosition)*float64(inputFile.Signal().Rate())*float64((inputFile.Signal().Channels())) + 0.5)
 	seek -= seek % uint64(inputFile.Signal().Channels())
 	inputFile.Seek(seek)
 }
+
 func startPlayer(chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Format) {
 	inputFile = sox.OpenRead(globals.Playing)
 	changePlayerPosition(inputFile)
@@ -84,33 +86,34 @@ func startPlayer(chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox
 	//Now actually play
 	chain = sox.CreateEffectsChain(inputFile.Encoding(), outputFile.Encoding())
 	//make it output
-	interm_signal := inputFile.Signal().Copy()
+	intermSignal := inputFile.Signal().Copy()
 	//set input
 	e := sox.CreateEffect(sox.FindEffect("input"))
 	e.Options(inputFile)
-	chain.Add(e, interm_signal, inputFile.Signal())
+	chain.Add(e, intermSignal, inputFile.Signal())
 	e.Release()
 	//set output
 	e = sox.CreateEffect(sox.FindEffect("output"))
 	e.Options(outputFile)
-	chain.Add(e, interm_signal, inputFile.Signal())
+	chain.Add(e, intermSignal, inputFile.Signal())
 	e.Release()
 	//start the timer which keeps track of position in the file
 	startTime = time.Now()
-	globals.LengthOfFile = getLengthOfFile(globals.Playing) //set length
+	lengthOfFile = getLengthOfFile(globals.Playing) //set length
 	//process which also plays
 	go chain.Flow()
 }
 func pausePlayer() {
-	globals.playerPosition += int(time.Since(startTime).Seconds())
-	globals.playerState = _pause
+	playerPosition += int(time.Since(startTime).Seconds())
+	globals.playerState = Pause
 }
+
 func stopPlayer() {
 	//reset position
-	globals.playerPosition = -1
-	globals.playerState = _nothing
+	playerPosition = -1
+	globals.playerState = NothingPlaying
 	globals.Playing = ""
-	globals.LengthOfFile = 0 //set length
+	lengthOfFile = 0 //set length
 }
 
 func fastforward() {
@@ -119,10 +122,10 @@ func fastforward() {
 		fmt.Println("Have to select a file to play to resume playback")
 	} else {
 		playerPosition += int(time.Since(startTime).Seconds()) + globals.Config.forwardSkipLength
-		if playerPosition > int(globals.LengthOfFile) {
-			playerPosition = int(globals.LengthOfFile) - 1
+		if playerPosition > int(lengthOfFile) {
+			playerPosition = int(lengthOfFile) - 1
 		}
-		globals.playerState = _play
+		globals.playerState = Play
 	}
 }
 
@@ -135,7 +138,7 @@ func rewind() {
 		if playerPosition < 0 {
 			playerPosition = 0
 		}
-		globals.playerState = _play
+		globals.playerState = Play
 	}
 }
 
@@ -156,4 +159,12 @@ func getLengthOfFile(fileName string) uint64 {
 	seek := uint64(float64(inputFile.Signal().Length())/float64(inputFile.Signal().Channels())/float64(inputFile.Signal().Rate()) - 0.5)
 	seek += seek % uint64(inputFile.Signal().Channels())
 	return seek
+}
+
+func getLengthOfPlayingFile() uint64 {
+	return lengthOfFile
+}
+
+func getPlayerState() int {
+	return 0
 }

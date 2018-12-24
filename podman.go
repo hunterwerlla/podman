@@ -12,13 +12,11 @@ import (
 //TODO get rid of this whole awful thing
 var (
 	globals = GlobalState{
-		Playing:        "",
-		Config:         nil,
-		playerFile:     nil,
-		playerControl:  nil,
-		playerState:    _nothing,
-		LengthOfFile:   0,
-		playerPosition: 0,
+		Playing:       "",
+		Config:        nil,
+		playerFile:    nil,
+		playerControl: nil,
+		playerState:   NothingPlaying,
 	}
 )
 
@@ -38,7 +36,7 @@ func main() {
 	//read config file
 	config = readConfig(config)
 	//make the channels used by player
-	globals.playerControl = make(chan int)
+	globals.playerControl = make(chan PlayerState)
 	globals.playerFile = make(chan string)
 	playerExit := make(chan bool)
 	go play(playerExit)
@@ -66,9 +64,9 @@ func main() {
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
-	writeConfig(*globals.Config)   //update config on exit
-	globals.playerControl <- _exit //tell player to exit
-	<-playerExit                   //wait for player to exit to finally exit
+	writeConfig(*globals.Config)        //update config on exit
+	globals.playerControl <- ExitPlayer //tell player to exit
+	<-playerExit                        //wait for player to exit to finally exit
 }
 
 func refreshGui(g *gocui.Gui) {

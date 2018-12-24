@@ -7,7 +7,12 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"time"
+)
+
+var (
+	playerLock sync.Mutex
 )
 
 func guiHandler(g *gocui.Gui) error {
@@ -301,36 +306,37 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 		}
 		//now play
 		if toPlay := toPlay.StorageLocation; toPlay != "" {
-			globals.playerControl <- _play
+			globals.playerControl <- Play
 		}
 	}
 	return nil
 }
 
 func togglePlayerState(g *gocui.Gui, v *gocui.View) error {
-	//pause so will not enter invalid state when pressing the spacebar a lot
-	time.Sleep(time.Millisecond * 50)
-	if globals.playerState == _play {
-		globals.playerState = _pause
-		globals.playerControl <- _pause
-	} else if globals.playerState == _pause {
-		globals.playerState = _play
-		globals.playerControl <- _play
+	playerLock.Lock()
+	if globals.playerState == Play {
+		globals.playerState = Pause
+		globals.playerControl <- Pause
+	} else if globals.playerState == Pause {
+		globals.playerState = Play
+		globals.playerControl <- Play
 	}
+	playerLock.Unlock()
+	// needed for gocui
 	return nil
 }
 
 func skipPlayerForward(g *gocui.Gui, v *gocui.View) error {
 	//pause so will not enter invalid state
 	time.Sleep(time.Millisecond * 50)
-	globals.playerControl <- _ff
+	globals.playerControl <- FastForward
 	return nil
 }
 
 func skipPlayerBackward(g *gocui.Gui, v *gocui.View) error {
 	//pause so will not enter invalid state
 	time.Sleep(time.Millisecond * 50)
-	globals.playerControl <- _rw
+	globals.playerControl <- Rewind
 	return nil
 }
 

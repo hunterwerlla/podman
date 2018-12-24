@@ -4,16 +4,18 @@ import (
 	"time"
 )
 
-//player consts
+//go:generate stringer -type=PlayerState
+type PlayerState int
+
 const (
-	_nothing = iota
-	_resume  = iota
-	_play    = iota
-	_pause   = iota
-	_stop    = iota
-	_ff      = iota
-	_rw      = iota
-	_exit    = iota
+	NothingPlaying PlayerState = iota
+	Resume         PlayerState = iota
+	Play           PlayerState = iota
+	Pause          PlayerState = iota
+	Stop           PlayerState = iota
+	FastForward    PlayerState = iota
+	Rewind         PlayerState = iota
+	ExitPlayer     PlayerState = iota
 )
 
 //view constants
@@ -67,13 +69,11 @@ type ItunesSearch struct {
 }
 
 type GlobalState struct {
-	Playing        string
-	Config         *Configuration
-	playerFile     chan string
-	playerControl  chan int
-	playerState    int
-	LengthOfFile   uint64
-	playerPosition int
+	Playing       string
+	Config        *Configuration
+	playerFile    chan string
+	playerControl chan PlayerState
+	playerState   PlayerState
 }
 
 type cachedPodcast struct {

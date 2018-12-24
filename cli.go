@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func CliCommand(playerFile chan string, playerControl chan int) bool {
+func CliCommand(playerFile chan string, playerControl chan PlayerState) bool {
 	command := ""
 	_, err := fmt.Scanf("%s", &command)
 	if err != nil {
@@ -152,15 +152,15 @@ func CliCommand(playerFile chan string, playerControl chan int) bool {
 		fmt.Println("episode not found")
 		return false
 	} else if command == "stop" {
-		playerControl <- _stop
+		playerControl <- Stop
 	} else if command == "pause" {
-		playerControl <- _pause
+		playerControl <- Pause
 	} else if command == "resume" {
-		playerControl <- _resume
+		playerControl <- Resume
 	} else if command == "ff" {
-		playerControl <- _ff
+		playerControl <- FastForward
 	} else if command == "rewind" {
-		playerControl <- _rw
+		playerControl <- Rewind
 	} else if command == "ls-download" {
 		for i, podcast := range globals.Config.Downloaded {
 			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)

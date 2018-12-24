@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/kennygrant/sanitize" //for stripping html tags
-	"github.com/ungerik/go-rss"      //test differnt kind
+	"github.com/ungerik/go-rss"
 	"io/ioutil"
 	"net/http"
 	"strings"

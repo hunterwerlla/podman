@@ -241,10 +241,10 @@ func printPlayer(g *gocui.Gui) error {
 	v.Clear()
 	playingPlayerPosition := 0
 	playingMessage := ""
-	if globals.playerState == _play {
+	if globals.playerState == Play {
 		playingPlayerPosition = playerPosition + int(time.Since(startTime).Seconds())
 	}
-	count := globals.LengthOfFile
+	count := getLengthOfPlayingFile()
 	percent := float64(playingPlayerPosition) / float64(count)
 	//10 is width of numbers, 2 is width of ends
 	numFilled := int(percent * float64(maxX-10.0-2.0))
@@ -254,13 +254,13 @@ func printPlayer(g *gocui.Gui) error {
 	//actually print player
 	if (downloadProgressText.Len() == 0) || (playerOutputState == _show_player && downloadProgressText.Len() != 0) {
 		//if playing and valid length of file
-		if globals.playerState == _play && globals.LengthOfFile != 0 {
+		if globals.playerState == Play && getLengthOfPlayingFile() != 0 {
 			playingMessage = fmt.Sprintf("%d/%d", playingPlayerPosition, count)
 			numEmpty := int((1.0 - float64(percent)) * float64(maxX-10.0-2.0))
 			playingMessage = fmt.Sprintf("%s%s%s%s%s%s\n", playingMessage, "[", strings.Repeat("=", numFilled-1), ">", strings.Repeat("-", numEmpty), "]")
-		} else if globals.playerState == _pause {
+		} else if globals.playerState == Pause {
 			playingMessage = "paused"
-		} else if globals.playerState == _stop {
+		} else if globals.playerState == Stop {
 			playingMessage = "stopped"
 		} else {
 			playingMessage = "Nothing playing"
@@ -272,7 +272,7 @@ func printPlayer(g *gocui.Gui) error {
 	} else { //else print progress bar
 		fmt.Fprintf(v, "%s", downloadProgressText.String())
 		//only alternate if playing
-		if globals.playerState == _play {
+		if globals.playerState == Play {
 			playerOutputState = _show_player
 		}
 	}
