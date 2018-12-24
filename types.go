@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/cheggaaa/pb"
 	"time"
 )
 
@@ -68,14 +67,13 @@ type ItunesSearch struct {
 }
 
 type GlobalState struct {
-	Playing          string
-	Config           *Configuration
-	playerFile       chan string
-	playerControl    chan int
-	playerState      int
-	LengthOfFile     uint64
-	downloadProgress *pb.ProgressBar
-	playerPosition   int
+	Playing        string
+	Config         *Configuration
+	playerFile     chan string
+	playerControl  chan int
+	playerState    int
+	LengthOfFile   uint64
+	playerPosition int
 }
 
 type cachedPodcast struct {

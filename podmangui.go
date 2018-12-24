@@ -266,7 +266,7 @@ func printPlayer(g *gocui.Gui) error {
 			playingMessage = "Nothing playing"
 		}
 		fmt.Fprintf(v, playingMessage)
-		if globals.downloadProgress != nil {
+		if downloadInProgress() {
 			playerOutputState = _show_download //alternate state
 		}
 	} else { //else print progress bar

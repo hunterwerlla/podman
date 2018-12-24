@@ -11,7 +11,15 @@ import (
 //global state
 //TODO get rid of this whole awful thing
 var (
-	globals GlobalState = GlobalState{"", nil, nil, nil, -1, 0, nil, 0}
+	globals = GlobalState{
+		Playing:        "",
+		Config:         nil,
+		playerFile:     nil,
+		playerControl:  nil,
+		playerState:    _nothing,
+		LengthOfFile:   0,
+		playerPosition: 0,
+	}
 )
 
 func main() {

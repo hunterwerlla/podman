@@ -2,16 +2,24 @@ package main
 
 import (
 	"errors"
-	"github.com/jroimartin/gocui"
 	"github.com/cheggaaa/pb"
+	"github.com/jroimartin/gocui"
 	"io"
 	"net/http"
 	"os"
 	"path"
 	"strings"
+	"sync/atomic"
+)
+
+var (
+	downloading      int32 = 0
+	downloadProgress *pb.ProgressBar
 )
 
 func download(config Configuration, podcast Podcast, ep PodcastEntry, g *gocui.Gui) (Configuration, error) {
+	atomic.AddInt32(&downloading, 1)
+	defer func() { atomic.AddInt32(&downloading, -1) }()
 	//get rid of all stdout data
 	_, w, _ := os.Pipe()
 	os.Stdout = w
@@ -49,21 +57,21 @@ func download(config Configuration, podcast Podcast, ep PodcastEntry, g *gocui.G
 		return config, err
 	}
 	//actually download
-	if globals.downloadProgress != nil {
+	if downloadProgress != nil {
 		//make a progress bar length of the content
-		globals.downloadProgress.Add(int(link.ContentLength))
+		downloadProgress.Add(int(link.ContentLength))
 	} else {
-		globals.downloadProgress = pb.New(int(link.ContentLength))
-		globals.downloadProgress.SetUnits(pb.U_BYTES)
-		globals.downloadProgress.Format("[=-]")
-		globals.downloadProgress.Start()
-		defer globals.downloadProgress.Finish()
-		globals.downloadProgress.Output = &downloadProgressText
+		downloadProgress = pb.New(int(link.ContentLength))
+		downloadProgress.SetUnits(pb.U_BYTES)
+		downloadProgress.Format("[=-]")
+		downloadProgress.Start()
+		defer downloadProgress.Finish()
+		downloadProgress.Output = &downloadProgressText
 	}
-	writeTo := io.MultiWriter(file, globals.downloadProgress)
+	writeTo := io.MultiWriter(file, downloadProgress)
 	_, err = io.Copy(writeTo, link.Body)
 	//stop download progress bar
-	globals.downloadProgress = nil
+	downloadProgress = nil
 	downloadProgressText.Truncate(0)
 	if err != nil {
 		return config, err
@@ -85,11 +93,9 @@ func isDownloaded(entry PodcastEntry) bool {
 	return false
 }
 
-func isDownloadedPath(path string) bool {
-	for _, item := range globals.Config.Downloaded {
-		if strings.Contains(item.Link, path) {
-			return true
-		}
+func downloadInProgress() bool {
+	if downloading > 0 {
+		return true
 	}
 	return false
 }
