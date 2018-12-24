@@ -9,6 +9,7 @@ require (
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
+	github.com/mozilla/rr v0.0.0-20181221050654-b5d10b29d654 // indirect
 	github.com/nsf/termbox-go v0.0.0-20181027232701-60ab7e3d12ed // indirect
 	github.com/paulrosania/go-charset v0.0.0-20151028000031-621bb39fcc83 // indirect
 	github.com/ungerik/go-rss v0.0.0-20180730053843-e6dab863fc93

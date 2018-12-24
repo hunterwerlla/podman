@@ -8,7 +8,7 @@ import (
 )
 
 // CliCommand runs the main loop for a CLI based session
-func CliCommand(playerFile chan string) bool {
+func CliCommand(config *Configuration) bool {
 	command := ""
 	_, err := fmt.Scanf("%s\n", &command)
 	if err != nil {
@@ -146,8 +146,9 @@ func CliCommand(playerFile chan string) bool {
 		for _, value := range config.Downloaded {
 			if i == pcNum {
 				//send storage location to player
-				playerFile <- value.StorageLocation
-				return false
+				player.SetPlaying(value.StorageLocation)
+				player.SetPlayerState(player.Play)
+				break
 			}
 			i++
 		}
@@ -163,12 +164,12 @@ func CliCommand(playerFile chan string) bool {
 		player.SetPlayerState(player.FastForward)
 	} else if command == "rewind" {
 		player.SetPlayerState(player.Rewind)
-	} else if command == "ls-download" {
+	} else if command == "ls-downloaded" {
 		for i, podcast := range config.Downloaded {
 			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)
 		}
 	} else if command == "help" {
-		fmt.Println("Type ls to list your subscriptions, ls-download to list downloads, start <num> to play, stop to stop, resume to resume, /<string> to search, exit to exit, help to show this")
+		fmt.Println("Type ls to list your subscriptions, ls-downloaded to list downloads, start <num> to play, stop to stop, resume to resume, /<string> to search, exit to exit, help to show this")
 	} else if command == "settings" {
 		fmt.Println(*config)
 	} else {

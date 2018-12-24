@@ -14,6 +14,8 @@ github.com/mattn/go-isatty v0.0.4 h1:bnP0vzxcAdeI1zdubAl5PjU6zsERjGZb7raWodagDYs
 github.com/mattn/go-isatty v0.0.4/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
 github.com/mattn/go-runewidth v0.0.4 h1:2BvfKmzob6Bmd4YsL0zygOqfdFnK7GR4QL06Do4/p7Y=
 github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
+github.com/mozilla/rr v0.0.0-20181221050654-b5d10b29d654 h1:siRpYstsfc8NGtYOe5iSO2IB/nVGyBtUqcrZXwh2LvE=
+github.com/mozilla/rr v0.0.0-20181221050654-b5d10b29d654/go.mod h1:upAeYBpRvyJGU0ZXPp45G5Flr2lQBsviww0s4R1qRnU=
 github.com/nsf/termbox-go v0.0.0-20181027232701-60ab7e3d12ed h1:bAVGG6B+R5qpSylrrA+BAMrzYkdAoiTaKPVxRB+4cyM=
 github.com/nsf/termbox-go v0.0.0-20181027232701-60ab7e3d12ed/go.mod h1:IuKpRQcYE1Tfu+oAQqaLisqDeXgjyyltCfsaoYN18NQ=
 github.com/paulrosania/go-charset v0.0.0-20151028000031-621bb39fcc83 h1:XQonH5Iv5rbyIkMJOQ4xKmKHQTh8viXtRSmep5Ca5I4=

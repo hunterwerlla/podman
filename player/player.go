@@ -3,7 +3,6 @@ package player
 import (
 	"fmt"
 	"github.com/krig/go-sox"
-	"os"
 	"time"
 )
 
@@ -25,9 +24,9 @@ func StartPlayer(playerState chan PlayerState, fileChannel chan string, exit cha
 func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string, exit chan bool) {
 	//get rid of all stderr and stdout data
 	//due to SOX outputting error messages
-	_, unused, _ := os.Pipe()
-	os.Stderr = unused
-	os.Stdout = unused
+	// _, unused, _ := os.Pipe()
+	// os.Stderr = unused
+	// os.Stdout = unused
 	playerControl = playerState
 	fileChannel = fileSelectionChannel
 	var (

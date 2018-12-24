@@ -10,7 +10,7 @@ import (
 )
 
 //global state
-//TODO get rid of this whole awful thing
+//TODO get rid of this global config
 var (
 	config *Configuration
 )
@@ -23,13 +23,13 @@ func main() {
 	if err == nil {
 		defaultStorage = usr.HomeDir + "/" + "podman"
 	}
-	//make configuration struct that holds default settings
+	//read config file
+	// TODO move to own package and add a make default
 	config := Configuration{defaultStorage, "k", "j", "h", "l", " ", "/", 30, 10, make([]Podcast, 0), make(map[string]PodcastEpisode, 0), make([]cachedPodcast, 0)}
+	config = readConfig(config)
 	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the GUI or not")
 	flag.Parse()
-	//read config file
-	config = readConfig(config)
 	//make the channels used by player
 	playerState := make(chan player.PlayerState)
 	playerFile := make(chan string)
@@ -37,12 +37,21 @@ func main() {
 	player.StartPlayer(playerState, playerFile, playerExit)
 	//made a decision to use TUI or not
 	if *noTui == true {
-		end := false
-		for end != true {
-			end = CliCommand(playerFile)
-		}
+		runCui(&config)
 		return
+	} else {
+		runTui(playerExit)
 	}
+}
+
+func runCui(configuration *Configuration) {
+	end := false
+	for end != true {
+		end = CliCommand(configuration)
+	}
+}
+
+func runTui(playerExit chan bool) {
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
 		fmt.Println(err)
@@ -57,7 +66,7 @@ func main() {
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
-	writeConfig(config)    //update config on exit
+	writeConfig(*config)   //update config on exit
 	player.DisposePlayer() //tell player to exit
 	<-playerExit           //wait for player to exit to finally exit
 }
