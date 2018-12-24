@@ -218,7 +218,7 @@ func switchKeyword(g *gocui.Gui, v *gocui.View) error {
 	queue = strings.Replace(queue, " ", "+", -1) //replace spaces with plus to not break everything
 	podcasts, err := searchItunes(queue)
 	if err != nil {
-		fmt.Fprintln(v, "error searching! %s", err.Error())
+		fmt.Fprintf(v, "error searching! %s", err.Error())
 		return nil
 	}
 	//clear the buffer
