@@ -17,7 +17,7 @@ var (
 	downloadProgress *pb.ProgressBar
 )
 
-func download(configuration *Configuration, podcast Podcast, ep PodcastEpisode, g *gocui.Gui) (*Configuration, error) {
+func DownloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode, g *gocui.Gui) (*Configuration, error) {
 	atomic.AddInt32(&downloading, 1)
 	defer func() { atomic.AddInt32(&downloading, -1) }()
 	//get rid of all stdout data
@@ -83,7 +83,7 @@ func download(configuration *Configuration, podcast Podcast, ep PodcastEpisode, 
 	return configuration, nil
 }
 
-func isDownloaded(entry PodcastEpisode) bool {
+func PodcastIsDownloaded(entry PodcastEpisode) bool {
 	_, ok := config.Downloaded[entry.GUID]
 	if ok {
 		return true

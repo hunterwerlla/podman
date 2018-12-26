@@ -1,4 +1,4 @@
-//this holds the tui functions and information
+//this holds Tui drawing functions
 package main
 
 import (
@@ -8,14 +8,13 @@ import (
 	"strings"
 )
 
-//go:generate stringer -type=TuiScreen
-type Screen int
-
 const (
-	Subscribed Screen = iota
-	PodcastList    Screen = iota
-	Search     Screen = iota
-	Downloaded Screen = iota
+	ScreenAll string = ""
+	ScreenSubscribed string = "subscribed"
+	ScreenPodcast    string = "podcast"
+	ScreenSearch     string = "search"
+	ScreenSearchResults string = "searchResults"
+	ScreenDownloads  string = "downloads"
 )
 
 const (
@@ -28,7 +27,7 @@ var (
 	selectedPodcast        Podcast
 	selectedPodcastEntries []PodcastEpisode
 	selectedPodcastSearch  []Podcast
-	stateView              = Subscribed
+	stateView              = ScreenSubscribed
 	scrollingOffset        = 0
 	playerOutputState      = ShowPlayer
 	downloadProgressText   bytes.Buffer
@@ -60,7 +59,7 @@ func formatPodcast(p Podcast, max int) string {
 func listSubscribed(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	g.Cursor = true
-	v, err := g.SetView("subscribed", -1, -1, maxX+1, maxY-1)
+	v, err := g.SetView(ScreenSubscribed, -1, -1, maxX+1, maxY-1)
 	//clear the view
 	v.Clear()
 	if err != nil {
@@ -74,7 +73,7 @@ func listSubscribed(g *gocui.Gui) error {
 		return err
 	}
 	//now set current view to main view
-	if _, err = g.SetCurrentView("subscribed"); err != nil {
+	if _, err = g.SetCurrentView(ScreenSubscribed); err != nil {
 		return err
 	}
 	if err = v.SetCursor(0, 1+yCursorOffset); err != nil {
@@ -86,7 +85,7 @@ func listSubscribed(g *gocui.Gui) error {
 func listPodcast(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	//first 5 rows reserved for description
-	v, err := g.SetView("podcast", -1, 4, maxX+1, maxY-1)
+	v, err := g.SetView(ScreenPodcast, -1, 4, maxX+1, maxY-1)
 	if err != nil {
 		if err != gocui.ErrUnknownView { //if not created yet cool we make it
 			return err
@@ -103,7 +102,7 @@ func listPodcast(g *gocui.Gui) error {
 	d.Clear()
 	v.Clear()
 	//set current view to podcast
-	if _, err = g.SetCurrentView("podcast"); err != nil {
+	if _, err = g.SetCurrentView(ScreenPodcast); err != nil {
 		return err
 	}
 	if err = v.SetCursor(0, 0+yCursorOffset); err != nil {
@@ -118,7 +117,7 @@ func listPodcast(g *gocui.Gui) error {
 
 func listSearch(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	v, err := g.SetView("searchResults", -1, 1, maxX+1, maxY-1)
+	v, err := g.SetView(ScreenSearchResults, -1, 1, maxX+1, maxY-1)
 	if err != nil {
 		if err != gocui.ErrUnknownView { //if not created yet cool we make it
 			return err
@@ -128,7 +127,7 @@ func listSearch(g *gocui.Gui) error {
 	if err != nil {
 		return err
 	}
-	d, err := g.SetView("search", -1, -1, maxX+1, 1)
+	d, err := g.SetView(ScreenSearch, -1, -1, maxX+1, 1)
 	if err != nil {
 		if err != gocui.ErrUnknownView { //if not created yet cool we make it
 			return err
@@ -140,7 +139,7 @@ func listSearch(g *gocui.Gui) error {
 	}
 	//set view to search if selectedPodcasts are not null aka we have searched and have results
 	if selectedPodcastSearch == nil {
-		_, err = g.SetCurrentView("search")
+		_, err = g.SetCurrentView(ScreenSearch)
 		if err != nil {
 			return err
 		}
@@ -188,7 +187,7 @@ func printListPodcast(v *gocui.View) error {
 	}
 	//now actually print
 	for i, thing := range selectedPodcastEntries[scrollingOffset:] {
-		fmt.Fprintf(v, "%d %s -  Dl:%t - %s\n", i+1+scrollingOffset, thing.Title, isDownloaded(thing), thing.Summary)
+		fmt.Fprintf(v, "%d %s -  Dl:%t - %s\n", i+1+scrollingOffset, thing.Title, PodcastIsDownloaded(thing), thing.Summary)
 	}
 	return nil
 }

@@ -122,7 +122,7 @@ func CliCommand(config *Configuration) bool {
 				}
 				for i, entry := range entries {
 					if i == epNum {
-						_, err := download(config, pc, entry, nil)
+						config, err := DownloadPodcast(config, pc, entry, nil)
 						WriteConfig(config)
 						if err != nil {
 							fmt.Printf("Error when downloading: %s\n", err.Error())
