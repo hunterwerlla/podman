@@ -1,11 +1,10 @@
 package main
 
 import (
-	. "github.com/hunterwerlla/podman/configuration"
 	"testing"
 )
 
-func TestFormat(t *testing.T) {
+func TestPodcastFormat(t *testing.T) {
 	p := Podcast{ArtistName: "?", CollectionName: ">", FeedURL: "NULL", Description: "a"}
 	formattedString := formatPodcast(p, 1)
 	if formattedString != ">" {

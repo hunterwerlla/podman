@@ -4,11 +4,18 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/hunterwerlla/podman/configuration"
-	"github.com/hunterwerlla/podman/player"
-	"github.com/hunterwerlla/podman/tui"
 	"github.com/jroimartin/gocui"
 	"strings"
+)
+
+//go:generate stringer -type=TuiScreen
+type Screen int
+
+const (
+	Subscribed Screen = iota
+	PodcastList    Screen = iota
+	Search     Screen = iota
+	Downloaded Screen = iota
 )
 
 const (
@@ -18,18 +25,36 @@ const (
 
 var (
 	yCursorOffset          = 0
-	selectedPodcast        configuration.Podcast
-	selectedPodcastEntries []configuration.PodcastEpisode
-	selectedPodcastSearch  []configuration.Podcast
-	stateView              = tui.Subscribed
+	selectedPodcast        Podcast
+	selectedPodcastEntries []PodcastEpisode
+	selectedPodcastSearch  []Podcast
+	stateView              = Subscribed
 	scrollingOffset        = 0
 	playerOutputState      = ShowPlayer
 	downloadProgressText   bytes.Buffer
-	config                 *configuration.Configuration
+	config                 *Configuration
 )
 
-func SetTuiConfiguration(configuration *configuration.Configuration) {
+func SetTuiConfiguration(configuration *Configuration) {
 	config = configuration
+}
+
+func setTuiScreenProperties(v *gocui.View) {
+	//set properties
+	v.BgColor = gocui.ColorWhite
+	v.FgColor = gocui.ColorBlack
+	v.Wrap = false
+	v.Frame = false
+}
+
+func formatPodcast(p Podcast, max int) string {
+	strin := p.CollectionName + " - " + p.ArtistName + " - " + p.Description
+	if len(p.Description+p.CollectionName+p.ArtistName)+6 < max {
+		//do nothing
+	} else { //else truncate string
+		strin = strin[0:max]
+	}
+	return strin
 }
 
 func listSubscribed(g *gocui.Gui) error {
@@ -150,7 +175,7 @@ func listDownloaded(g *gocui.Gui) error {
 
 func printListPodcast(v *gocui.View) error {
 	v.Clear()
-	setProperties(v)
+	setTuiScreenProperties(v)
 	v.Highlight = true
 	var err error
 	//if nil then cache them
@@ -170,7 +195,7 @@ func printListPodcast(v *gocui.View) error {
 
 //this function will print the podcast information when it goes to a podcast
 func printPodcastDescription(v *gocui.View) error {
-	setProperties(v)
+	setTuiScreenProperties(v)
 	v.Wrap = true //turn wrap on
 	//now actually print
 	fmt.Fprintf(v, "Name: %s \nBy: %s", selectedPodcast.CollectionName, selectedPodcast.ArtistName)
@@ -183,7 +208,7 @@ func printSubscribed(v *gocui.View) error {
 	//first clear
 	v.Clear()
 	//then set properties
-	setProperties(v)
+	setTuiScreenProperties(v)
 	v.Highlight = true
 	//if none print message and return
 	if len(config.Subscribed) == 0 {
@@ -199,7 +224,7 @@ func printSubscribed(v *gocui.View) error {
 }
 
 func printSearch(v *gocui.View) error {
-	setProperties(v)
+	setTuiScreenProperties(v)
 	v.Clear()
 	if selectedPodcastSearch != nil && len(selectedPodcastSearch) > 0 {
 		fmt.Fprintf(v, "Search Results: \n")
@@ -214,8 +239,9 @@ func printSearch(v *gocui.View) error {
 	}
 	return nil
 }
+
 func printSearchBar(v *gocui.View) error {
-	setProperties(v)
+	setTuiScreenProperties(v)
 	v.Autoscroll = true //to hide subsequent entries
 	v.Editable = true
 	return nil
@@ -225,7 +251,7 @@ func printDownloaded(v *gocui.View) error {
 	//first clear
 	v.Clear()
 	//then set properties
-	setProperties(v)
+	setTuiScreenProperties(v)
 	v.Highlight = true
 	if len(selectedPodcastEntries) == 0 {
 		fmt.Fprintf(v, "Subscribe to some podcasts and download episodes")
@@ -248,15 +274,15 @@ func printPlayer(g *gocui.Gui) error {
 		}
 	}
 	maxX, _ = v.Size()
-	setProperties(v)
+	setTuiScreenProperties(v)
 	v.Clear()
 	playingPlayerPosition := 0
 	playingMessage := ""
-	if player.GetPlayerState() == player.Play {
+	if GetPlayerState() == Play {
 		// TODO fix this logic
-		playingPlayerPosition = player.GetPlayerPosition()
+		playingPlayerPosition = GetPlayerPosition()
 	}
-	playingFileLength := player.GetLengthOfPlayingFile()
+	playingFileLength := GetLengthOfPlayingFile()
 	percent := float64(playingPlayerPosition) / float64(playingFileLength)
 	//10 is width of numbers, 2 is width of ends
 	numFilled := int(percent * float64(maxX-10.0-2.0))
@@ -266,13 +292,13 @@ func printPlayer(g *gocui.Gui) error {
 	//actually print player
 	if (downloadProgressText.Len() == 0) || (playerOutputState == ShowPlayer && downloadProgressText.Len() != 0) {
 		//if playing and valid length of file
-		if player.GetPlayerState() == player.Play && playingFileLength != 0 {
+		if GetPlayerState() == Play && playingFileLength != 0 {
 			playingMessage = fmt.Sprintf("%d/%d", playingPlayerPosition, playingFileLength)
 			numEmpty := int((1.0 - float64(percent)) * float64(maxX-10.0-2.0))
 			playingMessage = fmt.Sprintf("%s%s%s%s%s%s\n", playingMessage, "[", strings.Repeat("=", numFilled-1), ">", strings.Repeat("-", numEmpty), "]")
-		} else if player.GetPlayerState() == player.Pause {
+		} else if GetPlayerState() == Pause {
 			playingMessage = "paused"
-		} else if player.GetPlayerState() == player.Stop {
+		} else if GetPlayerState() == Stop {
 			playingMessage = "stopped"
 		} else {
 			playingMessage = "Nothing playing"
@@ -284,7 +310,7 @@ func printPlayer(g *gocui.Gui) error {
 	} else { //else print progress bar
 		fmt.Fprintf(v, "%s", downloadProgressText.String())
 		//only alternate if playing
-		if player.GetPlayerState() == player.Play {
+		if GetPlayerState() == Play {
 			playerOutputState = ShowPlayer
 		}
 	}

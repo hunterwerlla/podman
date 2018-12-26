@@ -3,9 +3,6 @@ package main
 
 import (
 	"fmt"
-	. "github.com/hunterwerlla/podman/configuration"
-	"github.com/hunterwerlla/podman/player"
-	"github.com/hunterwerlla/podman/tui"
 	"github.com/jroimartin/gocui"
 	"os"
 	"sort"
@@ -13,13 +10,13 @@ import (
 )
 
 func guiHandler(g *gocui.Gui) error {
-	if stateView == tui.Subscribed {
+	if stateView == Subscribed {
 		listSubscribed(g)
-	} else if stateView == tui.Podcast {
+	} else if stateView == PodcastList {
 		listPodcast(g)
-	} else if stateView == tui.Search {
+	} else if stateView == Search {
 		listSearch(g)
-	} else if stateView == tui.Downloaded {
+	} else if stateView == Downloaded {
 		listDownloaded(g)
 	}
 	printPlayer(g)
@@ -31,17 +28,17 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		_, maxY := v.Size()
 		x, y := v.Cursor()
-		if stateView == tui.Subscribed {
+		if stateView == Subscribed {
 			//starts at 1
 			if y >= len(config.Subscribed[scrollingOffset:]) {
 				return nil
 			}
-		} else if stateView == tui.Podcast || stateView == tui.Downloaded {
+		} else if stateView == PodcastList || stateView == Downloaded {
 			//starts at 0
 			if y >= len(selectedPodcastEntries[scrollingOffset:])-1 {
 				return nil
 			}
-		} else if stateView == tui.Search {
+		} else if stateView == Search {
 			//never allow scroll down on search, only allow transitioning view
 			if g.CurrentView().Name() == "search" {
 				if len(selectedPodcastSearch) > 0 {
@@ -80,7 +77,7 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		_, maxY := v.Size()
 		x, y := v.Cursor()
-		if stateView == tui.Subscribed {
+		if stateView == Subscribed {
 			//if Y is 1 at the top, so don't move up again
 			if y == 1 {
 				if scrollingOffset != 0 {
@@ -98,7 +95,7 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 				}
 				return nil
 			}
-		} else if stateView == tui.Podcast || stateView == tui.Downloaded {
+		} else if stateView == PodcastList || stateView == Downloaded {
 			if y == 0 {
 				if scrollingOffset != 0 {
 					yCursorOffset = maxY - 1
@@ -113,7 +110,7 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 				}
 				return nil
 			}
-		} else if stateView == tui.Search {
+		} else if stateView == Search {
 			if y < 2 { //y==0 included because search bar
 				if scrollingOffset != 0 {
 					//NOTE this is the same magic as list podcast
@@ -163,7 +160,7 @@ func switchListPodcast(g *gocui.Gui, v *gocui.View) error {
 	selectedPodcastSearch = nil
 	scrollingOffset = 0
 	//change layout
-	stateView = tui.Podcast
+	stateView = PodcastList
 	//delete old views
 	g.DeleteView("subscribed")
 	return nil
@@ -173,7 +170,7 @@ func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 	yCursorOffset = 0 //reset cursor
 	scrollingOffset = 0
 	//change layout
-	stateView = tui.Subscribed
+	stateView = Subscribed
 	//delete other views
 	g.DeleteView("subscribed")
 	g.DeleteView("podcast")
@@ -186,7 +183,7 @@ func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 func switchListSearch(g *gocui.Gui, v *gocui.View) error {
 	yCursorOffset = 0 //rest cursor
 	scrollingOffset = 0
-	stateView = tui.Search
+	stateView = Search
 	g.DeleteView("subscribed")
 	g.DeleteView("podcast")
 	g.DeleteView("downloads")
@@ -199,7 +196,7 @@ func switchListSearch(g *gocui.Gui, v *gocui.View) error {
 func switchListDownloads(g *gocui.Gui, v *gocui.View) error {
 	yCursorOffset = 0 //rest cursor
 	scrollingOffset = 0
-	stateView = tui.Downloaded
+	stateView = Downloaded
 	g.DeleteView("subscribed")
 	g.DeleteView("podcast")
 	g.DeleteView("downloads")
@@ -271,7 +268,7 @@ func switchRemoveSubscription(g *gocui.Gui, v *gocui.View) error {
 }
 func switchDeleteDownloaded(g *gocui.Gui, v *gocui.View) error {
 	_, position := v.Cursor()                                       //get cursor position to select
-	if stateView == tui.Subscribed || stateView == tui.Downloaded { //in subscribed is very different from in download list
+	if stateView == Subscribed || stateView == Downloaded { //in subscribed is very different from in download list
 		if isDownloaded(selectedPodcastEntries[position]) {
 			//remove entry in list, then remove entry on disk
 			toDelete, ok := config.Downloaded[selectedPodcastEntries[position].GUID]
@@ -281,7 +278,7 @@ func switchDeleteDownloaded(g *gocui.Gui, v *gocui.View) error {
 			}
 		}
 		//update if stateview is downloads, update due to custom sort
-		if stateView == tui.Downloaded {
+		if stateView == Downloaded {
 			switchListDownloads(g, v)
 		}
 	}
@@ -302,35 +299,35 @@ func playDownload(g *gocui.Gui, v *gocui.View) error {
 		}() //download async
 	} else {
 		if podcast := config.Downloaded[guid]; podcast != (PodcastEpisode{}) { //if it is not empty
-			player.SetPlaying(podcast.StorageLocation)
+			SetPlaying(podcast.StorageLocation)
 		} else {
 			return nil //TODO real error
 		}
 		//now play
 		if toPlay := toPlay.StorageLocation; toPlay != "" {
-			player.SetPlayerState(player.Play)
+			SetPlayerState(Play)
 		}
 	}
 	return nil
 }
 
 func togglePlayerState(g *gocui.Gui, v *gocui.View) error {
-	if player.GetPlayerState() == player.Play {
-		player.SetPlayerState(player.Pause)
-	} else if player.GetPlayerState() == player.Pause {
-		player.SetPlayerState(player.Play)
+	if GetPlayerState() == Play {
+		SetPlayerState(Pause)
+	} else if GetPlayerState() == Pause {
+		SetPlayerState(Play)
 	}
 	// needed for gocui
 	return nil
 }
 
 func skipPlayerForward(g *gocui.Gui, v *gocui.View) error {
-	player.SetPlayerState(player.FastForward)
+	SetPlayerState(FastForward)
 	return nil
 }
 
 func skipPlayerBackward(g *gocui.Gui, v *gocui.View) error {
-	player.SetPlayerState(player.Rewind)
+	SetPlayerState(Rewind)
 	return nil
 }
 

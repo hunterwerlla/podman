@@ -1,4 +1,20 @@
-package configuration
+package main
+
+// Configuration Stores the application configuration
+type Configuration struct {
+	StorageLocation    string
+	UpKeybind          string
+	DownKeybind        string
+	LeftKeybind        string
+	RightKeybind       string
+	PlayKeybind        string
+	SearchKeybind      string
+	forwardSkipLength  int
+	backwardSkipLength int
+	Subscribed         []Podcast
+	Downloaded         map[string]PodcastEpisode
+	Cached             []CachedPodcast
+}
 
 //TODO make this better
 //now functions on slice of podcast entry

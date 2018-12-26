@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	. "github.com/hunterwerlla/podman/configuration"
-	"github.com/hunterwerlla/podman/player"
 	"strconv"
 	"strings"
 )
@@ -152,8 +150,8 @@ func CliCommand(config *Configuration) bool {
 		for _, value := range config.Downloaded {
 			if i == pcNum {
 				//send storage location to player
-				player.SetPlaying(value.StorageLocation)
-				player.SetPlayerState(player.Play)
+				SetPlaying(value.StorageLocation)
+				SetPlayerState(Play)
 				break
 			}
 			i++
@@ -161,15 +159,15 @@ func CliCommand(config *Configuration) bool {
 		fmt.Println("episode not found")
 		return false
 	} else if command == "stop" {
-		player.SetPlayerState(player.Stop)
+		SetPlayerState(Stop)
 	} else if command == "pause" {
-		player.SetPlayerState(player.Pause)
+		SetPlayerState(Pause)
 	} else if command == "resume" {
-		player.SetPlayerState(player.Resume)
+		SetPlayerState(Resume)
 	} else if command == "ff" {
-		player.SetPlayerState(player.FastForward)
+		SetPlayerState(FastForward)
 	} else if command == "rewind" {
-		player.SetPlayerState(player.Rewind)
+		SetPlayerState(Rewind)
 	} else if command == "ls-downloaded" {
 		for i, podcast := range config.Downloaded {
 			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)

@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"github.com/cheggaaa/pb"
-	. "github.com/hunterwerlla/podman/configuration"
 	"github.com/jroimartin/gocui"
 	"io"
 	"net/http"

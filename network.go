@@ -4,7 +4,6 @@ import (
 	"encoding/json" //for reading itunes data
 	"errors"
 	"fmt"
-	. "github.com/hunterwerlla/podman/configuration"
 	"github.com/kennygrant/sanitize" //for stripping html tags
 	"github.com/ungerik/go-rss"
 	"io/ioutil"

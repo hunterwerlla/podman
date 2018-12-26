@@ -1,9 +1,24 @@
-package player
+package main
 
 import (
 	"fmt"
 	"github.com/krig/go-sox"
 	"time"
+)
+
+//go:generate stringer -type=PlayerState
+type PlayerState int
+
+const (
+	// NothingPlaying is the state when the player has nothing cued up/paused/buffered
+	NothingPlaying PlayerState = iota
+	Resume         PlayerState = iota
+	Play           PlayerState = iota
+	Pause          PlayerState = iota
+	Stop           PlayerState = iota
+	FastForward    PlayerState = iota
+	Rewind         PlayerState = iota
+	ExitPlayer     PlayerState = iota
 )
 
 var (
@@ -22,6 +37,47 @@ func StartPlayer() {
 	fileChannel := make(chan string)
 	exit := make(chan bool)
 	go startPlayer(playerState, fileChannel, exit)
+}
+
+func DisposePlayer() {
+	playerControl <- ExitPlayer
+	<-exitChannel
+}
+
+func PausePlayer() {
+	playerPosition += int(time.Since(startTime).Seconds())
+	playerState = Pause
+}
+
+func StopPlayer() {
+	//reset position
+	playerPosition = -1
+	playerState = NothingPlaying
+	playing = ""
+	lengthOfFile = 0 //set length
+}
+
+func GetLengthOfPlayingFile() uint64 {
+	return lengthOfFile
+}
+
+func GetPlayerState() PlayerState {
+	return playerState
+}
+
+func SetPlayerState(state PlayerState) {
+	playerControl <- state
+}
+
+func SetPlaying(filename string) {
+	fileChannel <- filename
+}
+
+func GetPlayerPosition() int {
+	if playerPosition < 0 {
+		return playerPosition
+	}
+	return playerPosition + int(time.Since(startTime).Seconds())
 }
 
 //this runs on its own thread to start/stop and select the media that is playing
@@ -78,11 +134,6 @@ func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string,
 	exit <- true
 }
 
-func DisposePlayer() {
-	playerControl <- ExitPlayer
-	<-exitChannel
-}
-
 func changePlayerPosition(inputFile *sox.Format) {
 	if playerPosition < 0 {
 		playerPosition = 0
@@ -124,19 +175,6 @@ func playFile(chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Fo
 	lengthOfFile = getLengthOfFile(playing) //set length
 	//process which also plays
 	go chain.Flow()
-}
-
-func PausePlayer() {
-	playerPosition += int(time.Since(startTime).Seconds())
-	playerState = Pause
-}
-
-func StopPlayer() {
-	//reset position
-	playerPosition = -1
-	playerState = NothingPlaying
-	playing = ""
-	lengthOfFile = 0 //set length
 }
 
 func fastForwardPlayer() {
@@ -184,27 +222,4 @@ func getLengthOfFile(fileName string) uint64 {
 	seek := uint64(float64(inputFile.Signal().Length())/float64(inputFile.Signal().Channels())/float64(inputFile.Signal().Rate()) - 0.5)
 	seek += seek % uint64(inputFile.Signal().Channels())
 	return seek
-}
-
-func GetLengthOfPlayingFile() uint64 {
-	return lengthOfFile
-}
-
-func GetPlayerState() PlayerState {
-	return playerState
-}
-
-func SetPlayerState(state PlayerState) {
-	playerControl <- state
-}
-
-func SetPlaying(filename string) {
-	fileChannel <- filename
-}
-
-func GetPlayerPosition() int {
-	if playerPosition < 0 {
-		return playerPosition
-	}
-	return playerPosition + int(time.Since(startTime).Seconds())
 }

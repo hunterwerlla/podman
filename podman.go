@@ -3,12 +3,45 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/hunterwerlla/podman/configuration"
-	"github.com/hunterwerlla/podman/player"
 	"github.com/jroimartin/gocui"
 	"os/user"
 	"time"
 )
+
+// Podcast Holds one podcast
+type Podcast struct {
+	ArtistName     string
+	CollectionName string
+	FeedURL        string
+	Description    string
+}
+
+// PodcastEpisode Holds one episode of a podcast
+type PodcastEpisode struct {
+	// The title of the podcast according to ITunes
+	PodcastTitle    string
+	Title           string
+	Summary         string
+	Link            string
+	Content         string
+	GUID            string
+	StorageLocation string
+}
+
+// CachedPodcast a struct that holds podcasts cached in memory/on disk
+type CachedPodcast struct {
+	Type     Podcast
+	Podcasts []PodcastEpisode
+	Checked  time.Time
+}
+
+// ItunesSearch returns an array of podcasts that are found by itunes
+type ItunesSearch struct {
+	Results []Podcast
+}
+
+// PodcastEpisodeSlice takes a slice of a list of podcasts
+type PodcastEpisodeSlice []PodcastEpisode
 
 func main() {
 	//get users home dir, the default storage
@@ -20,14 +53,14 @@ func main() {
 		defaultStorage = usr.HomeDir + "/.config/podman"
 	}
 	//read config file
-	config := configuration.CreateDefault()
+	config := CreateDefault()
 	config.StorageLocation = defaultStorage
-	config = configuration.ReadConfig(config)
+	config = ReadConfig(config)
 	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the GUI or not")
 	flag.Parse()
 	//make the channels used by player
-	player.StartPlayer()
+	StartPlayer()
 	//made a decision to use TUI or not
 	if *noTui == true {
 		runCui(&config)
@@ -36,14 +69,14 @@ func main() {
 	}
 }
 
-func runCui(config *configuration.Configuration) {
+func runCui(config *Configuration) {
 	end := false
 	for end != true {
 		end = CliCommand(config)
 	}
 }
 
-func runTui(config *configuration.Configuration) {
+func runTui(config *Configuration) {
 	SetTuiConfiguration(config)
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -59,8 +92,8 @@ func runTui(config *configuration.Configuration) {
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
 	}
-	configuration.WriteConfig(config) //update config on exit
-	player.DisposePlayer()            //tell player to exit + wait
+	WriteConfig(config) //update config on exit
+	DisposePlayer()            //tell player to exit + wait
 }
 
 func refreshGui(g *gocui.Gui) {
