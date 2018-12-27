@@ -32,6 +32,8 @@ var (
 	playerState    PlayerState
 )
 
+// StartPlayer starts the global player. The player is global since there is only one of them (bad singleton pattern)
+// and should be cleaned up to an object later TODO cleanup to an object
 func StartPlayer() {
 	playerState := make(chan PlayerState)
 	fileChannel := make(chan string)
@@ -91,11 +93,11 @@ func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string,
 	fileChannel = fileSelectionChannel
 	exitChannel = exit
 	var (
-		chain      *sox.EffectsChain = nil
-		inputFile  *sox.Format       = nil
-		outputFile *sox.Format       = nil
-		status     PlayerState       = NothingPlaying
-		stopToExit bool              = false
+		chain      *sox.EffectsChain
+		inputFile  *sox.Format
+		outputFile *sox.Format
+		status     PlayerState = NothingPlaying
+		stopToExit bool        = false
 	)
 	if !sox.Init() {
 		panic("Unable to start the player")

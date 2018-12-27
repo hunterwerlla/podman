@@ -1,6 +1,9 @@
 package main
 
-import ui "github.com/gizak/termui"
+import (
+	"fmt"
+	ui "github.com/gizak/termui"
+)
 
 const (
 	podmanHeader = "" +
@@ -23,7 +26,13 @@ func produceHeader(width int) *ui.Paragraph {
 	return headerWidget
 }
 
-func StartTui() {
+func handleKeyboard(configuration *Configuration, event ui.Event) {
+	if event.ID == configuration.PlayKeybind {
+		fmt.Println("play")
+	}
+}
+
+func StartTui(configuration *Configuration) {
 	err := ui.Init()
 	if err != nil {
 		panic(err)
@@ -38,6 +47,8 @@ func StartTui() {
 		if e.Type == ui.KeyboardEvent {
 			if e.ID == "<C-c>" {
 				break
+			} else {
+				handleKeyboard(configuration, e)
 			}
 		}
 	}

@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+func RunCui(config *Configuration) {
+	end := false
+	for end != true {
+		end = CliCommand(config)
+	}
+}
+
 // CliCommand runs the main loop for a CLI based session
 func CliCommand(config *Configuration) bool {
 	command := ""

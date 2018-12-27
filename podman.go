@@ -61,35 +61,8 @@ func main() {
 	StartPlayer()
 	//made a decision to use TUI or not
 	if *noTui == true {
-		runCui(&config)
+		RunCui(&config)
 	} else {
-		runTui(&config)
+		StartTui(&config)
 	}
-}
-
-func runCui(config *Configuration) {
-	end := false
-	for end != true {
-		end = CliCommand(config)
-	}
-}
-
-func runTui(config *Configuration) {
-	StartTui()
-	/*
-		SetTuiConfiguration(config)
-		g, err := gocui.NewGui(gocui.OutputNormal)
-		if err != nil {
-			fmt.Println(err)
-			panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
-		}
-		defer g.Close()
-		g.SetManagerFunc(TuiHandler)
-		SetTuiKeybinds(g)
-		g.Mouse = true
-		//main loop
-		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-		}*/
-
 }
