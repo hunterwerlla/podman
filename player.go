@@ -32,8 +32,8 @@ var (
 	playerState    PlayerState
 )
 
-// StartPlayer starts the global player. The player is global since there is only one of them (bad singleton pattern)
-// and should be cleaned up to an object later TODO cleanup to an object
+// StartPlayer starts the global player. The player is global since there is only one of them
+// I'm not really a fan of moving it into an object as it should not be reused
 func StartPlayer() {
 	playerState := make(chan PlayerState)
 	fileChannel := make(chan string)

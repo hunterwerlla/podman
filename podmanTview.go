@@ -34,6 +34,18 @@ var (
 		Downloaded: None,
 		Search:     Home,
 	}
+
+	createPage = map[Screen]func(configruation *Configuration, width int, height int) []ui.Bufferer{
+		Home:       drawMainPage,
+		Search:     drawSearch,
+		Downloaded: drawDownloaded,
+	}
+
+	refreshPage = map[Screen]func(configruation *Configuration, width int, height int) []ui.Bufferer{
+		Home:       refreshMainPage,
+		Search:     refreshSearch,
+		Downloaded: refreshDownlaoded,
+	}
 )
 
 var (
@@ -42,41 +54,50 @@ var (
 	currentScreen   = Home
 )
 
-func produceHeaderWidget(width int) *ui.Paragraph {
-	headerWidget := ui.NewParagraph(podmanHeader)
-	headerWidget.Height = headerHeight
-	headerWidget.Width = width
-	headerWidget.TextFgColor = ui.ColorBlack
-	headerWidget.BorderTop = false
-	headerWidget.BorderLeft = false
-	headerWidget.BorderRight = false
-	headerWidget.BorderBottom = true
-	headerWidget.WrapLength = 0
-	return headerWidget
+func termuiStyleText(text string, fgcolor string, bgcolor string) string {
+	text = "[" + text + "](fg-" + fgcolor + ",bg-" + string(bgcolor) + ")"
+	return text
 }
 
-func producePodcastListWidget(configruation *Configuration, width int, height int) *ui.List {
-	podcastWidget := ui.NewList()
-	podcastWidget.Width = width
-	podcastWidget.Height = height - headerHeight - playerHeight
-	podcastWidget.Y = headerHeight
-	podcastWidget.Border = false
-	var podcasts []string
-	currentListSize = len(configruation.Subscribed)
-	for ii, item := range configruation.Subscribed {
-		formattedPodcast := formatPodcast(item, width)
-		if ii == currentSelected {
-			formattedPodcast = "[" + formattedPodcast + "](fg-white,bg-green)"
-		}
-		podcasts = append(podcasts, formattedPodcast)
-	}
-	podcastWidget.Items = podcasts
-	return podcastWidget
+func drawMainPage(configruation *Configuration, width int, height int) []ui.Bufferer {
+	widgets := make([]ui.Bufferer, 0)
+	widgets = append(widgets, produceHeaderWidget(width))
+	widgets = append(widgets, producePodcastListWidget(configruation, width, height))
+	widgets = append(widgets, producePlayerWidget(width, height))
+	return widgets
 }
 
-func producePlayerWidget(width int, height int) *ui.Paragraph {
-	headerWidget := ui.NewParagraph("play something")
-	return headerWidget
+func refreshMainPage(configruation *Configuration, width int, height int) []ui.Bufferer {
+	widgets := make([]ui.Bufferer, 0)
+	widgets = append(widgets, producePodcastListWidget(configruation, width, height))
+	widgets = append(widgets, producePlayerWidget(width, height))
+	return widgets
+}
+
+func drawSearch(configruation *Configuration, width int, height int) []ui.Bufferer {
+	widgets := make([]ui.Bufferer, 0)
+	return widgets
+}
+
+func refreshSearch(configruation *Configuration, width int, height int) []ui.Bufferer {
+	widgets := make([]ui.Bufferer, 0)
+	return widgets
+}
+
+func drawDownloaded(configruation *Configuration, width int, height int) []ui.Bufferer {
+	widgets := make([]ui.Bufferer, 0)
+	return widgets
+}
+
+func refreshDownlaoded(configruation *Configuration, width int, height int) []ui.Bufferer {
+	widgets := make([]ui.Bufferer, 0)
+	return widgets
+}
+
+func refreshPlayer(configuration *Configuration, width int, height int) []ui.Bufferer {
+	widgets := make([]ui.Bufferer, 0)
+	widgets = append(widgets, producePlayerWidget(width, height))
+	return widgets
 }
 
 func transitionScreen(transitions map[Screen]Screen, screen Screen) {
@@ -118,8 +139,8 @@ func StartTui(configuration *Configuration) {
 
 	width := ui.TermWidth()
 	height := ui.TermHeight()
-	ui.Render(produceHeaderWidget(width))
-	ui.Render(producePodcastListWidget(configuration, width, height))
+
+	ui.Render(createPage[currentScreen](configuration, width, height)...)
 
 	for e := range ui.PollEvents() {
 		if e.Type == ui.KeyboardEvent {
@@ -127,7 +148,7 @@ func StartTui(configuration *Configuration) {
 				break
 			} else {
 				handleKeyboard(configuration, e)
-				ui.Render(producePodcastListWidget(configuration, width, height))
+				ui.Render(refreshPage[currentScreen](configuration, width, height)...)
 			}
 		}
 	}
