@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"github.com/jroimartin/gocui"
 	"strings"
+	"time"
 )
 
 const (
-	ScreenAll string = ""
-	ScreenSubscribed string = "subscribed"
-	ScreenPodcast    string = "podcast"
-	ScreenSearch     string = "search"
+	ScreenAll           string = ""
+	ScreenHeader        string = "header"
+	ScreenSubscribed    string = "subscribed"
+	ScreenPodcast       string = "podcast"
+	ScreenSearch        string = "search"
 	ScreenSearchResults string = "searchResults"
-	ScreenDownloads  string = "downloads"
+	ScreenDownloads     string = "downloads"
 )
 
 const (
@@ -40,6 +42,7 @@ func SetTuiConfiguration(configuration *Configuration) {
 
 func setTuiScreenProperties(v *gocui.View) {
 	//set properties
+	v.Clear()
 	v.BgColor = gocui.ColorWhite
 	v.FgColor = gocui.ColorBlack
 	v.Wrap = false
@@ -59,9 +62,14 @@ func formatPodcast(p Podcast, max int) string {
 func listSubscribed(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	g.Cursor = true
-	v, err := g.SetView(ScreenSubscribed, -1, -1, maxX+1, maxY-1)
-	//clear the view
-	v.Clear()
+	v, err := g.SetView(ScreenHeader, -1, -1, maxX+1, 4)
+	if err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+	}
+	err = printHeader(v)
+	v, err = g.SetView(ScreenSubscribed, -1, 3, maxX+1, maxY-1)
 	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -76,7 +84,7 @@ func listSubscribed(g *gocui.Gui) error {
 	if _, err = g.SetCurrentView(ScreenSubscribed); err != nil {
 		return err
 	}
-	if err = v.SetCursor(0, 1+yCursorOffset); err != nil {
+	if err = v.SetCursor(0, yCursorOffset); err != nil {
 		return err
 	}
 	return err
@@ -203,10 +211,17 @@ func printPodcastDescription(v *gocui.View) error {
 	return nil
 }
 
+func printHeader(v *gocui.View) error {
+	setTuiScreenProperties(v)
+	fmt.Fprintln(v, " _____         _                  ")
+	fmt.Fprintln(v, "|  _  | ___  _| | _____  ___  ___ ")
+	fmt.Fprintln(v, "|   __|| . || . ||     || .'||   |")
+	fmt.Fprintln(v, "|__|   |___||___||_|_|_||__,||_|_|")
+	return nil
+}
+
 func printSubscribed(v *gocui.View) error {
-	//first clear
-	v.Clear()
-	//then set properties
+	// set properties
 	setTuiScreenProperties(v)
 	v.Highlight = true
 	//if none print message and return
@@ -214,7 +229,6 @@ func printSubscribed(v *gocui.View) error {
 		fmt.Fprintln(v, "Scroll left to search for podcasts to subscribe to.")
 		return nil
 	}
-	fmt.Fprintf(v, "Podcast Name - Artist - Description \n")
 	for _, item := range config.Subscribed[scrollingOffset:] {
 		xWidth, _ := v.Size()
 		fmt.Fprintf(v, "%s\n", formatPodcast(item, xWidth))
@@ -314,4 +328,21 @@ func printPlayer(g *gocui.Gui) error {
 		}
 	}
 	return nil
+}
+
+// TODO figure out how to re-enable this in a reasonable way
+func refreshTui(g *gocui.Gui) {
+	update := time.NewTicker(time.Millisecond * 500).C
+	stopTick := make(chan bool)
+	defer close(stopTick)
+	go func() {
+		for {
+			select {
+			case <-update:
+				g.Update(TuiHandler)
+			case <-stopTick:
+				return
+			}
+		}
+	}()
 }

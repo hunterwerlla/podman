@@ -2,8 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"github.com/jroimartin/gocui"
 	"os/user"
 	"time"
 )
@@ -77,37 +75,21 @@ func runCui(config *Configuration) {
 }
 
 func runTui(config *Configuration) {
-	SetTuiConfiguration(config)
-	g, err := gocui.NewGui(gocui.OutputNormal)
-	if err != nil {
-		fmt.Println(err)
-		panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
-	}
-	defer g.Close()
-	g.SetManagerFunc(TuiHandler)
-	SetTuiKeybinds(g)
-	g.Mouse = true
-	refreshGui(g)
-	//main loop
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-	}
-	WriteConfig(config) //update config on exit
-	DisposePlayer()            //tell player to exit + wait
-}
-
-func refreshGui(g *gocui.Gui) {
-	update := time.NewTicker(time.Millisecond * 500).C
-	stopTick := make(chan bool)
-	defer close(stopTick)
-	go func() {
-		for {
-			select {
-			case <-update:
-				g.Update(TuiHandler)
-			case <-stopTick:
-				return
-			}
+	StartTui()
+	/*
+		SetTuiConfiguration(config)
+		g, err := gocui.NewGui(gocui.OutputNormal)
+		if err != nil {
+			fmt.Println(err)
+			panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
 		}
-	}()
+		defer g.Close()
+		g.SetManagerFunc(TuiHandler)
+		SetTuiKeybinds(g)
+		g.Mouse = true
+		//main loop
+		if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+			panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
+		}*/
+
 }

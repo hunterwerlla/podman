@@ -93,8 +93,8 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 		_, maxY := v.Size()
 		x, y := v.Cursor()
 		if stateView == ScreenSubscribed {
-			//starts at 1
-			if y >= len(config.Subscribed[scrollingOffset:]) {
+			//starts at 0
+			if y >= len(config.Subscribed[scrollingOffset:])-1 {
 				return nil
 			}
 		} else if stateView == ScreenPodcast || stateView == ScreenDownloads {
@@ -143,22 +143,19 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 		x, y := v.Cursor()
 		if stateView == ScreenSubscribed {
 			//if Y is 1 at the top, so don't move up again
-			if y == 1 {
-				if scrollingOffset != 0 {
-					//this seems like some magic numbers but it's due to the way the cursor is updated
-					yCursorOffset = maxY - 2
-					//NOTE if this ever breaks, it's because the library changed something with cursor updating
-					if err := v.SetCursor(x, yCursorOffset); err != nil {
-						return err
-					}
-					scrollingOffset -= maxY //subtract height
-					//make sure it's not negative
-					if scrollingOffset < 0 {
-						scrollingOffset = 0
-					}
-				}
+			if y == 0 {
 				return nil
 			}
+			yCursorOffset--
+			if err := v.SetCursor(x, yCursorOffset); err != nil {
+				return err
+			}
+			scrollingOffset -= maxY //subtract height
+			//make sure it's not negative
+			if scrollingOffset < 0 {
+				scrollingOffset = 0
+			}
+			return nil
 		} else if stateView == ScreenPodcast || stateView == ScreenDownloads {
 			if y == 0 {
 				if scrollingOffset != 0 {
@@ -235,12 +232,7 @@ func switchListSubscribed(g *gocui.Gui, v *gocui.View) error {
 	scrollingOffset = 0
 	//change layout
 	stateView = ScreenSubscribed
-	//delete other views
-	g.DeleteView(ScreenSubscribed)
-	g.DeleteView(ScreenPodcast)
-	g.DeleteView("downloads")
-	g.DeleteView("podcastDescription")
-	listSubscribed(g)
+	_ = listSubscribed(g)
 	return nil
 }
 
@@ -248,11 +240,7 @@ func switchListSearch(g *gocui.Gui, v *gocui.View) error {
 	yCursorOffset = 0 //rest cursor
 	scrollingOffset = 0
 	stateView = ScreenSearch
-	g.DeleteView(ScreenSubscribed)
-	g.DeleteView(ScreenPodcast)
-	g.DeleteView("downloads")
-	g.DeleteView("podcastDescription")
-	listSearch(g)
+	_ = listSearch(g)
 	g.SetCurrentView(ScreenSearch)
 	return nil
 }
@@ -331,7 +319,7 @@ func switchRemoveSubscription(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 func switchDeleteDownloaded(g *gocui.Gui, v *gocui.View) error {
-	_, position := v.Cursor()                                       //get cursor position to select
+	_, position := v.Cursor()                                          //get cursor position to select
 	if stateView == ScreenSubscribed || stateView == ScreenDownloads { //in subscribed is very different from in download list
 		if PodcastIsDownloaded(selectedPodcastEntries[position]) {
 			//remove entry in list, then remove entry on disk
