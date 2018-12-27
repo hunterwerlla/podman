@@ -14,7 +14,6 @@ func produceHeaderWidget(width int) *ui.Paragraph {
 	headerWidget.BorderLeft = false
 	headerWidget.BorderRight = false
 	headerWidget.BorderBottom = true
-	headerWidget.WrapLength = 0
 	return headerWidget
 }
 
@@ -38,14 +37,35 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 	return podcastWidget
 }
 
-func producePlayerWidget(width int, height int) *ui.Paragraph {
-	playerWidget := ui.NewParagraph("play something")
-	playerWidget.Width = width
-	playerWidget.Height = playerHeight
-	playerWidget.Y = height - playerHeight
-	playerWidget.BorderLeft = false
-	playerWidget.BorderRight = false
-	playerWidget.BorderBottom = false
-	playerWidget.TextFgColor = ui.ColorBlack
-	return playerWidget
+// TODO figure out how to fix this mess
+func producePlayerWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	if GetPlayerState() != Play {
+		playerWidget := ui.NewParagraph("Nothing playing")
+		playerWidget.TextFgColor = ui.ColorBlack
+		playerWidget.Width = width
+		playerWidget.Height = playerHeight
+		playerWidget.Y = height - playerHeight
+		playerWidget.BorderLeft = false
+		playerWidget.BorderRight = false
+		playerWidget.BorderBottom = false
+		return playerWidget
+	} else {
+		playerWidget := ui.NewGauge()
+		playerWidget.Label = "whatever {{percent}}%"
+		playerWidget.Width = width
+		playerWidget.Height = playerHeight
+		playerWidget.Y = height - playerHeight
+		playerWidget.BorderLeft = false
+		playerWidget.BorderRight = false
+		playerWidget.BorderBottom = false
+		return playerWidget
+	}
+}
+
+func produceSearchWidget(configuration *Configuration, width int, height int) *ui.Paragraph {
+	return nil
+}
+
+func produceSearchResults(configuration *Configuration, width int, height int) *ui.List {
+	return nil
 }

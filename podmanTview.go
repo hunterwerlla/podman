@@ -12,7 +12,7 @@ const (
 		" _____         _                  \n" +
 		"|  _  | ___  _| | _____  ___  ___ \n" +
 		"|   __|| . || . ||     || .'||   |\n" +
-		"|__|   |___||___||_|_|_||__,||_|_|\n"
+		"|__|   |___||___||_|_|_||__,||_|_|"
 	headerHeight = 5
 	playerHeight = 3
 
@@ -63,14 +63,14 @@ func drawMainPage(configruation *Configuration, width int, height int) []ui.Buff
 	widgets := make([]ui.Bufferer, 0)
 	widgets = append(widgets, produceHeaderWidget(width))
 	widgets = append(widgets, producePodcastListWidget(configruation, width, height))
-	widgets = append(widgets, producePlayerWidget(width, height))
+	widgets = append(widgets, producePlayerWidget(configruation, width, height))
 	return widgets
 }
 
 func refreshMainPage(configruation *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
 	widgets = append(widgets, producePodcastListWidget(configruation, width, height))
-	widgets = append(widgets, producePlayerWidget(width, height))
+	widgets = append(widgets, producePlayerWidget(configruation, width, height))
 	return widgets
 }
 
@@ -96,7 +96,7 @@ func refreshDownlaoded(configruation *Configuration, width int, height int) []ui
 
 func refreshPlayer(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, producePlayerWidget(width, height))
+	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	return widgets
 }
 
