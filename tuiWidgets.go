@@ -81,9 +81,14 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 	}
 	if currentMode == Insert {
 		text += ">"
+	} else {
+		text += " "
 	}
 	if userTextBuffer != "" {
 		text += userTextBuffer
+	}
+	if currentMode == Insert {
+		text += "_"
 	}
 	searchWidget := ui.NewParagraph(text)
 	searchWidget.TextFgColor = ui.ColorBlack

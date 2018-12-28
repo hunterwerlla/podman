@@ -11,10 +11,24 @@ func enterPressedHome(configuration *Configuration) {
 }
 
 func enterPressedSearch(configuration *Configuration) {
+	// TODO refactor into two functions
 	if currentMode == Normal {
-
+		if currentSelected >= len(currentPodcastsInBuffer) || currentSelected < 0 {
+			return
+		}
+		selectedPodcast := currentPodcastsInBuffer[currentSelected]
+		// check if it's already part of the configuration
+		for _, thing := range configuration.Subscribed {
+			if selectedPodcast.ArtistName == thing.ArtistName && selectedPodcast.CollectionName == thing.CollectionName {
+				//already subscribed so do nothing
+				return
+			}
+		}
+		configuration.Subscribed = append(configuration.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
+		writeConfig(configuration)
 	} else {
 		// search TODO use go()
+		currentSelected = 0
 		var err error
 		searchString := strings.Replace(userTextBuffer, "\n", "", -1)
 		searchString = strings.Trim(searchString, "\n\t")
@@ -75,14 +89,17 @@ func downPressedDownloaded(configuration *Configuration) {
 }
 
 func searchPressedHome(configuration *Configuration) {
+	userTextBuffer = ""
 	currentMode = Insert
 }
 
 func searchPressedSearch(configuration *Configuration) {
+	userTextBuffer = ""
 	currentMode = Insert
 }
 
 func searchPressedDownloaded(configuration *Configuration) {
+	userTextBuffer = ""
 	currentMode = Insert
 }
 
@@ -110,9 +127,6 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 			userTextBuffer += event.ID
 		}
 	} else if event.ID == configuration.SearchKeybind {
-		// Clear buffer and set insert every time
-		userTextBuffer = ""
-		currentMode = Insert
 		searchPressed[currentScreen](configuration)
 	} else if event.ID == configuration.LeftKeybind || event.ID == "<Left>" {
 		transitionScreen(leftTransitions, currentScreen)
