@@ -111,6 +111,18 @@ func produceSearchResults(configuration *Configuration, width int, height int) *
 	currentListSize = len(currentPodcastsInBuffer)
 	for ii, item := range currentPodcastsInBuffer {
 		formattedPodcast := formatPodcast(item, width)
+		// TODO make an isSubscribed function
+		subscribed := false
+		for _, thing := range configuration.Subscribed {
+			if item.ArtistName == thing.ArtistName && item.CollectionName == thing.CollectionName {
+				//already subscribed so do nothing
+				formattedPodcast = "S - " + formattedPodcast
+				subscribed = true
+			}
+		}
+		if subscribed != true {
+			formattedPodcast = "    " + formattedPodcast
+		}
 		if ii == currentSelected {
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		}
