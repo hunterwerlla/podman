@@ -12,6 +12,8 @@ import (
 const configStorageLocation = "/.config/podman/"
 const configName = "config.json"
 
+// TODO read locally first
+// TODO make work on Windows
 func getConfigStorage() string {
 	usr, err := user.Current()
 	var defaultStorage string
@@ -24,7 +26,7 @@ func getConfigStorage() string {
 }
 
 //read config in
-func ReadConfig(c Configuration) Configuration {
+func readConfig(c Configuration) Configuration {
 	// make the config location if needed
 	if _, err := os.Stat(c.StorageLocation); os.IsNotExist(err) {
 		// try to make path first,
@@ -36,7 +38,11 @@ func ReadConfig(c Configuration) Configuration {
 		}
 		fmt.Printf("making folder at:%s\n", getConfigStorage())
 		err = os.MkdirAll(getConfigStorage(), 0700)
-		WriteConfig(&c)
+		if err != nil {
+			fmt.Println("cannot make folder for config, defaulting storage to local directory")
+			//failed to create folder to store, store files in same directory as program
+		}
+		writeConfig(&c)
 		return c
 	}
 	config, err := os.Open(getConfigStorage() + configName)
@@ -53,9 +59,8 @@ func ReadConfig(c Configuration) Configuration {
 	return c
 }
 
-//save current config to file
-func WriteConfig(c *Configuration) {
-
+// writeConfig saves current config to file
+func writeConfig(c *Configuration) {
 	config, err := os.Create(getConfigStorage() + configName)
 	if err != nil {
 		//using default settings because cannot write settings

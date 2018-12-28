@@ -4,6 +4,17 @@ import (
 	ui "github.com/gizak/termui"
 )
 
+const (
+	podmanHeader = "" +
+		" _____         _                  \n" +
+		"|  _  | ___  _| | _____  ___  ___ \n" +
+		"|   __|| . || . ||     || .'||   |\n" +
+		"|__|   |___||___||_|_|_||__,||_|_|"
+	headerHeight    = 5
+	playerHeight    = 3
+	searchBarHeight = 3
+)
+
 func produceHeaderWidget(width int) *ui.Paragraph {
 	headerWidget := ui.NewParagraph(podmanHeader)
 	headerWidget.Height = headerHeight
@@ -49,23 +60,29 @@ func producePlayerWidget(configuration *Configuration, width int, height int) ui
 		playerWidget.BorderRight = false
 		playerWidget.BorderBottom = false
 		return playerWidget
-	} else {
-		playerWidget := ui.NewGauge()
-		playerWidget.Label = "whatever {{percent}}%"
-		playerWidget.Width = width
-		playerWidget.Height = playerHeight
-		playerWidget.Y = height - playerHeight
-		playerWidget.BorderLeft = false
-		playerWidget.BorderRight = false
-		playerWidget.BorderBottom = false
-		return playerWidget
 	}
+	playerWidget := ui.NewGauge()
+	playerWidget.Label = "whatever {{percent}}%"
+	playerWidget.Width = width
+	playerWidget.Height = playerHeight
+	playerWidget.Y = height - playerHeight
+	playerWidget.BorderLeft = false
+	playerWidget.BorderRight = false
+	playerWidget.BorderBottom = false
+	return playerWidget
 }
 
 func produceSearchWidget(configuration *Configuration, width int, height int) *ui.Paragraph {
-	return nil
+	searchWidget := ui.NewParagraph("Search for podcasts:\n" + userTextBuffer)
+	searchWidget.Height = searchBarHeight
+	searchWidget.Width = width
+	searchWidget.BorderTop = false
+	searchWidget.BorderRight = false
+	searchWidget.BorderLeft = false
+	return searchWidget
 }
 
 func produceSearchResults(configuration *Configuration, width int, height int) *ui.List {
-	return nil
+	searchResultsWidget := ui.NewList()
+	return searchResultsWidget
 }

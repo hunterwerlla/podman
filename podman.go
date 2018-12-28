@@ -53,7 +53,7 @@ func main() {
 	//read config file
 	config := CreateDefault()
 	config.StorageLocation = defaultStorage
-	config = ReadConfig(config)
+	config = readConfig(config)
 	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the GUI or not")
 	flag.Parse()

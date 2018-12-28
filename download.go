@@ -16,7 +16,7 @@ var (
 	downloadProgressText bytes.Buffer
 )
 
-func DownloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode) (*Configuration, error) {
+func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode) (*Configuration, error) {
 	atomic.AddInt32(&downloading, 1)
 	defer func() { atomic.AddInt32(&downloading, -1) }()
 	//get rid of all stdout data
@@ -69,7 +69,7 @@ func DownloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	return configuration, nil
 }
 
-func PodcastIsDownloaded(configuration *Configuration, entry PodcastEpisode) bool {
+func podcastIsDownloaded(configuration *Configuration, entry PodcastEpisode) bool {
 	_, ok := configuration.Downloaded[entry.GUID]
 	if ok {
 		return true

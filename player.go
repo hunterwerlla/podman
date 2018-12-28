@@ -41,6 +41,8 @@ func StartPlayer() {
 	go startPlayer(playerState, fileChannel, exit)
 }
 
+// DisposePlayer sends a signal to the player to destroy itself, and then waits for the player to exit
+// This function will deadlock if called twice
 func DisposePlayer() {
 	playerControl <- ExitPlayer
 	<-exitChannel
@@ -96,8 +98,8 @@ func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string,
 		chain      *sox.EffectsChain
 		inputFile  *sox.Format
 		outputFile *sox.Format
-		status     PlayerState = NothingPlaying
-		stopToExit bool        = false
+		status     = NothingPlaying
+		stopToExit = false
 	)
 	if !sox.Init() {
 		panic("Unable to start the player")
