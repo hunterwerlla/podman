@@ -73,7 +73,20 @@ func producePlayerWidget(configuration *Configuration, width int, height int) ui
 }
 
 func produceSearchWidget(configuration *Configuration, width int, height int) *ui.Paragraph {
-	searchWidget := ui.NewParagraph("Search for podcasts:\n" + userTextBuffer)
+	text := ""
+	if len(currentPodcastsInBuffer) > 0 {
+		text = "Results:\n"
+	} else {
+		text = "Search for podcasts:\n"
+	}
+	if currentMode == Insert {
+		text += ">"
+	}
+	if userTextBuffer != "" {
+		text += userTextBuffer
+	}
+	searchWidget := ui.NewParagraph(text)
+	searchWidget.TextFgColor = ui.ColorBlack
 	searchWidget.Height = searchBarHeight
 	searchWidget.Width = width
 	searchWidget.BorderTop = false
@@ -84,5 +97,20 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 
 func produceSearchResults(configuration *Configuration, width int, height int) *ui.List {
 	searchResultsWidget := ui.NewList()
+	searchResultsWidget.Y = searchBarHeight
+	searchResultsWidget.Height = height - searchBarHeight - playerHeight
+	searchResultsWidget.Width = width
+	searchResultsWidget.Border = false
+	searchResultsWidget.ItemFgColor = ui.ColorBlack
+	var podcasts []string
+	currentListSize = len(currentPodcastsInBuffer)
+	for ii, item := range currentPodcastsInBuffer {
+		formattedPodcast := formatPodcast(item, width)
+		if ii == currentSelected {
+			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
+		}
+		podcasts = append(podcasts, formattedPodcast)
+	}
+	searchResultsWidget.Items = podcasts
 	return searchResultsWidget
 }

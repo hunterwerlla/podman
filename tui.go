@@ -76,12 +76,13 @@ var (
 )
 
 var (
-	currentSelected   = 0
-	currentListSize   = 0
-	currentListOffset = 0
-	currentMode       = Normal
-	currentScreen     = Home
-	userTextBuffer    = ""
+	currentSelected         = 0
+	currentListSize         = 0
+	currentListOffset       = 0
+	currentMode             = Normal
+	currentScreen           = Home
+	currentPodcastsInBuffer []Podcast
+	userTextBuffer          = ""
 )
 
 func termuiStyleText(text string, fgcolor string, bgcolor string) string {
@@ -106,6 +107,8 @@ func refreshPageMain(configuration *Configuration, width int, height int) []ui.B
 
 func drawPageSearch(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
+	widgets = append(widgets, produceSearchWidget(configuration, width, height))
+	widgets = append(widgets, produceSearchResults(configuration, width, height))
 	return widgets
 }
 
@@ -113,6 +116,7 @@ func refreshPageSearch(configuration *Configuration, width int, height int) []ui
 	widgets := make([]ui.Bufferer, 0)
 	widgets = append(widgets, produceSearchWidget(configuration, width, height))
 	widgets = append(widgets, produceSearchResults(configuration, width, height))
+	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	return widgets
 }
 
@@ -159,9 +163,19 @@ func StartTui(configuration *Configuration) {
 			} else {
 				previousScreen := currentScreen
 				handleKeyboard(configuration, e)
-				ui.Render(refreshPage[currentScreen](configuration, width, height)...)
-				// redraw screen entirely if we have changed screens
-				if previousScreen != currentScreen {
+				// refresh screen after keyboard input or redraw screen entirely + reset state if we have changed screens
+				if previousScreen == currentScreen {
+					ui.Render(refreshPage[currentScreen](configuration, width, height)...)
+				} else {
+					// reset modes
+					if currentScreen == Search {
+						currentMode = Insert
+					} else {
+						currentMode = Normal
+					}
+					// reset text
+					userTextBuffer = ""
+					currentPodcastsInBuffer = nil
 					ui.Render(drawPage[currentScreen](configuration, width, height)...)
 				}
 			}
