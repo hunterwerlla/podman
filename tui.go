@@ -20,6 +20,12 @@ const (
 )
 
 var (
+	controlsMap = map[screen]string{
+		Home:       "[s]elect/[<enter>]  ",
+		Search:     "[s]ubscribe   [/]search   [esc]ape searching   [<enter>]finish search   [h]left   [j]down   [k]up   [l]right",
+		Downloaded: "[p]lay/<enter>",
+	}
+
 	leftTransitions = map[screen]screen{
 		Home:       Search,
 		Search:     None,
@@ -109,6 +115,8 @@ func drawPageSearch(configuration *Configuration, width int, height int) []ui.Bu
 	widgets := make([]ui.Bufferer, 0)
 	widgets = append(widgets, produceSearchWidget(configuration, width, height))
 	widgets = append(widgets, produceSearchResults(configuration, width, height))
+	widgets = append(widgets, producePlayerWidget(configuration, width, height))
+	widgets = append(widgets, produceControlsWidget(configuration, width, height))
 	return widgets
 }
 
@@ -176,6 +184,7 @@ func StartTui(configuration *Configuration) {
 					// reset text
 					userTextBuffer = ""
 					currentPodcastsInBuffer = nil
+					currentSelected = 0
 					ui.Render(drawPage[currentScreen](configuration, width, height)...)
 				}
 			}

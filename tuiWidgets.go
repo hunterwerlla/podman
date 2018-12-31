@@ -13,6 +13,7 @@ const (
 	headerHeight    = 5
 	playerHeight    = 3
 	searchBarHeight = 3
+	controlsHeight  = 2
 )
 
 func produceHeaderWidget(width int) *ui.Paragraph {
@@ -75,14 +76,14 @@ func producePlayerWidget(configuration *Configuration, width int, height int) ui
 func produceSearchWidget(configuration *Configuration, width int, height int) *ui.Paragraph {
 	text := ""
 	if len(currentPodcastsInBuffer) > 0 {
-		text = "Results:\n"
+		text = "    Results:\n"
 	} else {
-		text = "Search for podcasts:\n"
+		text = "    Search for podcasts:\n"
 	}
 	if currentMode == Insert {
-		text += ">"
+		text += "   >"
 	} else {
-		text += " "
+		text += "    "
 	}
 	if userTextBuffer != "" {
 		text += userTextBuffer
@@ -103,7 +104,7 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 func produceSearchResults(configuration *Configuration, width int, height int) *ui.List {
 	searchResultsWidget := ui.NewList()
 	searchResultsWidget.Y = searchBarHeight
-	searchResultsWidget.Height = height - searchBarHeight - playerHeight
+	searchResultsWidget.Height = height - searchBarHeight - playerHeight - controlsHeight
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
 	searchResultsWidget.ItemFgColor = ui.ColorBlack
@@ -130,4 +131,16 @@ func produceSearchResults(configuration *Configuration, width int, height int) *
 	}
 	searchResultsWidget.Items = podcasts
 	return searchResultsWidget
+}
+
+func produceControlsWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	controlsWidget := ui.NewParagraph(controlsMap[currentScreen])
+	controlsWidget.TextFgColor = ui.ColorBlack
+	controlsWidget.Width = width
+	controlsWidget.Height = controlsHeight
+	controlsWidget.Y = height - playerHeight - controlsHeight
+	controlsWidget.BorderLeft = false
+	controlsWidget.BorderRight = false
+	controlsWidget.BorderBottom = false
+	return controlsWidget
 }

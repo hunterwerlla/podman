@@ -112,6 +112,10 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		// reset mode on Escape as well as possibly do something else
 		currentMode = Normal
 		escapePressed[currentScreen](configuration)
+	} else if (event.ID == configuration.LeftKeybind && currentMode == Normal) || event.ID == "<Left>" {
+		transitionScreen(leftTransitions, currentScreen)
+	} else if (event.ID == configuration.RightKeybind && currentMode == Normal) || event.ID == "<Right>" {
+		transitionScreen(rightTransitions, currentScreen)
 	} else if currentMode == Insert {
 		if event.ID == "<Backspace>" || event.ID == "<Delete>" || event.ID == "C-8>" {
 			if len(userTextBuffer) > 0 {
@@ -128,10 +132,6 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		}
 	} else if event.ID == configuration.SearchKeybind {
 		searchPressed[currentScreen](configuration)
-	} else if event.ID == configuration.LeftKeybind || event.ID == "<Left>" {
-		transitionScreen(leftTransitions, currentScreen)
-	} else if event.ID == configuration.RightKeybind || event.ID == "<Right>" {
-		transitionScreen(rightTransitions, currentScreen)
 		// TODO refactor these out
 	} else if event.ID == configuration.PlayKeybind {
 		fmt.Println("play")
