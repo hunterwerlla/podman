@@ -10,14 +10,24 @@ const (
 		"|  _  | ___  _| | _____  ___  ___ \n" +
 		"|   __|| . || . ||     || .'||   |\n" +
 		"|__|   |___||___||_|_|_||__,||_|_|"
+	downloadedHeader = "" +
+		"____                     _              _         _\n" +
+		"|    \\  ___  _ _ _  ___ | | ___  ___  _| | ___  _| |\n" +
+		"|  |  || . || | | ||   || || . || .'|| . || -_|| . |\n" +
+		"|____/ |___||_____||_|_||_||___||__,||___||___||___|"
+	searchHeader = "" +
+		" _____                      _\n" +
+		"|   __| ___  ___  ___  ___ | |_\n" +
+		"|__   || -_|| .'||  _||  _||   |\n" +
+		"|_____||___||__,||_|  |___||_|_|"
 	headerHeight    = 5
 	playerHeight    = 3
 	searchBarHeight = 3
 	controlsHeight  = 2
 )
 
-func produceHeaderWidget(width int) *ui.Paragraph {
-	headerWidget := ui.NewParagraph(podmanHeader)
+func produceHeaderWidget(width int, header string) *ui.Paragraph {
+	headerWidget := ui.NewParagraph(header)
 	headerWidget.Height = headerHeight
 	headerWidget.Width = width
 	headerWidget.TextFgColor = ui.ColorBlack
@@ -92,18 +102,17 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 		text += "_"
 	}
 	searchWidget := ui.NewParagraph(text)
+	searchWidget.Y = headerHeight
 	searchWidget.TextFgColor = ui.ColorBlack
 	searchWidget.Height = searchBarHeight
 	searchWidget.Width = width
-	searchWidget.BorderTop = false
-	searchWidget.BorderRight = false
-	searchWidget.BorderLeft = false
+	searchWidget.Border = false
 	return searchWidget
 }
 
-func produceSearchResults(configuration *Configuration, width int, height int) *ui.List {
+func produceSearchResultsWidget(configuration *Configuration, width int, height int) *ui.List {
 	searchResultsWidget := ui.NewList()
-	searchResultsWidget.Y = searchBarHeight
+	searchResultsWidget.Y = searchBarHeight + headerHeight
 	searchResultsWidget.Height = height - searchBarHeight - playerHeight - controlsHeight
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
@@ -128,6 +137,29 @@ func produceSearchResults(configuration *Configuration, width int, height int) *
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		}
 		podcasts = append(podcasts, formattedPodcast)
+	}
+	searchResultsWidget.Items = podcasts
+	return searchResultsWidget
+}
+
+func produceDownloadedWidget(configuration *Configuration, width int, height int) *ui.List {
+	searchResultsWidget := ui.NewList()
+	searchResultsWidget.Y = headerHeight
+	searchResultsWidget.Height = height - playerHeight - headerHeight
+	searchResultsWidget.Width = width
+	searchResultsWidget.Border = false
+	searchResultsWidget.ItemFgColor = ui.ColorBlack
+	var podcasts []string
+	currentListSize = len(configuration.Downloaded)
+	currentNum := 0
+	for _, item := range configuration.Downloaded {
+		// TODO add function for this
+		formattedPodcast := item.PodcastTitle + " " + item.Title + " " + item.Summary
+		if currentNum == currentSelected {
+			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
+		}
+		podcasts = append(podcasts, formattedPodcast)
+		currentNum++
 	}
 	searchResultsWidget.Items = podcasts
 	return searchResultsWidget

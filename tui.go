@@ -98,7 +98,7 @@ func termuiStyleText(text string, fgcolor string, bgcolor string) string {
 
 func drawPageMain(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, produceHeaderWidget(width))
+	widgets = append(widgets, produceHeaderWidget(width, podmanHeader))
 	widgets = append(widgets, producePodcastListWidget(configuration, width, height))
 	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	return widgets
@@ -113,8 +113,9 @@ func refreshPageMain(configuration *Configuration, width int, height int) []ui.B
 
 func drawPageSearch(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
+	widgets = append(widgets, produceHeaderWidget(width, searchHeader))
 	widgets = append(widgets, produceSearchWidget(configuration, width, height))
-	widgets = append(widgets, produceSearchResults(configuration, width, height))
+	widgets = append(widgets, produceSearchResultsWidget(configuration, width, height))
 	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	widgets = append(widgets, produceControlsWidget(configuration, width, height))
 	return widgets
@@ -123,13 +124,16 @@ func drawPageSearch(configuration *Configuration, width int, height int) []ui.Bu
 func refreshPageSearch(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
 	widgets = append(widgets, produceSearchWidget(configuration, width, height))
-	widgets = append(widgets, produceSearchResults(configuration, width, height))
+	widgets = append(widgets, produceSearchResultsWidget(configuration, width, height))
 	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	return widgets
 }
 
 func drawPageDownloaded(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
+	widgets = append(widgets, produceHeaderWidget(width, downloadedHeader))
+	widgets = append(widgets, produceDownloadedWidget(configuration, width, height))
+	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	return widgets
 }
 
