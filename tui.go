@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	ui "github.com/gizak/termui"
 )
 
@@ -20,11 +21,13 @@ const (
 )
 
 var (
-	controlsMap = map[screen]string{
-		Home:       "[s]elect/[<enter>]  ",
-		Search:     "[s]ubscribe   [/]search   [esc]ape searching   [<enter>]finish search   [h]left   [j]down   [k]up   [l]right",
+	defaultControlsMap = map[screen]string{
+		Home:       "[%s]elect/[<enter>]  ",
+		Search:     "[s]ubscribe   [/]search   [esc]ape searching   [<enter>]%s   [h]left   [j]down   [k]up   [l]right",
 		Downloaded: "[p]lay/<enter>",
 	}
+
+	controlsMap = make(map[screen]string)
 
 	leftTransitions = map[screen]screen{
 		Home:       Search,
@@ -46,7 +49,7 @@ var (
 
 	refreshPage = map[screen]func(configuration *Configuration, width int, height int) []ui.Bufferer{
 		Home:       refreshPageMain,
-		Search:     refreshPageSearch,
+		Search:     drawPageSearch,
 		Downloaded: refreshPageDownloaded,
 	}
 
@@ -91,6 +94,18 @@ var (
 	userTextBuffer          = ""
 )
 
+func fillOutControlsMap(configuration *Configuration, controls map[screen]string) {
+	var searchText string
+	controlsMap[Home] = fmt.Sprintf(controls[Home], configuration.ActionKeybind)
+	if currentMode == Insert {
+		searchText = "finish search  "
+	} else {
+		searchText = "look at podcast"
+	}
+	controlsMap[Search] = fmt.Sprintf(controls[Search], searchText)
+	controlsMap[Downloaded] = controls[Downloaded]
+}
+
 func termuiStyleText(text string, fgcolor string, bgcolor string) string {
 	text = "[" + text + "](fg-" + fgcolor + ",bg-" + string(bgcolor) + ")"
 	return text
@@ -98,8 +113,8 @@ func termuiStyleText(text string, fgcolor string, bgcolor string) string {
 
 func drawPageMain(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, produceHeaderWidget(width, podmanHeader))
 	widgets = append(widgets, producePodcastListWidget(configuration, width, height))
+	widgets = append(widgets, produceControlsWidget(configuration, width, height))
 	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	return widgets
 }
@@ -112,38 +127,26 @@ func refreshPageMain(configuration *Configuration, width int, height int) []ui.B
 }
 
 func drawPageSearch(configuration *Configuration, width int, height int) []ui.Bufferer {
+	fillOutControlsMap(configuration, defaultControlsMap)
 	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, produceHeaderWidget(width, searchHeader))
 	widgets = append(widgets, produceSearchWidget(configuration, width, height))
 	widgets = append(widgets, produceSearchResultsWidget(configuration, width, height))
-	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	widgets = append(widgets, produceControlsWidget(configuration, width, height))
-	return widgets
-}
-
-func refreshPageSearch(configuration *Configuration, width int, height int) []ui.Bufferer {
-	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, produceSearchWidget(configuration, width, height))
-	widgets = append(widgets, produceSearchResultsWidget(configuration, width, height))
 	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	return widgets
 }
 
 func drawPageDownloaded(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, produceHeaderWidget(width, downloadedHeader))
 	widgets = append(widgets, produceDownloadedWidget(configuration, width, height))
+	widgets = append(widgets, produceControlsWidget(configuration, width, height))
 	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	return widgets
 }
 
 func refreshPageDownloaded(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
-	return widgets
-}
-
-func refreshPlayer(configuration *Configuration, width int, height int) []ui.Bufferer {
-	widgets := make([]ui.Bufferer, 0)
+	widgets = append(widgets, produceDownloadedWidget(configuration, width, height))
 	widgets = append(widgets, producePlayerWidget(configuration, width, height))
 	return widgets
 }
@@ -157,6 +160,8 @@ func transitionScreen(transitions map[screen]screen, screen screen) {
 
 // StartTui starts the TUI with the Configuration passed in
 func StartTui(configuration *Configuration) {
+	fillOutControlsMap(configuration, defaultControlsMap)
+
 	err := ui.Init()
 	if err != nil {
 		panic(err)

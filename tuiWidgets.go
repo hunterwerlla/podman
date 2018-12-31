@@ -5,45 +5,16 @@ import (
 )
 
 const (
-	podmanHeader = "" +
-		" _____         _                  \n" +
-		"|  _  | ___  _| | _____  ___  ___ \n" +
-		"|   __|| . || . ||     || .'||   |\n" +
-		"|__|   |___||___||_|_|_||__,||_|_|"
-	downloadedHeader = "" +
-		"____                     _              _         _\n" +
-		"|    \\  ___  _ _ _  ___ | | ___  ___  _| | ___  _| |\n" +
-		"|  |  || . || | | ||   || || . || .'|| . || -_|| . |\n" +
-		"|____/ |___||_____||_|_||_||___||__,||___||___||___|"
-	searchHeader = "" +
-		" _____                      _\n" +
-		"|   __| ___  ___  ___  ___ | |_\n" +
-		"|__   || -_|| .'||  _||  _||   |\n" +
-		"|_____||___||__,||_|  |___||_|_|"
-	headerHeight    = 5
 	playerHeight    = 3
 	searchBarHeight = 3
 	controlsHeight  = 2
 )
 
-func produceHeaderWidget(width int, header string) *ui.Paragraph {
-	headerWidget := ui.NewParagraph(header)
-	headerWidget.Height = headerHeight
-	headerWidget.Width = width
-	headerWidget.TextFgColor = ui.ColorBlack
-	headerWidget.TextBgColor = ui.ColorRGB(4, 4, 4)
-	headerWidget.BorderTop = false
-	headerWidget.BorderLeft = false
-	headerWidget.BorderRight = false
-	headerWidget.BorderBottom = true
-	return headerWidget
-}
-
 func producePodcastListWidget(configruation *Configuration, width int, height int) *ui.List {
 	podcastWidget := ui.NewList()
 	podcastWidget.Width = width
-	podcastWidget.Height = height - headerHeight - playerHeight
-	podcastWidget.Y = headerHeight
+	podcastWidget.Height = height - playerHeight - controlsHeight
+	podcastWidget.Y = 0
 	podcastWidget.Border = false
 	podcastWidget.ItemFgColor = ui.ColorBlack
 	var podcasts []string
@@ -102,7 +73,7 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 		text += "_"
 	}
 	searchWidget := ui.NewParagraph(text)
-	searchWidget.Y = headerHeight
+	searchWidget.Y = 0
 	searchWidget.TextFgColor = ui.ColorBlack
 	searchWidget.Height = searchBarHeight
 	searchWidget.Width = width
@@ -112,7 +83,7 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 
 func produceSearchResultsWidget(configuration *Configuration, width int, height int) *ui.List {
 	searchResultsWidget := ui.NewList()
-	searchResultsWidget.Y = searchBarHeight + headerHeight
+	searchResultsWidget.Y = searchBarHeight
 	searchResultsWidget.Height = height - searchBarHeight - playerHeight - controlsHeight
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
@@ -144,8 +115,8 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 
 func produceDownloadedWidget(configuration *Configuration, width int, height int) *ui.List {
 	searchResultsWidget := ui.NewList()
-	searchResultsWidget.Y = headerHeight
-	searchResultsWidget.Height = height - playerHeight - headerHeight
+	searchResultsWidget.Y = 0
+	searchResultsWidget.Height = height - playerHeight - controlsHeight
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
 	searchResultsWidget.ItemFgColor = ui.ColorBlack

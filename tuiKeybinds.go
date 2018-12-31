@@ -65,6 +65,8 @@ func upPressedHome(configuration *Configuration) {
 func upPressedSearch(configuration *Configuration) {
 	if currentSelected > 0 {
 		currentSelected--
+	} else {
+		currentMode = Insert
 	}
 }
 
