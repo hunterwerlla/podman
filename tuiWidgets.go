@@ -18,8 +18,8 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 	podcastWidget.Border = false
 	podcastWidget.ItemFgColor = ui.ColorBlack
 	var podcasts []string
-	currentListSize = len(configruation.Subscribed)
-	for ii, item := range configruation.Subscribed {
+	currentListSize = len(currentPodcastsInBuffer)
+	for ii, item := range currentPodcastsInBuffer {
 		formattedPodcast := formatPodcast(item, width)
 		if ii == currentSelected {
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")

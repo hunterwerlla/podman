@@ -6,6 +6,7 @@ import (
 
 func drawPageMain(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
+	currentPodcastsInBuffer = configuration.Subscribed
 	widgets = append(widgets, producePodcastListWidget(configuration, width, height))
 	widgets = append(widgets, produceControlsWidget(configuration, width, height))
 	widgets = append(widgets, producePlayerWidget(configuration, width, height))

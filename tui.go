@@ -10,6 +10,7 @@ type mode string
 
 const (
 	None          screen = "None"
+	LastScreen    screen = "LastScreen"
 	Home          screen = "Home"
 	Search        screen = "Search"
 	Downloaded    screen = "Downloaded"
@@ -24,7 +25,7 @@ const (
 var (
 	defaultControlsMap = map[screen]string{
 		Home:          "[%s]elect/[<enter>]  ",
-		Search:        "[s]ubscribe   [/]search   [esc]ape searching   [r]emove subscription   [<enter>]%s   [h]left   [j]down   [k]up   [l]right",
+		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [h]left   [j]down   [k]up   [l]right",
 		Downloaded:    "[p]lay/<enter>",
 		PodcastDetail: "[<enter>] download episode",
 	}
@@ -32,15 +33,17 @@ var (
 	controlsMap = make(map[screen]string)
 
 	leftTransitions = map[screen]screen{
-		Home:       Search,
-		Search:     None,
-		Downloaded: Home,
+		Home:          Search,
+		Search:        None,
+		Downloaded:    Home,
+		PodcastDetail: LastScreen,
 	}
 
 	rightTransitions = map[screen]screen{
-		Home:       Downloaded,
-		Downloaded: None,
-		Search:     Home,
+		Home:          Downloaded,
+		Downloaded:    None,
+		Search:        Home,
+		PodcastDetail: LastScreen,
 	}
 
 	drawPage = map[screen]func(configuration *Configuration, width int, height int) []ui.Bufferer{
@@ -64,9 +67,10 @@ var (
 	}
 
 	enterPressed = map[screen]func(configuration *Configuration){
-		Home:       enterPressedHome,
-		Search:     enterPressedSearch,
-		Downloaded: enterPressedDownloaded,
+		Home:          enterPressedHome,
+		Search:        enterPressedSearch,
+		Downloaded:    enterPressedDownloaded,
+		PodcastDetail: enterPressedPodcastDetail,
 	}
 
 	escapePressed = map[screen]func(configuration *Configuration){
@@ -100,6 +104,7 @@ var (
 	currentListOffset       = 0
 	currentMode             = Normal
 	currentScreen           = Home
+	previousScreen          = None
 	currentPodcastsInBuffer []Podcast
 	currentSelectedPodcast  Podcast
 	userTextBuffer          = ""
@@ -124,9 +129,13 @@ func termuiStyleText(text string, fgcolor string, bgcolor string) string {
 
 func transitionScreen(transitions map[screen]screen, screen screen) {
 	if transitions[screen] == None {
-		return
+		// do nothing
+	} else if transitions[screen] == LastScreen {
+		currentScreen = previousScreen
+		previousScreen = None
+	} else {
+		currentScreen = transitions[screen]
 	}
-	currentScreen = transitions[screen]
 }
 
 // StartTui starts the TUI with the Configuration passed in
@@ -149,10 +158,10 @@ func StartTui(configuration *Configuration) {
 			if e.ID == "<C-c>" {
 				break
 			} else {
-				previousScreen := currentScreen
+				savedScreen := currentScreen
 				handleKeyboard(configuration, e)
 				// refresh screen after keyboard input or redraw screen entirely + reset state if we have changed screens
-				if previousScreen == currentScreen {
+				if savedScreen == currentScreen {
 					ui.Render(refreshPage[currentScreen](configuration, width, height)...)
 				} else {
 					// reset modes
@@ -165,6 +174,9 @@ func StartTui(configuration *Configuration) {
 					userTextBuffer = ""
 					currentPodcastsInBuffer = nil
 					currentSelected = 0
+					// save last screen
+					previousScreen = savedScreen
+					// render new screen
 					ui.Render(drawPage[currentScreen](configuration, width, height)...)
 				}
 			}

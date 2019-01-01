@@ -6,18 +6,25 @@ import (
 	"strings"
 )
 
-func enterPressedHome(configuration *Configuration) {
+func switchToSelectedPodcastScreen(configuration *Configuration) {
+	if currentSelected >= len(currentPodcastsInBuffer) || currentSelected < 0 {
+		return
+	}
+	currentSelectedPodcast = currentPodcastsInBuffer[currentSelected]
+	currentScreen = PodcastDetail
+}
 
+func enterPressedHome(configuration *Configuration) {
+	// TODO refactor into two functions
+	if currentMode == Normal {
+		switchToSelectedPodcastScreen(configuration)
+	}
 }
 
 func enterPressedSearch(configuration *Configuration) {
 	// TODO refactor into two functions
 	if currentMode == Normal {
-		if currentSelected >= len(currentPodcastsInBuffer) || currentSelected < 0 {
-			return
-		}
-		currentSelectedPodcast = currentPodcastsInBuffer[currentSelected]
-		currentScreen = PodcastDetail
+		switchToSelectedPodcastScreen(configuration)
 	} else {
 		// search TODO use go()
 		currentSelected = 0
@@ -33,6 +40,10 @@ func enterPressedSearch(configuration *Configuration) {
 }
 
 func enterPressedDownloaded(configuration *Configuration) {
+
+}
+
+func enterPressedPodcastDetail(configuration *Configuration) {
 
 }
 
