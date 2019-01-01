@@ -35,10 +35,10 @@ var (
 // StartPlayer starts the global player. The player is global since there is only one of them
 // I'm not really a fan of moving it into an object as it should not be reused
 func StartPlayer() {
-	playerControl := make(chan PlayerState)
-	fileChannel := make(chan string)
-	exit := make(chan bool)
-	go startPlayer(playerControl, fileChannel, exit)
+	playerControl = make(chan PlayerState)
+	fileChannel = make(chan string)
+	exitChannel = make(chan bool)
+	go startPlayer()
 }
 
 // DisposePlayer sends a signal to the player to destroy itself, and then waits for the player to exit
@@ -50,7 +50,7 @@ func DisposePlayer() {
 
 func TogglePlayerState() {
 	if playerState == Play {
-		PausePlayer()
+		playerControl <- Pause
 	} else if playerState == Pause {
 		ResumePlayer()
 	}
@@ -58,7 +58,6 @@ func TogglePlayerState() {
 
 func PausePlayer() {
 	playerPosition += int(time.Since(startTime).Seconds())
-	playerControl <- Pause
 }
 
 func ResumePlayer() {
@@ -99,14 +98,7 @@ func GetPlayerPosition() int {
 }
 
 //this runs on its own thread to start/stop and select the media that is playing
-func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string, exit chan bool) {
-	//get rid of all stderr and stdout data
-	//due to SOX outputting error messages
-	// _, unused, _ := os.Pipe()
-	// os.Stderr = unused
-	// os.Stdout = unused
-	fileChannel = fileSelectionChannel
-	exitChannel = exit
+func startPlayer() {
 	var (
 		chain      *sox.EffectsChain
 		inputFile  *sox.Format
@@ -132,8 +124,8 @@ func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string,
 			panic("invalid state when switching status, this should never happen")
 		case Play:
 			playFile(chain, inputFile, outputFile)
-		case Pause: //case 1 pause
-			//save time and file
+		case Pause:
+			//save time and file then cleanup
 			PausePlayer()
 			cleanupSoxData(chain, inputFile, outputFile)
 		case Stop:
@@ -148,7 +140,7 @@ func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string,
 			stopToExit = true
 		}
 	}
-	exit <- true
+	exitChannel <- true
 }
 
 func changePlayerPosition(inputFile *sox.Format) {

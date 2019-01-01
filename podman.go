@@ -57,7 +57,7 @@ func main() {
 	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the GUI or not")
 	flag.Parse()
-	//make the channels used by player
+	// Start up the global player
 	StartPlayer()
 	//made a decision to use TUI or not
 	if *noTui == true {
