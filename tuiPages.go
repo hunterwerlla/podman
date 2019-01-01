@@ -33,6 +33,7 @@ func drawPageSearch(configuration *Configuration, width int, height int) []ui.Bu
 
 func drawPageDownloaded(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 0)
+	currentPodcastsInBuffers[Downloaded] = configuration.Downloaded
 	widgets = append(widgets, produceDownloadedWidget(configuration, width, height))
 	widgets = append(widgets, produceControlsWidget(configuration, width, height))
 	widgets = append(widgets, producePlayerWidget(configuration, width, height))

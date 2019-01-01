@@ -65,14 +65,15 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	//add location of file to structure
 	ep.StorageLocation = fullPathFile
 	//file download good so add it to downloaded
-	configuration.Downloaded[ep.GUID] = ep
+	configuration.Downloaded = append(configuration.Downloaded, ep)
 	return configuration, nil
 }
 
 func podcastIsDownloaded(configuration *Configuration, entry PodcastEpisode) bool {
-	_, ok := configuration.Downloaded[entry.GUID]
-	if ok {
-		return true
+	for _, value := range configuration.Downloaded {
+		if value.GUID == entry.GUID {
+			return true
+		}
 	}
 	return false
 }

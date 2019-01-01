@@ -123,9 +123,10 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 	searchResultsWidget.Border = false
 	searchResultsWidget.ItemFgColor = ui.ColorBlack
 	var podcasts []string
-	currentListSize = len(configuration.Downloaded)
+	var podcastList = currentPodcastsInBuffers[Downloaded].([]PodcastEpisode)
+	currentListSize = len(podcastList)
 	currentNum := 0
-	for _, item := range configuration.Downloaded {
+	for _, item := range podcastList {
 		// TODO add function for this
 		formattedPodcast := item.PodcastTitle + " " + item.Title + " " + item.Summary
 		if currentNum == currentSelected {

@@ -96,6 +96,13 @@ var (
 		Search:     searchPressedSearch,
 		Downloaded: searchPressedDownloaded,
 	}
+
+	currentPodcastsInBuffers = map[screen]interface{}{
+		Home:          nil,
+		Search:        nil,
+		Downloaded:    nil,
+		PodcastDetail: nil,
+	}
 )
 
 var (

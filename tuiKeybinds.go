@@ -43,7 +43,12 @@ func enterPressedSearch(configuration *Configuration) {
 }
 
 func enterPressedDownloaded(configuration *Configuration) {
-
+	podcasts := currentPodcastsInBuffers[Downloaded].([]PodcastEpisode)
+	if currentSelected >= len(podcasts) || currentSelected < 0 {
+		return
+	}
+	SetPlaying(podcasts[currentSelected].StorageLocation)
+	SetPlayerState(Play)
 }
 
 func enterPressedPodcastDetail(configuration *Configuration) {
