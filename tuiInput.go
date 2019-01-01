@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	ui "github.com/gizak/termui"
 	"strings"
 	"time"
@@ -261,7 +260,6 @@ func tuiMainLoop(configuration *Configuration) {
 		case e := <-uiEvents:
 			{
 				savedScreen := currentScreen
-				fmt.Printf("%V", e)
 				if e.Type == ui.KeyboardEvent {
 					if e.ID == "<C-c>" {
 						goto exitMainLoop
