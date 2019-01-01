@@ -98,23 +98,22 @@ var (
 	}
 
 	currentPodcastsInBuffers = map[screen]interface{}{
-		Home:          nil,
-		Search:        nil,
-		Downloaded:    nil,
-		PodcastDetail: nil,
+		Home:          make([]Podcast, 0),
+		Search:        make([]Podcast, 0),
+		Downloaded:    make([]PodcastEpisode, 0),
+		PodcastDetail: make([]Podcast, 0),
 	}
 )
 
 var (
-	currentSelected         = 0
-	currentListSize         = 0
-	currentListOffset       = 0
-	currentMode             = Normal
-	currentScreen           = Home
-	previousScreen          = None
-	currentPodcastsInBuffer []Podcast
-	currentSelectedPodcast  Podcast
-	userTextBuffer          = ""
+	currentSelected        = 0
+	currentListSize        = 0
+	currentListOffset      = 0
+	currentMode            = Normal
+	currentScreen          = Home
+	previousScreen         = None
+	currentSelectedPodcast Podcast
+	userTextBuffer         = ""
 )
 
 func fillOutControlsMap(configuration *Configuration, controls map[screen]string) {
@@ -179,7 +178,6 @@ func StartTui(configuration *Configuration) {
 					}
 					// reset text
 					userTextBuffer = ""
-					currentPodcastsInBuffer = nil
 					currentSelected = 0
 					// save last screen
 					previousScreen = savedScreen

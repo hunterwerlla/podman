@@ -7,10 +7,11 @@ import (
 )
 
 func switchToSelectedPodcastScreen(configuration *Configuration) {
-	if currentSelected >= len(currentPodcastsInBuffer) || currentSelected < 0 {
+	podcasts := currentPodcastsInBuffers[currentScreen].([]Podcast)
+	if currentSelected >= len(podcasts) || currentSelected < 0 {
 		return
 	}
-	currentSelectedPodcast = currentPodcastsInBuffer[currentSelected]
+	currentSelectedPodcast = podcasts[currentSelected]
 	currentScreen = PodcastDetail
 }
 
@@ -21,7 +22,7 @@ func searchPodcastsFromTui(configuration *Configuration) {
 	searchString := strings.Replace(userTextBuffer, "\n", "", -1)
 	searchString = strings.Trim(searchString, "\n\t")
 	searchString = strings.Replace(searchString, " ", "+", -1) //replace spaces with plus to not break everything
-	currentPodcastsInBuffer, err = searchItunes(searchString)
+	currentPodcastsInBuffers[currentScreen], err = searchItunes(searchString)
 	if err != nil {
 		userTextBuffer = "error searching! " + err.Error()
 	}
@@ -43,7 +44,7 @@ func enterPressedSearch(configuration *Configuration) {
 }
 
 func enterPressedDownloaded(configuration *Configuration) {
-	podcasts := currentPodcastsInBuffers[Downloaded].([]PodcastEpisode)
+	podcasts := currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
 	if currentSelected >= len(podcasts) || currentSelected < 0 {
 		return
 	}
@@ -73,10 +74,11 @@ func actionPressedHome(configuration *Configuration) {
 
 func actionPressedSearch(configuration *Configuration) {
 	subscribedKey := -1
-	if currentSelected >= len(currentPodcastsInBuffer) || currentSelected < 0 {
+	podcasts := currentPodcastsInBuffers[currentScreen].([]Podcast)
+	if currentSelected >= len(podcasts) || currentSelected < 0 {
 		return
 	}
-	selectedPodcast := currentPodcastsInBuffer[currentSelected]
+	selectedPodcast := podcasts[currentSelected]
 	// check if it's already part of the configuration
 	for key, value := range configuration.Subscribed {
 		if selectedPodcast.ArtistName == value.ArtistName && selectedPodcast.CollectionName == value.CollectionName {
@@ -124,7 +126,7 @@ func downPressedHome(configuration *Configuration) {
 }
 
 func downPressedSearch(configuration *Configuration) {
-	if currentMode == Insert {
+	if currentMode == Insert && len(userTextBuffer) > 0 {
 		searchPodcastsFromTui(configuration)
 	} else if currentSelected < currentListSize-1 {
 		currentSelected++

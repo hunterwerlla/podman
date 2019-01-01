@@ -91,7 +91,7 @@ func getPodcastEntries(podcast Podcast, input string, podcastCache *[]CachedPodc
 		title := sanitizeRss(item.Title)
 		description := sanitizeRss(item.Description)
 		for _, enc := range item.Enclosure {
-			if enc.URL != "" {
+			if len(enc.URL) > 0 {
 				url = enc.URL
 				break
 			}
