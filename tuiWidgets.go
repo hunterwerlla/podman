@@ -63,6 +63,8 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 	}
 	if currentMode == Insert {
 		text += "   >"
+	} else if len(userTextBuffer) == 0 {
+		text += "   >"
 	} else {
 		text += "    "
 	}

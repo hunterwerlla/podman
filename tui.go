@@ -24,8 +24,8 @@ const (
 
 var (
 	defaultControlsMap = map[screen]string{
-		Home:          "[%s]elect/[<enter>]  ",
-		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [h]left   [j]down   [k]up   [l]right",
+		Home:          "[%s]elect/[<enter>]  [h]left(search)   [l]right(downloaded)",
+		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]right(home)",
 		Downloaded:    "[p]lay/<enter>",
 		PodcastDetail: "[<enter>] download episode",
 	}
@@ -180,6 +180,11 @@ func StartTui(configuration *Configuration) {
 					ui.Render(drawPage[currentScreen](configuration, width, height)...)
 				}
 			}
+		} else if e.Type == ui.ResizeEvent {
+			payload := e.Payload.(ui.Resize)
+			width = payload.Width
+			height = payload.Height
+			ui.Render(drawPage[currentScreen](configuration, width, height)...)
 		}
 	}
 }

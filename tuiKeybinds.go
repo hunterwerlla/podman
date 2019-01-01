@@ -14,6 +14,19 @@ func switchToSelectedPodcastScreen(configuration *Configuration) {
 	currentScreen = PodcastDetail
 }
 
+func searchPodcastsFromTui(configuration *Configuration) {
+	// search TODO use go()
+	currentSelected = 0
+	var err error
+	searchString := strings.Replace(userTextBuffer, "\n", "", -1)
+	searchString = strings.Trim(searchString, "\n\t")
+	searchString = strings.Replace(searchString, " ", "+", -1) //replace spaces with plus to not break everything
+	currentPodcastsInBuffer, err = searchItunes(searchString)
+	if err != nil {
+		userTextBuffer = "error searching! " + err.Error()
+	}
+}
+
 func enterPressedHome(configuration *Configuration) {
 	// TODO refactor into two functions
 	if currentMode == Normal {
@@ -22,20 +35,10 @@ func enterPressedHome(configuration *Configuration) {
 }
 
 func enterPressedSearch(configuration *Configuration) {
-	// TODO refactor into two functions
 	if currentMode == Normal {
 		switchToSelectedPodcastScreen(configuration)
 	} else {
-		// search TODO use go()
-		currentSelected = 0
-		var err error
-		searchString := strings.Replace(userTextBuffer, "\n", "", -1)
-		searchString = strings.Trim(searchString, "\n\t")
-		searchString = strings.Replace(searchString, " ", "+", -1) //replace spaces with plus to not break everything
-		currentPodcastsInBuffer, err = searchItunes(searchString)
-		if err != nil {
-			userTextBuffer = "error searching! " + err.Error()
-		}
+		searchPodcastsFromTui(configuration)
 	}
 }
 
@@ -116,7 +119,9 @@ func downPressedHome(configuration *Configuration) {
 }
 
 func downPressedSearch(configuration *Configuration) {
-	if currentSelected < currentListSize-1 {
+	if currentMode == Insert {
+		searchPodcastsFromTui(configuration)
+	} else if currentSelected < currentListSize-1 {
 		currentSelected++
 	}
 }
@@ -146,13 +151,18 @@ func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 		// reset mode on enter after the action is done
 		currentMode = Normal
 	} else if event.ID == "<Escape>" {
-		// reset mode on Escape as well as possibly do something else
+		// reset mode on Escape as well as possibly do an action
 		currentMode = Normal
 		escapePressed[currentScreen](configuration)
 	} else if (event.ID == configuration.LeftKeybind && currentMode == Normal) || event.ID == "<Left>" {
 		transitionScreen(leftTransitions, currentScreen)
 	} else if (event.ID == configuration.RightKeybind && currentMode == Normal) || event.ID == "<Right>" {
 		transitionScreen(rightTransitions, currentScreen)
+	} else if (event.ID == configuration.UpKeybind && currentMode == Normal) || event.ID == "<Up>" {
+		upPressed[currentScreen](configuration)
+	} else if (event.ID == configuration.DownKeybind && currentMode == Normal) || event.ID == "<Down>" {
+		downPressed[currentScreen](configuration)
+		currentMode = Normal
 	} else {
 		// nothing matches, return false
 		return false
@@ -184,10 +194,6 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		// TODO refactor these out
 	} else if event.ID == configuration.PlayKeybind {
 		fmt.Println("play")
-	} else if event.ID == configuration.UpKeybind || event.ID == "<Up>" {
-		upPressed[currentScreen](configuration)
-	} else if event.ID == configuration.DownKeybind || event.ID == "<Down>" {
-		downPressed[currentScreen](configuration)
 	} else if event.ID == configuration.ActionKeybind {
 		actionPressed[currentScreen](configuration)
 	}
