@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	ui "github.com/gizak/termui"
 )
 
 const (
-	playerHeight                   = 3
+	playerHeight                   = 2
 	searchBarHeight                = 3
 	controlsHeight                 = 2
 	podcastDetailDescriptionHeight = 3
@@ -34,7 +35,7 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 
 // TODO figure out how to fix this mess
 func producePlayerWidget(configuration *Configuration, width int, height int) ui.Bufferer {
-	if GetPlayerState() != Play {
+	if GetPlayerState() != Play || GetLengthOfPlayingFile() < 1 {
 		playerWidget := ui.NewParagraph("Nothing playing")
 		playerWidget.TextFgColor = ui.ColorBlack
 		playerWidget.Width = width
@@ -45,14 +46,20 @@ func producePlayerWidget(configuration *Configuration, width int, height int) ui
 		playerWidget.BorderBottom = false
 		return playerWidget
 	}
+	lengthOfPlayingFile := GetLengthOfPlayingFile()
+	currentPlayingPosition := GetPlayerPosition()
+	label := fmt.Sprintf("%d/%d", int(currentPlayingPosition), lengthOfPlayingFile)
 	playerWidget := ui.NewGauge()
-	playerWidget.Label = "whatever {{percent}}%"
+	playerWidget.Percent = int((float64(currentPlayingPosition) / float64(lengthOfPlayingFile)) * 100)
+	playerWidget.Label = label
 	playerWidget.Width = width
 	playerWidget.Height = playerHeight
 	playerWidget.Y = height - playerHeight
 	playerWidget.BorderLeft = false
 	playerWidget.BorderRight = false
 	playerWidget.BorderBottom = false
+	playerWidget.BarColor = ui.ColorBlack
+	playerWidget.LabelAlign = ui.AlignLeft
 	return playerWidget
 }
 
