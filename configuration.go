@@ -39,7 +39,7 @@ func CreateDefault() Configuration {
 		DownKeybind:        "j",
 		LeftKeybind:        "h",
 		RightKeybind:       "l",
-		PlayKeybind:        " ",
+		PlayKeybind:        "<Space>",
 		SearchKeybind:      "/",
 		ActionKeybind:      "s",
 		forwardSkipLength:  30,

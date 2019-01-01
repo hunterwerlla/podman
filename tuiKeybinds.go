@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	ui "github.com/gizak/termui"
 	"strings"
 )
@@ -170,6 +169,8 @@ func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 	} else if (event.ID == configuration.DownKeybind && currentMode == Normal) || event.ID == "<Down>" {
 		downPressed[currentScreen](configuration)
 		currentMode = Normal
+	} else if event.ID == configuration.PlayKeybind {
+		TogglePlayerState()
 	} else {
 		// nothing matches, return false
 		return false
@@ -180,9 +181,8 @@ func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 
 func handleKeyboard(configuration *Configuration, event ui.Event) {
 	if handleEventsGlobal(configuration, event) {
-		return
-	}
-	if currentMode == Insert {
+		// handled
+	} else if currentMode == Insert {
 		if event.ID == "<Backspace>" || event.ID == "<Delete>" || event.ID == "C-8>" {
 			if len(userTextBuffer) > 0 {
 				userTextBuffer = userTextBuffer[:len(userTextBuffer)-1]
@@ -198,9 +198,6 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		}
 	} else if event.ID == configuration.SearchKeybind {
 		searchPressed[currentScreen](configuration)
-		// TODO refactor these out
-	} else if event.ID == configuration.PlayKeybind {
-		fmt.Println("play")
 	} else if event.ID == configuration.ActionKeybind {
 		actionPressed[currentScreen](configuration)
 	}

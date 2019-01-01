@@ -29,16 +29,16 @@ var (
 	fileChannel    chan string
 	exitChannel    chan bool
 	playing        string
-	playerState    PlayerState
+	playerState    = NothingPlaying
 )
 
 // StartPlayer starts the global player. The player is global since there is only one of them
 // I'm not really a fan of moving it into an object as it should not be reused
 func StartPlayer() {
-	playerState := make(chan PlayerState)
+	playerControl := make(chan PlayerState)
 	fileChannel := make(chan string)
 	exit := make(chan bool)
-	go startPlayer(playerState, fileChannel, exit)
+	go startPlayer(playerControl, fileChannel, exit)
 }
 
 // DisposePlayer sends a signal to the player to destroy itself, and then waits for the player to exit
@@ -48,9 +48,23 @@ func DisposePlayer() {
 	<-exitChannel
 }
 
+func TogglePlayerState() {
+	if playerState == Play {
+		PausePlayer()
+	} else if playerState == Pause {
+		ResumePlayer()
+	}
+}
+
 func PausePlayer() {
 	playerPosition += int(time.Since(startTime).Seconds())
-	playerState = Pause
+	playerControl <- Pause
+}
+
+func ResumePlayer() {
+	if playerState == Pause {
+		playerControl <- Play
+	}
 }
 
 func StopPlayer() {
@@ -91,7 +105,6 @@ func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string,
 	// _, unused, _ := os.Pipe()
 	// os.Stderr = unused
 	// os.Stdout = unused
-	playerControl = playerState
 	fileChannel = fileSelectionChannel
 	exitChannel = exit
 	var (
