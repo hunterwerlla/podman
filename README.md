@@ -21,14 +21,15 @@ Podman requires:
 [termui](https://github.com/gizak/termui) for the interface,  
 [go-sox](https://github.com/krig/go-sox) to play audio files,  
 [sanitize](https://github.com/kennygrant/sanitize) to clean up podcast descriptions,  
-and [go-rss](https://github.com/ungerik/go-rss) to grab podcast feeds. 
-
-Podman utilizes go modules to simplify this.
+[go-rss](https://github.com/ungerik/go-rss) to grab podcast feeds  
+[kr/text](https://github.com/kr/text) for text wrapping
 
 Searching utilizes ITunes.
 
 # TODO
-* Fix total length of download progress bar
-* fix graphical glitches
-* more advanced searching (categories, etc)
-* store data in a database
+* re-add download bar
+* add verification of downloads
+* store user data in a database
+* make it work on dark theme terminals
+* add a settings menu
+* look at optimization
