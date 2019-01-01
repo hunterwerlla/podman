@@ -169,8 +169,6 @@ func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 	} else if (event.ID == configuration.DownKeybind && currentMode == Normal) || event.ID == "<Down>" {
 		downPressed[currentScreen](configuration)
 		currentMode = Normal
-	} else if event.ID == configuration.PlayKeybind {
-		TogglePlayerState()
 	} else {
 		// nothing matches, return false
 		return false
@@ -196,9 +194,23 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		} else {
 			userTextBuffer += event.ID
 		}
+	} else if event.ID == configuration.PlayKeybind {
+		TogglePlayerState()
 	} else if event.ID == configuration.SearchKeybind {
 		searchPressed[currentScreen](configuration)
 	} else if event.ID == configuration.ActionKeybind {
 		actionPressed[currentScreen](configuration)
+	}
+}
+
+func handleMouse(configuration *Configuration, event ui.Event) {
+	if event.ID == "<MouseWheelUp>" {
+		upPressed[currentScreen](configuration)
+	} else if event.ID == "<MouseWheelDown>" {
+		downPressed[currentScreen](configuration)
+	} else if event.ID == "<MouseLeft>" {
+		enterPressed[currentScreen](configuration)
+	} else if event.ID == "<MouseRight>" && currentScreen == PodcastDetail {
+		transitionScreen(leftTransitions, currentScreen)
 	}
 }
