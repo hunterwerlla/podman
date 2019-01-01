@@ -52,16 +52,6 @@ func TogglePlayerState() {
 	if playerState == Play {
 		playerControl <- Pause
 	} else if playerState == Pause {
-		ResumePlayer()
-	}
-}
-
-func PausePlayer() {
-	playerPosition += int(time.Since(startTime).Seconds())
-}
-
-func ResumePlayer() {
-	if playerState == Pause {
 		playerControl <- Play
 	}
 }
@@ -126,8 +116,9 @@ func startPlayer() {
 			playFile(chain, inputFile, outputFile)
 		case Pause:
 			//save time and file then cleanup
-			PausePlayer()
+			playerPosition += int(time.Since(startTime).Seconds())
 			cleanupSoxData(chain, inputFile, outputFile)
+			playerState = Pause
 		case Stop:
 			StopPlayer()
 			cleanupSoxData(chain, inputFile, outputFile)
