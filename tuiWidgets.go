@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	playerHeight    = 3
-	searchBarHeight = 3
-	controlsHeight  = 2
+	playerHeight                   = 3
+	searchBarHeight                = 3
+	controlsHeight                 = 2
+	podcastDetailDescriptionHeight = 3
 )
 
 func producePodcastListWidget(configruation *Configuration, width int, height int) *ui.List {
@@ -154,14 +155,26 @@ func produceControlsWidget(configuration *Configuration, width int, height int) 
 	return controlsWidget
 }
 
-func producePodcastDetailWidget(configuration *Configuration, width int, height int) ui.Bufferer {
-	podcastDetailWidget := ui.NewParagraph("Stuff \n")
+func producePodcastDetailDescriptionWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	blurb := currentSelectedPodcast.CollectionName + ", " + currentSelectedPodcast.ArtistName + "\n" + currentSelectedPodcast.Description
+	podcastDetailWidget := ui.NewParagraph(blurb)
 	podcastDetailWidget.TextFgColor = ui.ColorBlack
 	podcastDetailWidget.Width = width
-	podcastDetailWidget.Height = height
+	podcastDetailWidget.Height = podcastDetailDescriptionHeight
 	podcastDetailWidget.Y = 0
 	podcastDetailWidget.BorderLeft = false
 	podcastDetailWidget.BorderRight = false
-	podcastDetailWidget.BorderBottom = false
+	podcastDetailWidget.BorderTop = false
+	return podcastDetailWidget
+}
+
+func producePodcastDetailListWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	podcasts := currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
+	podcastDetailWidget := ui.NewParagraph(podcasts[0].Title)
+	podcastDetailWidget.TextFgColor = ui.ColorBlack
+	podcastDetailWidget.Width = width
+	podcastDetailWidget.Height = height - podcastDetailDescriptionHeight
+	podcastDetailWidget.Y = podcastDetailDescriptionHeight
+	podcastDetailWidget.Border = false
 	return podcastDetailWidget
 }

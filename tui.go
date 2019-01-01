@@ -46,6 +46,13 @@ var (
 		PodcastDetail: LastScreen,
 	}
 
+	prepareDrawPage = map[screen]func(configuration *Configuration){
+		Home:          prepareDrawPageMain,
+		Search:        prepareDrawPageSearch,
+		Downloaded:    prepareDrawPageDownloaded,
+		PodcastDetail: prepareDrawPagePodcastDetail,
+	}
+
 	drawPage = map[screen]func(configuration *Configuration, width int, height int) []ui.Bufferer{
 		Home:          drawPageMain,
 		Search:        drawPageSearch,
@@ -74,15 +81,17 @@ var (
 	}
 
 	upPressed = map[screen]func(configuration *Configuration){
-		Home:       upPressedHome,
-		Search:     upPressedSearch,
-		Downloaded: upPressedDownloaded,
+		Home:          upPressedHome,
+		Search:        upPressedSearch,
+		Downloaded:    upPressedDownloaded,
+		PodcastDetail: upPressedPodcastDetail,
 	}
 
 	downPressed = map[screen]func(configuration *Configuration){
-		Home:       downPressedHome,
-		Search:     downPressedSearch,
-		Downloaded: downPressedDownloaded,
+		Home:          downPressedHome,
+		Search:        downPressedSearch,
+		Downloaded:    downPressedDownloaded,
+		PodcastDetail: downPressedPodcastDetail,
 	}
 
 	searchPressed = map[screen]func(configuration *Configuration){
@@ -159,6 +168,7 @@ func StartTui(configuration *Configuration) {
 	width := ui.TermWidth()
 	height := ui.TermHeight()
 
+	prepareDrawPage[currentScreen](configuration)
 	ui.Render(drawPage[currentScreen](configuration, width, height)...)
 
 	for e := range ui.PollEvents() {
@@ -180,6 +190,7 @@ func StartTui(configuration *Configuration) {
 		}
 		// refresh screen after keyboard input or redraw screen entirely + reset state if we have changed screens
 		if savedScreen != currentScreen {
+			prepareDrawPage[currentScreen](configuration)
 			// reset modes
 			if currentScreen == Search && (savedScreen != PodcastDetail) {
 				currentMode = Insert

@@ -93,7 +93,7 @@ func CliCommand(config *Configuration) bool {
 		for i, pc := range config.Subscribed {
 			if i == num {
 				found = true
-				entries, err := getPodcastEntries(pc, pc.FeedURL, &config.Cached)
+				entries, err := getPodcastEntries(pc, &config.Cached)
 				if err != nil {
 					fmt.Printf("%s when attempting to parse RSS\n", err.Error())
 					break
@@ -122,7 +122,7 @@ func CliCommand(config *Configuration) bool {
 		}
 		for ii, pc := range config.Subscribed {
 			if ii == pcNum {
-				entries, err := getPodcastEntries(pc, pc.FeedURL, &config.Cached)
+				entries, err := getPodcastEntries(pc, &config.Cached)
 				if err != nil {
 					fmt.Printf("%s when attempting to parse RSS\n", err.Error())
 					break

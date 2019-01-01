@@ -118,6 +118,10 @@ func upPressedDownloaded(configuration *Configuration) {
 
 }
 
+func upPressedPodcastDetail(configuration *Configuration) {
+
+}
+
 func downPressedHome(configuration *Configuration) {
 	if currentSelected < currentListSize-1 {
 		currentSelected++
@@ -133,6 +137,10 @@ func downPressedSearch(configuration *Configuration) {
 }
 
 func downPressedDownloaded(configuration *Configuration) {
+
+}
+
+func downPressedPodcastDetail(configuration *Configuration) {
 
 }
 

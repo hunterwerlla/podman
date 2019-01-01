@@ -58,8 +58,9 @@ func sanitizeRss(entry string) string {
 }
 
 //TODO strip HTML
-func getPodcastEntries(podcast Podcast, input string, podcastCache *[]CachedPodcast) ([]PodcastEpisode, error) {
+func getPodcastEntries(podcast Podcast, podcastCache *[]CachedPodcast) ([]PodcastEpisode, error) {
 	var cacheEntry *CachedPodcast
+	input := podcast.FeedURL
 	for _, value := range *podcastCache {
 		if podcast.CollectionName == value.Type.CollectionName && podcast.ArtistName == value.Type.ArtistName {
 			cacheEntry = &value
