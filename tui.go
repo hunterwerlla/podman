@@ -53,12 +53,6 @@ var (
 		PodcastDetail: drawPagePodcastDetail,
 	}
 
-	refreshPage = map[screen]func(configuration *Configuration, width int, height int) []ui.Bufferer{
-		Home:       refreshPageMain,
-		Search:     drawPageSearch,
-		Downloaded: refreshPageDownloaded,
-	}
-
 	actionPressed = map[screen]func(configuration *Configuration){
 		Home:          actionPressedHome,
 		Search:        actionPressedSearch,
@@ -175,9 +169,7 @@ func StartTui(configuration *Configuration) {
 				savedScreen := currentScreen
 				handleKeyboard(configuration, e)
 				// refresh screen after keyboard input or redraw screen entirely + reset state if we have changed screens
-				if savedScreen == currentScreen {
-					ui.Render(refreshPage[currentScreen](configuration, width, height)...)
-				} else {
+				if savedScreen != currentScreen {
 					// reset modes
 					if currentScreen == Search {
 						currentMode = Insert
@@ -189,9 +181,8 @@ func StartTui(configuration *Configuration) {
 					currentSelected = 0
 					// save last screen
 					previousScreen = savedScreen
-					// render new screen
-					ui.Render(drawPage[currentScreen](configuration, width, height)...)
 				}
+				ui.Render(drawPage[currentScreen](configuration, width, height)...)
 			}
 		} else if e.Type == ui.ResizeEvent {
 			payload := e.Payload.(ui.Resize)
