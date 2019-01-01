@@ -4,6 +4,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gizak/termui v0.0.0-20181203230344-3461d4a2e81a
 	github.com/kennygrant/sanitize v1.2.4
+	github.com/kr/pty v1.1.3 // indirect
 	github.com/kr/text v0.1.0
 	github.com/krig/go-sox v0.0.0-20180617124112-7d2f8ae31981
 	github.com/maruel/panicparse v1.1.1 // indirect

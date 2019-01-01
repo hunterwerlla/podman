@@ -141,7 +141,11 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 		// TODO add function for this
 		formattedPodcast := item.PodcastTitle + " " + item.Title + " " + item.Summary
 		if currentItem == currentSelected {
+			formattedPodcast = wrapString(formattedPodcast, width)
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
+		} else if len(formattedPodcast) > width {
+			formattedPodcast = formattedPodcast[0 : width-3]
+			formattedPodcast += "..."
 		}
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
 		currentItem++
@@ -187,7 +191,7 @@ func producePodcastDetailListWidget(configuration *Configuration, width int, hei
 	podcastDetailListWidget.Overflow = "wrap"
 	currentListSize = len(podcasts)
 	for currentNum, item := range podcasts {
-		formattedPodcast := item.Title + " - " + item.Summary + " - " + item.Content
+		formattedPodcast := formatPodcastEpisode(item)
 		if currentNum == currentSelected {
 			formattedPodcast = wrapString(formattedPodcast, width)
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
