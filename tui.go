@@ -116,6 +116,14 @@ var (
 	userTextBuffer         = ""
 )
 
+func getCurrentPagePodcasts() []Podcast {
+	return currentPodcastsInBuffers[currentScreen].([]Podcast)
+}
+
+func getCurrentPagePodcastEpisodes() []PodcastEpisode {
+	return currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
+}
+
 func fillOutControlsMap(configuration *Configuration, controls map[screen]string) {
 	var searchText string
 	controlsMap[Home] = fmt.Sprintf(controls[Home], configuration.ActionKeybind)

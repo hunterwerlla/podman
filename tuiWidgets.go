@@ -18,7 +18,7 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 	podcastWidget.Border = false
 	podcastWidget.ItemFgColor = ui.ColorBlack
 	var listFormattedPodcasts []string
-	podcasts := currentPodcastsInBuffers[currentScreen].([]Podcast)
+	podcasts := getCurrentPagePodcasts()
 	currentListSize = len(podcasts)
 	for ii, item := range podcasts {
 		formattedPodcast := formatPodcast(item, width)
@@ -57,7 +57,7 @@ func producePlayerWidget(configuration *Configuration, width int, height int) ui
 
 func produceSearchWidget(configuration *Configuration, width int, height int) *ui.Paragraph {
 	text := ""
-	podcasts := currentPodcastsInBuffers[currentScreen].([]Podcast)
+	podcasts := getCurrentPagePodcasts()
 	if len(podcasts) > 0 {
 		text = "    Results:\n"
 	} else {
@@ -93,7 +93,7 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 	searchResultsWidget.Border = false
 	searchResultsWidget.ItemFgColor = ui.ColorBlack
 	var formattedPodcastList []string
-	podcasts := currentPodcastsInBuffers[currentScreen].([]Podcast)
+	podcasts := getCurrentPagePodcasts()
 	currentListSize = len(podcasts)
 	for ii, item := range podcasts {
 		formattedPodcast := formatPodcast(item, width)
@@ -126,7 +126,7 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 	searchResultsWidget.Border = false
 	searchResultsWidget.ItemFgColor = ui.ColorBlack
 	var listFormattedPodcasts []string
-	var podcast = currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
+	var podcast = getCurrentPagePodcastEpisodes()
 	currentListSize = len(podcast)
 	currentNum := 0
 	for _, item := range podcast {

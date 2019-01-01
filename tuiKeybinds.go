@@ -7,7 +7,7 @@ import (
 )
 
 func switchToSelectedPodcastScreen(configuration *Configuration) {
-	podcasts := currentPodcastsInBuffers[currentScreen].([]Podcast)
+	podcasts := getCurrentPagePodcasts()
 	if currentSelected >= len(podcasts) || currentSelected < 0 {
 		return
 	}
@@ -44,7 +44,7 @@ func enterPressedSearch(configuration *Configuration) {
 }
 
 func enterPressedDownloaded(configuration *Configuration) {
-	podcasts := currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
+	podcasts := getCurrentPagePodcastEpisodes()
 	if currentSelected >= len(podcasts) || currentSelected < 0 {
 		return
 	}
@@ -74,7 +74,7 @@ func actionPressedHome(configuration *Configuration) {
 
 func actionPressedSearch(configuration *Configuration) {
 	subscribedKey := -1
-	podcasts := currentPodcastsInBuffers[currentScreen].([]Podcast)
+	podcasts := getCurrentPagePodcasts()
 	if currentSelected >= len(podcasts) || currentSelected < 0 {
 		return
 	}
