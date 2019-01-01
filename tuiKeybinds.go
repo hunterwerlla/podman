@@ -53,18 +53,22 @@ func actionPressedHome(configuration *Configuration) {
 }
 
 func actionPressedSearch(configuration *Configuration) {
+	subscribedKey := -1
 	if currentSelected >= len(currentPodcastsInBuffer) || currentSelected < 0 {
 		return
 	}
 	selectedPodcast := currentPodcastsInBuffer[currentSelected]
 	// check if it's already part of the configuration
-	for _, thing := range configuration.Subscribed {
-		if selectedPodcast.ArtistName == thing.ArtistName && selectedPodcast.CollectionName == thing.CollectionName {
-			//already subscribed so do nothing
-			return
+	for key, value := range configuration.Subscribed {
+		if selectedPodcast.ArtistName == value.ArtistName && selectedPodcast.CollectionName == value.CollectionName {
+			subscribedKey = key
 		}
 	}
-	configuration.Subscribed = append(configuration.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
+	if subscribedKey != -1 {
+		configuration.Subscribed = append(configuration.Subscribed[:subscribedKey], configuration.Subscribed[subscribedKey+1:]...)
+	} else {
+		configuration.Subscribed = append(configuration.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
+	}
 	writeConfig(configuration)
 }
 

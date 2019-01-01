@@ -94,8 +94,8 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 		formattedPodcast := formatPodcast(item, width)
 		// TODO make an isSubscribed function
 		subscribed := false
-		for _, thing := range configuration.Subscribed {
-			if item.ArtistName == thing.ArtistName && item.CollectionName == thing.CollectionName {
+		for _, value := range configuration.Subscribed {
+			if item.ArtistName == value.ArtistName && item.CollectionName == value.CollectionName {
 				//already subscribed so do nothing
 				formattedPodcast = "S - " + formattedPodcast
 				subscribed = true
@@ -152,8 +152,8 @@ func producePodcastDetailWidget(configuration *Configuration, width int, height 
 	podcastDetailWidget := ui.NewParagraph("Stuff \n")
 	podcastDetailWidget.TextFgColor = ui.ColorBlack
 	podcastDetailWidget.Width = width
-	podcastDetailWidget.Height = controlsHeight
-	podcastDetailWidget.Y = height - playerHeight - controlsHeight
+	podcastDetailWidget.Height = height
+	podcastDetailWidget.Y = 0
 	podcastDetailWidget.BorderLeft = false
 	podcastDetailWidget.BorderRight = false
 	podcastDetailWidget.BorderBottom = false
