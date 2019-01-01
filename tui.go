@@ -9,10 +9,11 @@ type screen string
 type mode string
 
 const (
-	None       screen = "None"
-	Home       screen = "Home"
-	Search     screen = "Search"
-	Downloaded screen = "Downloaded"
+	None          screen = "None"
+	Home          screen = "Home"
+	Search        screen = "Search"
+	Downloaded    screen = "Downloaded"
+	PodcastDetail screen = "PodcastDetail"
 )
 
 const (
@@ -22,9 +23,10 @@ const (
 
 var (
 	defaultControlsMap = map[screen]string{
-		Home:       "[%s]elect/[<enter>]  ",
-		Search:     "[s]ubscribe   [/]search   [esc]ape searching   [<enter>]%s   [h]left   [j]down   [k]up   [l]right",
-		Downloaded: "[p]lay/<enter>",
+		Home:          "[%s]elect/[<enter>]  ",
+		Search:        "[s]ubscribe   [/]search   [esc]ape searching   [r]emove subscription   [<enter>]%s   [h]left   [j]down   [k]up   [l]right",
+		Downloaded:    "[p]lay/<enter>",
+		PodcastDetail: "[<enter>] download episode",
 	}
 
 	controlsMap = make(map[screen]string)
@@ -42,15 +44,23 @@ var (
 	}
 
 	drawPage = map[screen]func(configuration *Configuration, width int, height int) []ui.Bufferer{
-		Home:       drawPageMain,
-		Search:     drawPageSearch,
-		Downloaded: drawPageDownloaded,
+		Home:          drawPageMain,
+		Search:        drawPageSearch,
+		Downloaded:    drawPageDownloaded,
+		PodcastDetail: drawPagePodcastDetail,
 	}
 
 	refreshPage = map[screen]func(configuration *Configuration, width int, height int) []ui.Bufferer{
 		Home:       refreshPageMain,
 		Search:     drawPageSearch,
 		Downloaded: refreshPageDownloaded,
+	}
+
+	actionPressed = map[screen]func(configuration *Configuration){
+		Home:          actionPressedHome,
+		Search:        actionPressedSearch,
+		Downloaded:    actionPressedDownloaded,
+		PodcastDetail: actionPressedPodcastDetail,
 	}
 
 	enterPressed = map[screen]func(configuration *Configuration){
@@ -91,6 +101,7 @@ var (
 	currentMode             = Normal
 	currentScreen           = Home
 	currentPodcastsInBuffer []Podcast
+	currentSelectedPodcast  Podcast
 	userTextBuffer          = ""
 )
 
@@ -109,46 +120,6 @@ func fillOutControlsMap(configuration *Configuration, controls map[screen]string
 func termuiStyleText(text string, fgcolor string, bgcolor string) string {
 	text = "[" + text + "](fg-" + fgcolor + ",bg-" + string(bgcolor) + ")"
 	return text
-}
-
-func drawPageMain(configuration *Configuration, width int, height int) []ui.Bufferer {
-	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, producePodcastListWidget(configuration, width, height))
-	widgets = append(widgets, produceControlsWidget(configuration, width, height))
-	widgets = append(widgets, producePlayerWidget(configuration, width, height))
-	return widgets
-}
-
-func refreshPageMain(configuration *Configuration, width int, height int) []ui.Bufferer {
-	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, producePodcastListWidget(configuration, width, height))
-	widgets = append(widgets, producePlayerWidget(configuration, width, height))
-	return widgets
-}
-
-func drawPageSearch(configuration *Configuration, width int, height int) []ui.Bufferer {
-	fillOutControlsMap(configuration, defaultControlsMap)
-	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, produceSearchWidget(configuration, width, height))
-	widgets = append(widgets, produceSearchResultsWidget(configuration, width, height))
-	widgets = append(widgets, produceControlsWidget(configuration, width, height))
-	widgets = append(widgets, producePlayerWidget(configuration, width, height))
-	return widgets
-}
-
-func drawPageDownloaded(configuration *Configuration, width int, height int) []ui.Bufferer {
-	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, produceDownloadedWidget(configuration, width, height))
-	widgets = append(widgets, produceControlsWidget(configuration, width, height))
-	widgets = append(widgets, producePlayerWidget(configuration, width, height))
-	return widgets
-}
-
-func refreshPageDownloaded(configuration *Configuration, width int, height int) []ui.Bufferer {
-	widgets := make([]ui.Bufferer, 0)
-	widgets = append(widgets, produceDownloadedWidget(configuration, width, height))
-	widgets = append(widgets, producePlayerWidget(configuration, width, height))
-	return widgets
 }
 
 func transitionScreen(transitions map[screen]screen, screen screen) {

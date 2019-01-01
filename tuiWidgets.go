@@ -147,3 +147,15 @@ func produceControlsWidget(configuration *Configuration, width int, height int) 
 	controlsWidget.BorderBottom = false
 	return controlsWidget
 }
+
+func producePodcastDetailWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	podcastDetailWidget := ui.NewParagraph("Stuff \n")
+	podcastDetailWidget.TextFgColor = ui.ColorBlack
+	podcastDetailWidget.Width = width
+	podcastDetailWidget.Height = controlsHeight
+	podcastDetailWidget.Y = height - playerHeight - controlsHeight
+	podcastDetailWidget.BorderLeft = false
+	podcastDetailWidget.BorderRight = false
+	podcastDetailWidget.BorderBottom = false
+	return podcastDetailWidget
+}

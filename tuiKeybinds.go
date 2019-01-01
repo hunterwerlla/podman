@@ -16,16 +16,8 @@ func enterPressedSearch(configuration *Configuration) {
 		if currentSelected >= len(currentPodcastsInBuffer) || currentSelected < 0 {
 			return
 		}
-		selectedPodcast := currentPodcastsInBuffer[currentSelected]
-		// check if it's already part of the configuration
-		for _, thing := range configuration.Subscribed {
-			if selectedPodcast.ArtistName == thing.ArtistName && selectedPodcast.CollectionName == thing.CollectionName {
-				//already subscribed so do nothing
-				return
-			}
-		}
-		configuration.Subscribed = append(configuration.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
-		writeConfig(configuration)
+		currentSelectedPodcast = currentPodcastsInBuffer[currentSelected]
+		currentScreen = PodcastDetail
 	} else {
 		// search TODO use go()
 		currentSelected = 0
@@ -53,6 +45,34 @@ func escapePressedSearch(configuration *Configuration) {
 }
 
 func escapePressedDownloaded(configuration *Configuration) {
+
+}
+
+func actionPressedHome(configuration *Configuration) {
+
+}
+
+func actionPressedSearch(configuration *Configuration) {
+	if currentSelected >= len(currentPodcastsInBuffer) || currentSelected < 0 {
+		return
+	}
+	selectedPodcast := currentPodcastsInBuffer[currentSelected]
+	// check if it's already part of the configuration
+	for _, thing := range configuration.Subscribed {
+		if selectedPodcast.ArtistName == thing.ArtistName && selectedPodcast.CollectionName == thing.CollectionName {
+			//already subscribed so do nothing
+			return
+		}
+	}
+	configuration.Subscribed = append(configuration.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
+	writeConfig(configuration)
+}
+
+func actionPressedDownloaded(configuration *Configuration) {
+
+}
+
+func actionPressedPodcastDetail(configuration *Configuration) {
 
 }
 
@@ -105,7 +125,7 @@ func searchPressedDownloaded(configuration *Configuration) {
 	currentMode = Insert
 }
 
-func handleKeyboard(configuration *Configuration, event ui.Event) {
+func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 	if event.ID == "<Enter>" {
 		enterPressed[currentScreen](configuration)
 		// reset mode on enter after the action is done
@@ -118,7 +138,19 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		transitionScreen(leftTransitions, currentScreen)
 	} else if (event.ID == configuration.RightKeybind && currentMode == Normal) || event.ID == "<Right>" {
 		transitionScreen(rightTransitions, currentScreen)
-	} else if currentMode == Insert {
+	} else {
+		// nothing matches, return false
+		return false
+	}
+	// matches, return true
+	return true
+}
+
+func handleKeyboard(configuration *Configuration, event ui.Event) {
+	if handleEventsGlobal(configuration, event) {
+		return
+	}
+	if currentMode == Insert {
 		if event.ID == "<Backspace>" || event.ID == "<Delete>" || event.ID == "C-8>" {
 			if len(userTextBuffer) > 0 {
 				userTextBuffer = userTextBuffer[:len(userTextBuffer)-1]
@@ -141,5 +173,7 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		upPressed[currentScreen](configuration)
 	} else if event.ID == configuration.DownKeybind || event.ID == "<Down>" {
 		downPressed[currentScreen](configuration)
+	} else if event.ID == configuration.ActionKeybind {
+		actionPressed[currentScreen](configuration)
 	}
 }
