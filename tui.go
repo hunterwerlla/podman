@@ -165,46 +165,5 @@ func StartTui(configuration *Configuration) {
 	}
 	defer ui.Close()
 
-	width := ui.TermWidth()
-	height := ui.TermHeight()
-
-	prepareDrawPage[currentScreen](configuration)
-	ui.Render(drawPage[currentScreen](configuration, width, height)...)
-
-	for e := range ui.PollEvents() {
-		savedScreen := currentScreen
-		if e.Type == ui.KeyboardEvent {
-			if e.ID == "<C-c>" {
-				break
-			} else {
-				handleKeyboard(configuration, e)
-			}
-		} else if e.Type == ui.MouseEvent {
-			handleMouse(configuration, e)
-			ui.Render(drawPage[currentScreen](configuration, width, height)...)
-		} else if e.Type == ui.ResizeEvent {
-			payload := e.Payload.(ui.Resize)
-			width = payload.Width
-			height = payload.Height
-			ui.Render(drawPage[currentScreen](configuration, width, height)...)
-		}
-		// refresh screen after keyboard input or redraw screen entirely + reset state if we have changed screens
-		if savedScreen != currentScreen {
-			prepareDrawPage[currentScreen](configuration)
-			// reset modes
-			if currentScreen == Search && (savedScreen != PodcastDetail) {
-				currentMode = Insert
-			} else {
-				currentMode = Normal
-			}
-			// reset text and selected if not transitioning between detail screen
-			if (currentScreen != PodcastDetail) && (savedScreen != PodcastDetail) {
-				userTextBuffer = ""
-				currentSelected = 0
-			}
-			// save last screen
-			previousScreen = savedScreen
-		}
-		ui.Render(drawPage[currentScreen](configuration, width, height)...)
-	}
+	tuiMainLoop(configuration)
 }

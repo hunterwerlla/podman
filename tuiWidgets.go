@@ -126,18 +126,18 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
 	searchResultsWidget.ItemFgColor = ui.ColorBlack
+	searchResultsWidget.Overflow = "wrap"
 	var listFormattedPodcasts []string
 	var podcast = getCurrentPagePodcastEpisodes()
 	currentListSize = len(podcast)
-	currentNum := 0
-	for _, item := range podcast {
+	for currentItem, item := range podcast {
 		// TODO add function for this
 		formattedPodcast := item.PodcastTitle + " " + item.Title + " " + item.Summary
-		if currentNum == currentSelected {
+		if currentItem == currentSelected {
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		}
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
-		currentNum++
+		currentItem++
 	}
 	searchResultsWidget.Items = listFormattedPodcasts
 	return searchResultsWidget
@@ -169,12 +169,28 @@ func producePodcastDetailDescriptionWidget(configuration *Configuration, width i
 }
 
 func producePodcastDetailListWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	var listFormattedPodcasts []string
 	podcasts := currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
-	podcastDetailWidget := ui.NewParagraph(podcasts[0].Title)
-	podcastDetailWidget.TextFgColor = ui.ColorBlack
-	podcastDetailWidget.Width = width
-	podcastDetailWidget.Height = height - podcastDetailDescriptionHeight
-	podcastDetailWidget.Y = podcastDetailDescriptionHeight
-	podcastDetailWidget.Border = false
-	return podcastDetailWidget
+	podcastDetailListWidget := ui.NewList()
+	podcastDetailListWidget.Width = width
+	podcastDetailListWidget.Height = height - podcastDetailDescriptionHeight
+	podcastDetailListWidget.Y = podcastDetailDescriptionHeight
+	podcastDetailListWidget.Border = false
+	podcastDetailListWidget.ItemFgColor = ui.ColorBlack
+	podcastDetailListWidget.Overflow = "wrap"
+	currentListSize = len(podcasts)
+	for currentNum, item := range podcasts {
+		formattedPodcast := item.Title + " - " + item.Summary + " - " + item.Content
+		if currentNum == currentSelected {
+			formattedPodcast = wrapString(formattedPodcast, width)
+			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
+		} else if len(formattedPodcast) > width {
+			formattedPodcast = formattedPodcast[0 : width-3]
+			formattedPodcast += "..."
+		}
+		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
+		currentNum++
+	}
+	podcastDetailListWidget.Items = listFormattedPodcasts
+	return podcastDetailListWidget
 }

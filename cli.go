@@ -177,7 +177,7 @@ func CliCommand(config *Configuration) bool {
 		SetPlayerState(Rewind)
 	} else if command == "ls-downloaded" {
 		for i, podcast := range config.Downloaded {
-			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)
+			fmt.Printf("%d %s %s\n", i, podcast.PodcastTitle, podcast.Title)
 		}
 	} else if command == "help" {
 		fmt.Println("Type ls to list your subscriptions, ls-downloaded to list downloads, start <num> to play, stop to stop, resume to resume, show <num> to show subscribed, /<string> to search, exit to exit, help to show this")

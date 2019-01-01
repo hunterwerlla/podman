@@ -52,7 +52,20 @@ func enterPressedDownloaded(configuration *Configuration) {
 }
 
 func enterPressedPodcastDetail(configuration *Configuration) {
-
+	podcasts := getCurrentPagePodcastEpisodes()
+	if currentSelected >= len(podcasts) || currentSelected < 0 {
+		return
+	}
+	if podcastIsDownloaded(configuration, podcasts[currentSelected]) {
+		return
+	}
+	// TODO fix this race condition/bad configuration management.
+	go func() {
+		configuration, err := downloadPodcast(configuration, currentSelectedPodcast, podcasts[currentSelected])
+		if err == nil {
+			writeConfig(configuration)
+		}
+	}()
 }
 
 func escapePressedHome(configuration *Configuration) {
@@ -115,11 +128,15 @@ func upPressedSearch(configuration *Configuration) {
 }
 
 func upPressedDownloaded(configuration *Configuration) {
-
+	if currentSelected > 0 {
+		currentSelected--
+	}
 }
 
 func upPressedPodcastDetail(configuration *Configuration) {
-
+	if currentSelected > 0 {
+		currentSelected--
+	}
 }
 
 func downPressedHome(configuration *Configuration) {
@@ -137,11 +154,15 @@ func downPressedSearch(configuration *Configuration) {
 }
 
 func downPressedDownloaded(configuration *Configuration) {
-
+	if currentSelected < currentListSize-1 {
+		currentSelected++
+	}
 }
 
 func downPressedPodcastDetail(configuration *Configuration) {
-
+	if currentSelected < currentListSize-1 {
+		currentSelected++
+	}
 }
 
 func searchPressedHome(configuration *Configuration) {
@@ -220,5 +241,51 @@ func handleMouse(configuration *Configuration, event ui.Event) {
 		enterPressed[currentScreen](configuration)
 	} else if event.ID == "<MouseRight>" && currentScreen == PodcastDetail {
 		transitionScreen(leftTransitions, currentScreen)
+	}
+}
+
+func tuiMainLoop(configuration *Configuration) {
+	width := ui.TermWidth()
+	height := ui.TermHeight()
+
+	prepareDrawPage[currentScreen](configuration)
+	ui.Render(drawPage[currentScreen](configuration, width, height)...)
+
+	for e := range ui.PollEvents() {
+		savedScreen := currentScreen
+		if e.Type == ui.KeyboardEvent {
+			if e.ID == "<C-c>" {
+				break
+			} else {
+				handleKeyboard(configuration, e)
+			}
+		} else if e.Type == ui.MouseEvent {
+			handleMouse(configuration, e)
+			ui.Render(drawPage[currentScreen](configuration, width, height)...)
+		} else if e.Type == ui.ResizeEvent {
+			payload := e.Payload.(ui.Resize)
+			width = payload.Width
+			height = payload.Height
+			ui.Render(drawPage[currentScreen](configuration, width, height)...)
+		}
+		// refresh screen after keyboard input or redraw screen entirely + reset state if we have changed screens
+		if savedScreen != currentScreen {
+			prepareDrawPage[currentScreen](configuration)
+			// reset modes
+			if currentScreen == Search && (savedScreen != PodcastDetail) {
+				currentMode = Insert
+			} else {
+				currentMode = Normal
+			}
+			// reset text and selected if not transitioning between detail screen
+			// TODO make cursor per screen
+			if (currentScreen != PodcastDetail) && (savedScreen != PodcastDetail) {
+				userTextBuffer = ""
+				currentSelected = 0
+			}
+			// save last screen
+			previousScreen = savedScreen
+		}
+		ui.Render(drawPage[currentScreen](configuration, width, height)...)
 	}
 }
