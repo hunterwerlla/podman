@@ -67,13 +67,6 @@ func getPodcastEntries(podcast Podcast, podcastCache *[]CachedPodcast) ([]Podcas
 			break
 		}
 	}
-	//first check if we need to update
-	if cacheEntry != nil {
-		//TODO set time to update
-		if time.Since(cacheEntry.Checked).Hours() < 12 {
-			return cacheEntry.Podcasts, nil
-		}
-	}
 	feed, err := rss.Read(input)
 	if err != nil {
 		if cacheEntry != nil {
