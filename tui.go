@@ -104,6 +104,13 @@ var (
 		PodcastDetail: doNothingWithInput,
 	}
 
+	deletePressed = map[screen]func(configuration *Configuration){
+		Home:          doNothingWithInput,
+		Search:        doNothingWithInput,
+		Downloaded:    actionPressedDownloaded,
+		PodcastDetail: doNothingWithInput,
+	}
+
 	currentPodcastsInBuffers = map[screen]interface{}{
 		Home:          make([]Podcast, 0),
 		Search:        make([]Podcast, 0),

@@ -210,6 +210,8 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		searchPressed[currentScreen](configuration)
 	} else if event.ID == configuration.ActionKeybind {
 		actionPressed[currentScreen](configuration)
+	} else if event.ID == configuration.DeleteKeybind {
+		deletePressed[currentScreen](configuration)
 	}
 }
 
