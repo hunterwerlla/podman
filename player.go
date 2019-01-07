@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
@@ -27,7 +26,7 @@ const (
 var (
 	playerPosition int = -1
 	startTime      time.Time
-	lengthOfFile   uint64
+	lengthOfFile   int
 	playerControl  chan PlayerState
 	fileChannel    chan string
 	exitChannel    chan bool
@@ -55,18 +54,19 @@ func TogglePlayerState() {
 	if playerState == PlayerPlay {
 		playerControl <- PlayerPause
 	} else if playerState == PlayerPause {
-		playerControl <- PlayerPlay
+		playerControl <- PlayerResume
 	}
 }
 
 func StopPlayer() {
+	playerState = PlayerStop
 	playerPosition = -1
 	playerState = PlayerNothingPlaying
 	playing = ""
 	lengthOfFile = 0 //set length
 }
 
-func GetLengthOfPlayingFile() uint64 {
+func GetLengthOfPlayingFile() int {
 	return lengthOfFile
 }
 
@@ -107,23 +107,26 @@ func startPlayer() {
 
 		switch status {
 		case PlayerNothingPlaying:
-			panic("invalid state when switching status, this should never happen")
+			panic("invalid state sent to player, this should never happen")
 		case PlayerPlay:
 			ctrl = playFile()
+		case PlayerResume:
+			playerState = PlayerPlay
+			ctrl.Paused = false
+			startTime = time.Now()
 		case PlayerPause:
 			//save time and file then cleanup
 			ctrl.Paused = true
 			playerPosition += int(time.Since(startTime).Seconds())
-			speaker.Clear()
 			playerState = PlayerPause
 		case PlayerStop:
 			ctrl.Paused = true
 			ctrl.Streamer = nil
 			StopPlayer()
 		case PlayerFastForward:
-			fastForwardPlayer()
+			fastForwardPlayer(ctrl)
 		case PlayerRewind:
-			rewindPlayer()
+			rewindPlayer(ctrl)
 		case PlayerExit:
 			speaker.Clear()
 			stopToExit = true
@@ -141,10 +144,6 @@ func changePlayerPosition(inputFile beep.StreamSeekCloser, format beep.Format) {
 	_ = inputFile.Seek(seek)
 }
 
-func fileEnded() {
-	playerState = PlayerStop
-}
-
 func playFile() *beep.Ctrl {
 	playerState = PlayerPlay
 	inputFile, _ := os.Open(playing)
@@ -152,34 +151,16 @@ func playFile() *beep.Ctrl {
 	ctrl := &beep.Ctrl{decoaded, false}
 	changePlayerPosition(decoaded, format)
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-	speaker.Play(ctrl, beep.Callback(fileEnded))
+	speaker.Play(beep.Seq(ctrl, beep.Callback(StopPlayer)))
+	lengthOfFile = decoaded.Len() / format.NumChannels / int(format.SampleRate)
+	startTime = time.Now()
 	return ctrl
 }
 
-func fastForwardPlayer() {
-	//save time and file
-	if playerPosition == -1 {
-		fmt.Println("Have to select a file to play to resume playback")
-	} else {
-		// TODO fix forward skip length
-		// playerPosition += int(time.Since(startTime).Seconds()) + config.forwardSkipLength
-		if playerPosition > int(lengthOfFile) {
-			playerPosition = int(lengthOfFile) - 1
-		}
-		playerState = PlayerPlay
-	}
+func fastForwardPlayer(ctrl *beep.Ctrl) {
+	// TODO rewrite this
 }
 
-func rewindPlayer() {
-	//save time and file
-	if playerPosition == -1 {
-		fmt.Println("Have to select a file to play to resume playback")
-	} else {
-		// TODO fix rewind skip length
-		// playerPosition += int(time.Since(startTime).Seconds()) - config.backwardSkipLength
-		if playerPosition < 0 {
-			playerPosition = 0
-		}
-		playerState = PlayerPlay
-	}
+func rewindPlayer(ctrl *beep.Ctrl) {
+	// TODO rewrite this
 }

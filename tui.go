@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	ui "github.com/gizak/termui"
-	"os"
 )
 
 type screen string
@@ -180,15 +179,6 @@ func setCurrentCursorPosition(position int) {
 	currentssSelectedOnScreen[currentScreen] = position
 }
 
-// TODO remove when sox is removed
-func eatInput() {
-	//get rid of all stderr and stdout data
-	//due to SOX outputting error messages
-	_, unused, _ := os.Pipe()
-	os.Stderr = unused
-	os.Stdout = unused
-}
-
 // StartTui starts the TUI with the Configuration passed in
 func StartTui(configuration *Configuration) {
 	fillOutControlsMap(configuration, defaultControlsMap)
@@ -199,6 +189,5 @@ func StartTui(configuration *Configuration) {
 	}
 	defer ui.Close()
 
-	eatInput()
 	tuiMainLoop(configuration)
 }
