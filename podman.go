@@ -2,8 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"github.com/jroimartin/gocui"
 	"os/user"
 	"time"
 )
@@ -55,59 +53,16 @@ func main() {
 	//read config file
 	config := CreateDefault()
 	config.StorageLocation = defaultStorage
-	config = ReadConfig(config)
+	config = readConfig(config)
 	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the GUI or not")
 	flag.Parse()
-	//make the channels used by player
+	// Start up the global player
 	StartPlayer()
 	//made a decision to use TUI or not
 	if *noTui == true {
-		runCui(&config)
+		RunCui(&config)
 	} else {
-		runTui(&config)
+		StartTui(&config)
 	}
-}
-
-func runCui(config *Configuration) {
-	end := false
-	for end != true {
-		end = CliCommand(config)
-	}
-}
-
-func runTui(config *Configuration) {
-	SetTuiConfiguration(config)
-	g, err := gocui.NewGui(gocui.OutputNormal)
-	if err != nil {
-		fmt.Println(err)
-		panic("Unable to start TUI, can atttempt to run --no-tui for minimal text based version")
-	}
-	defer g.Close()
-	g.SetManagerFunc(TuiHandler)
-	SetTuiKeybinds(g)
-	g.Mouse = true
-	refreshGui(g)
-	//main loop
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		panic(fmt.Sprintf("Error in GUI, have to exit %s", err.Error()))
-	}
-	WriteConfig(config) //update config on exit
-	DisposePlayer()            //tell player to exit + wait
-}
-
-func refreshGui(g *gocui.Gui) {
-	update := time.NewTicker(time.Millisecond * 500).C
-	stopTick := make(chan bool)
-	defer close(stopTick)
-	go func() {
-		for {
-			select {
-			case <-update:
-				g.Update(TuiHandler)
-			case <-stopTick:
-				return
-			}
-		}
-	}()
 }

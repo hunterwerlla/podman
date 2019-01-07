@@ -9,10 +9,11 @@ type Configuration struct {
 	RightKeybind       string
 	PlayKeybind        string
 	SearchKeybind      string
+	ActionKeybind      string
 	forwardSkipLength  int
 	backwardSkipLength int
 	Subscribed         []Podcast
-	Downloaded         map[string]PodcastEpisode
+	Downloaded         []PodcastEpisode
 	Cached             []CachedPodcast
 }
 
@@ -38,12 +39,13 @@ func CreateDefault() Configuration {
 		DownKeybind:        "j",
 		LeftKeybind:        "h",
 		RightKeybind:       "l",
-		PlayKeybind:        " ",
+		PlayKeybind:        "<Space>",
 		SearchKeybind:      "/",
+		ActionKeybind:      "s",
 		forwardSkipLength:  30,
 		backwardSkipLength: 10,
 		Subscribed:         make([]Podcast, 0),
-		Downloaded:         make(map[string]PodcastEpisode, 0),
+		Downloaded:         make([]PodcastEpisode, 0),
 		Cached:             make([]CachedPodcast, 0),
 	}
 }

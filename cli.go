@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+func RunCui(config *Configuration) {
+	end := false
+	for end != true {
+		end = CliCommand(config)
+	}
+}
+
 // CliCommand runs the main loop for a CLI based session
 func CliCommand(config *Configuration) bool {
 	command := ""
@@ -43,7 +50,7 @@ func CliCommand(config *Configuration) bool {
 							podcastAddDescription(&result)
 							//then add
 							config.Subscribed = append(config.Subscribed, result)
-							WriteConfig(config) //update config on disk
+							writeConfig(config) //update config on disk
 							fmt.Println("subscribed and written to disk")
 							goto searchEnd //considered harmful
 						}
@@ -72,7 +79,7 @@ func CliCommand(config *Configuration) bool {
 				//then remove this one
 				fmt.Printf("Removing %s\n", config.Subscribed[i].CollectionName)
 				config.Subscribed = append(config.Subscribed[:i], config.Subscribed[i+1:]...)
-				WriteConfig(config)
+				writeConfig(config)
 			}
 		}
 	} else if command == "show" {
@@ -86,7 +93,7 @@ func CliCommand(config *Configuration) bool {
 		for i, pc := range config.Subscribed {
 			if i == num {
 				found = true
-				entries, err := getPodcastEntries(pc, pc.FeedURL, &config.Cached)
+				entries, err := getPodcastEntries(pc, &config.Cached)
 				if err != nil {
 					fmt.Printf("%s when attempting to parse RSS\n", err.Error())
 					break
@@ -115,15 +122,15 @@ func CliCommand(config *Configuration) bool {
 		}
 		for ii, pc := range config.Subscribed {
 			if ii == pcNum {
-				entries, err := getPodcastEntries(pc, pc.FeedURL, &config.Cached)
+				entries, err := getPodcastEntries(pc, &config.Cached)
 				if err != nil {
 					fmt.Printf("%s when attempting to parse RSS\n", err.Error())
 					break
 				}
 				for i, entry := range entries {
 					if i == epNum {
-						config, err := DownloadPodcast(config, pc, entry, nil)
-						WriteConfig(config)
+						config, err := downloadPodcast(config, pc, entry)
+						writeConfig(config)
 						if err != nil {
 							fmt.Printf("Error when downloading: %s\n", err.Error())
 						} else {
@@ -170,7 +177,7 @@ func CliCommand(config *Configuration) bool {
 		SetPlayerState(Rewind)
 	} else if command == "ls-downloaded" {
 		for i, podcast := range config.Downloaded {
-			fmt.Printf("%s %s %s\n", i, podcast.PodcastTitle, podcast.Title)
+			fmt.Printf("%d %s %s\n", i, podcast.PodcastTitle, podcast.Title)
 		}
 	} else if command == "help" {
 		fmt.Println("Type ls to list your subscriptions, ls-downloaded to list downloads, start <num> to play, stop to stop, resume to resume, show <num> to show subscribed, /<string> to search, exit to exit, help to show this")

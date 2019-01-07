@@ -1,9 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"errors"
-	"github.com/cheggaaa/pb"
-	"github.com/jroimartin/gocui"
 	"io"
 	"net/http"
 	"os"
@@ -13,11 +12,11 @@ import (
 )
 
 var (
-	downloading      int32
-	downloadProgress *pb.ProgressBar
+	downloading          int32
+	downloadProgressText bytes.Buffer
 )
 
-func DownloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode, g *gocui.Gui) (*Configuration, error) {
+func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode) (*Configuration, error) {
 	atomic.AddInt32(&downloading, 1)
 	defer func() { atomic.AddInt32(&downloading, -1) }()
 	//get rid of all stdout data
@@ -57,21 +56,8 @@ func DownloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	}
 	defer link.Body.Close()
 	//actually download
-	if downloadProgress != nil {
-		//make a progress bar length of the content
-		downloadProgress.Add(int(link.ContentLength))
-	} else {
-		downloadProgress = pb.New(int(link.ContentLength))
-		downloadProgress.SetUnits(pb.U_BYTES)
-		downloadProgress.Format("[=-]")
-		downloadProgress.Start()
-		defer downloadProgress.Finish()
-		downloadProgress.Output = &downloadProgressText
-	}
-	writeTo := io.MultiWriter(file, downloadProgress)
+	writeTo := io.Writer(file)
 	_, err = io.Copy(writeTo, link.Body)
-	//stop download progress bar
-	downloadProgress = nil
 	downloadProgressText.Truncate(0)
 	if err != nil {
 		return configuration, err
@@ -79,14 +65,15 @@ func DownloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	//add location of file to structure
 	ep.StorageLocation = fullPathFile
 	//file download good so add it to downloaded
-	configuration.Downloaded[ep.GUID] = ep
+	configuration.Downloaded = append(configuration.Downloaded, ep)
 	return configuration, nil
 }
 
-func PodcastIsDownloaded(entry PodcastEpisode) bool {
-	_, ok := config.Downloaded[entry.GUID]
-	if ok {
-		return true
+func podcastIsDownloaded(configuration *Configuration, entry PodcastEpisode) bool {
+	for _, value := range configuration.Downloaded {
+		if value.GUID == entry.GUID {
+			return true
+		}
 	}
 	return false
 }

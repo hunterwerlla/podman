@@ -58,11 +58,12 @@ func sanitizeRss(entry string) string {
 }
 
 //TODO strip HTML
-func getPodcastEntries(podcast Podcast, input string, podcastCache *[]CachedPodcast) ([]PodcastEpisode, error) {
+func getPodcastEntries(podcast Podcast, podcastCache *[]CachedPodcast) ([]PodcastEpisode, error) {
 	var cacheEntry *CachedPodcast
-	for _, thing := range *podcastCache {
-		if podcast.CollectionName == thing.Type.CollectionName && podcast.ArtistName == thing.Type.ArtistName {
-			cacheEntry = &thing
+	input := podcast.FeedURL
+	for _, value := range *podcastCache {
+		if podcast.CollectionName == value.Type.CollectionName && podcast.ArtistName == value.Type.ArtistName {
+			cacheEntry = &value
 			break
 		}
 	}
@@ -91,7 +92,7 @@ func getPodcastEntries(podcast Podcast, input string, podcastCache *[]CachedPodc
 		title := sanitizeRss(item.Title)
 		description := sanitizeRss(item.Description)
 		for _, enc := range item.Enclosure {
-			if enc.URL != "" {
+			if len(enc.URL) > 0 {
 				url = enc.URL
 				break
 			}

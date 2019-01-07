@@ -29,24 +29,31 @@ var (
 	fileChannel    chan string
 	exitChannel    chan bool
 	playing        string
-	playerState    PlayerState
+	playerState    = NothingPlaying
 )
 
+// StartPlayer starts the global player. The player is global since there is only one of them
+// I'm not really a fan of moving it into an object as it should not be reused
 func StartPlayer() {
-	playerState := make(chan PlayerState)
-	fileChannel := make(chan string)
-	exit := make(chan bool)
-	go startPlayer(playerState, fileChannel, exit)
+	playerControl = make(chan PlayerState)
+	fileChannel = make(chan string)
+	exitChannel = make(chan bool)
+	go startPlayer()
 }
 
+// DisposePlayer sends a signal to the player to destroy itself, and then waits for the player to exit
+// This function will deadlock if called twice
 func DisposePlayer() {
 	playerControl <- ExitPlayer
 	<-exitChannel
 }
 
-func PausePlayer() {
-	playerPosition += int(time.Since(startTime).Seconds())
-	playerState = Pause
+func TogglePlayerState() {
+	if playerState == Play {
+		playerControl <- Pause
+	} else if playerState == Pause {
+		playerControl <- Play
+	}
 }
 
 func StopPlayer() {
@@ -81,21 +88,12 @@ func GetPlayerPosition() int {
 }
 
 //this runs on its own thread to start/stop and select the media that is playing
-func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string, exit chan bool) {
-	//get rid of all stderr and stdout data
-	//due to SOX outputting error messages
-	// _, unused, _ := os.Pipe()
-	// os.Stderr = unused
-	// os.Stdout = unused
-	playerControl = playerState
-	fileChannel = fileSelectionChannel
-	exitChannel = exit
+func startPlayer() {
 	var (
-		chain      *sox.EffectsChain = nil
-		inputFile  *sox.Format       = nil
-		outputFile *sox.Format       = nil
-		status     PlayerState       = NothingPlaying
-		stopToExit bool              = false
+		chain      *sox.EffectsChain
+		inputFile  *sox.Format
+		status     = NothingPlaying
+		stopToExit = false
 	)
 	if !sox.Init() {
 		panic("Unable to start the player")
@@ -114,24 +112,26 @@ func startPlayer(playerState chan PlayerState, fileSelectionChannel chan string,
 		case NothingPlaying:
 			panic("invalid state when switching status, this should never happen")
 		case Play:
-			playFile(chain, inputFile, outputFile)
-		case Pause: //case 1 pause
-			//save time and file
-			PausePlayer()
-			cleanupSoxData(chain, inputFile, outputFile)
+			// TODO yes we are leaking fd's. sox is making pulseaudio panic and we need to get rid of it.
+			chain, inputFile, _ = playFile()
+		case Pause:
+			//save time and file then cleanup
+			playerPosition += int(time.Since(startTime).Seconds())
+			cleanupSoxData(chain, inputFile)
+			playerState = Pause
 		case Stop:
 			StopPlayer()
-			cleanupSoxData(chain, inputFile, outputFile)
+			cleanupSoxData(chain, inputFile)
 		case FastForward:
 			fastForwardPlayer()
 		case Rewind:
 			rewindPlayer()
 		case ExitPlayer:
-			cleanupSoxData(chain, inputFile, outputFile)
+			cleanupSoxData(chain, inputFile)
 			stopToExit = true
 		}
 	}
-	exit <- true
+	exitChannel <- true
 }
 
 func changePlayerPosition(inputFile *sox.Format) {
@@ -144,17 +144,14 @@ func changePlayerPosition(inputFile *sox.Format) {
 	inputFile.Seek(seek)
 }
 
-func playFile(chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Format) {
+func playFile() (chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Format) {
 	playerState = Play
 	inputFile = sox.OpenRead(playing)
 	changePlayerPosition(inputFile)
-	//try two audio output methods
+	// TODO make this work on Windows
 	outputFile = sox.OpenWrite("default", inputFile.Signal(), nil, "alsa")
 	if outputFile == nil {
-		outputFile = sox.OpenWrite("default", inputFile.Signal(), nil, "pulseaudio")
-		if outputFile == nil {
-			panic("Cannot open audio output devices")
-		}
+		panic("Cannot open audio output devices")
 	}
 	//Now actually play
 	chain = sox.CreateEffectsChain(inputFile.Encoding(), outputFile.Encoding())
@@ -175,6 +172,7 @@ func playFile(chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Fo
 	lengthOfFile = getLengthOfFile(playing) //set length
 	//process which also plays
 	go chain.Flow()
+	return chain, inputFile, outputFile
 }
 
 func fastForwardPlayer() {
@@ -205,12 +203,9 @@ func rewindPlayer() {
 	}
 }
 
-func cleanupSoxData(chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Format) {
+func cleanupSoxData(chain *sox.EffectsChain, inputFile *sox.Format) {
 	if inputFile != nil {
 		inputFile.Release()
-	}
-	if outputFile != nil {
-		outputFile.Release()
 	}
 	if chain != nil {
 		chain.Release()
