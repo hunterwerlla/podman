@@ -1,8 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"github.com/krig/go-sox"
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/mp3"
+	"github.com/faiface/beep/speaker"
+	"os"
 	"time"
 )
 
@@ -24,7 +26,7 @@ const (
 var (
 	playerPosition int = -1
 	startTime      time.Time
-	lengthOfFile   uint64
+	lengthOfFile   int
 	playerControl  chan PlayerState
 	fileChannel    chan string
 	exitChannel    chan bool
@@ -52,19 +54,19 @@ func TogglePlayerState() {
 	if playerState == PlayerPlay {
 		playerControl <- PlayerPause
 	} else if playerState == PlayerPause {
-		playerControl <- PlayerPlay
+		playerControl <- PlayerResume
 	}
 }
 
 func StopPlayer() {
-	//reset position
+	playerState = PlayerStop
 	playerPosition = -1
 	playerState = PlayerNothingPlaying
 	playing = ""
 	lengthOfFile = 0 //set length
 }
 
-func GetLengthOfPlayingFile() uint64 {
+func GetLengthOfPlayingFile() int {
 	return lengthOfFile
 }
 
@@ -90,15 +92,10 @@ func GetPlayerPosition() int {
 //this runs on its own thread to start/stop and select the media that is playing
 func startPlayer() {
 	var (
-		chain      *sox.EffectsChain
-		inputFile  *sox.Format
-		status     = PlayerNothingPlaying
-		stopToExit = false
+		status                = PlayerNothingPlaying
+		stopToExit            = false
+		ctrl       *beep.Ctrl = nil
 	)
-	if !sox.Init() {
-		panic("Unable to start the player")
-	}
-	defer sox.Quit()
 	for stopToExit != true {
 		status = PlayerNothingPlaying //reset status
 
@@ -110,116 +107,60 @@ func startPlayer() {
 
 		switch status {
 		case PlayerNothingPlaying:
-			panic("invalid state when switching status, this should never happen")
+			panic("invalid state sent to player, this should never happen")
 		case PlayerPlay:
-			if chain != nil || inputFile != nil {
-				cleanupSoxData(&chain, &inputFile)
-			}
-			// TODO yes we are leaking fd's. sox is making pulseaudio panic and we need to get rid of it.
-			chain, inputFile, _ = playFile()
+			ctrl = playFile()
+		case PlayerResume:
+			playerState = PlayerPlay
+			ctrl.Paused = false
+			startTime = time.Now()
 		case PlayerPause:
 			//save time and file then cleanup
+			ctrl.Paused = true
 			playerPosition += int(time.Since(startTime).Seconds())
-			cleanupSoxData(&chain, &inputFile)
 			playerState = PlayerPause
 		case PlayerStop:
+			ctrl.Paused = true
+			ctrl.Streamer = nil
 			StopPlayer()
-			cleanupSoxData(&chain, &inputFile)
 		case PlayerFastForward:
-			fastForwardPlayer()
+			fastForwardPlayer(ctrl)
 		case PlayerRewind:
-			rewindPlayer()
+			rewindPlayer(ctrl)
 		case PlayerExit:
-			cleanupSoxData(&chain, &inputFile)
+			speaker.Clear()
 			stopToExit = true
 		}
 	}
 	exitChannel <- true
 }
 
-func changePlayerPosition(inputFile *sox.Format) {
+func changePlayerPosition(inputFile beep.StreamSeekCloser, format beep.Format) {
 	if playerPosition < 0 {
 		playerPosition = 0
 	}
-	//formula taken from example 2 of goSoX
-	seek := uint64(float64(playerPosition)*float64(inputFile.Signal().Rate())*float64((inputFile.Signal().Channels())) + 0.5)
-	seek -= seek % uint64(inputFile.Signal().Channels())
-	inputFile.Seek(seek)
+	seek := int(float64(playerPosition)*float64(format.SampleRate)*float64(format.NumChannels) + 0.5)
+	seek -= seek % int(format.NumChannels)
+	_ = inputFile.Seek(seek)
 }
 
-func playFile() (chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Format) {
+func playFile() *beep.Ctrl {
 	playerState = PlayerPlay
-	inputFile = sox.OpenRead(playing)
-	changePlayerPosition(inputFile)
-	// TODO make this work on Windows
-	outputFile = sox.OpenWrite("default", inputFile.Signal(), nil, "alsa")
-	if outputFile == nil {
-		panic("Cannot open audio output devices")
-	}
-	//Now actually play
-	chain = sox.CreateEffectsChain(inputFile.Encoding(), outputFile.Encoding())
-	//make it output
-	intermSignal := inputFile.Signal().Copy()
-	//set input
-	e := sox.CreateEffect(sox.FindEffect("input"))
-	e.Options(inputFile)
-	chain.Add(e, intermSignal, inputFile.Signal())
-	e.Release()
-	//set output
-	e = sox.CreateEffect(sox.FindEffect("output"))
-	e.Options(outputFile)
-	chain.Add(e, intermSignal, inputFile.Signal())
-	e.Release()
-	//start the timer which keeps track of position in the file
+	inputFile, _ := os.Open(playing)
+	decoaded, format, _ := mp3.Decode(inputFile)
+	ctrl := &beep.Ctrl{decoaded, false}
+	changePlayerPosition(decoaded, format)
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	speaker.Play(beep.Seq(ctrl, beep.Callback(StopPlayer)))
+	lengthOfFile = decoaded.Len() / format.NumChannels / int(format.SampleRate)
 	startTime = time.Now()
-	lengthOfFile = getLengthOfFile(playing) //set length
-	//process which also plays
-	go chain.Flow()
-	return chain, inputFile, outputFile
+	return ctrl
 }
 
-func fastForwardPlayer() {
-	//save time and file
-	if playerPosition == -1 {
-		fmt.Println("Have to select a file to play to resume playback")
-	} else {
-		// TODO fix forward skip length
-		// playerPosition += int(time.Since(startTime).Seconds()) + config.forwardSkipLength
-		if playerPosition > int(lengthOfFile) {
-			playerPosition = int(lengthOfFile) - 1
-		}
-		playerState = PlayerPlay
-	}
+func fastForwardPlayer(ctrl *beep.Ctrl) {
+	// TODO rewrite this
 }
 
-func rewindPlayer() {
-	//save time and file
-	if playerPosition == -1 {
-		fmt.Println("Have to select a file to play to resume playback")
-	} else {
-		// TODO fix rewind skip length
-		// playerPosition += int(time.Since(startTime).Seconds()) - config.backwardSkipLength
-		if playerPosition < 0 {
-			playerPosition = 0
-		}
-		playerState = PlayerPlay
-	}
-}
-
-func cleanupSoxData(chain **sox.EffectsChain, inputFile **sox.Format) {
-	if inputFile != nil && *inputFile != nil {
-		(*inputFile).Release()
-		*inputFile = nil
-	}
-	if chain != nil && *chain != nil {
-		(*chain).Release()
-		*chain = nil
-	}
-}
-
-func getLengthOfFile(fileName string) uint64 {
-	inputFile := sox.OpenRead(fileName)
-	seek := uint64(float64(inputFile.Signal().Length())/float64(inputFile.Signal().Channels())/float64(inputFile.Signal().Rate()) - 0.5)
-	seek += seek % uint64(inputFile.Signal().Channels())
-	return seek
+func rewindPlayer(ctrl *beep.Ctrl) {
+	// TODO rewrite this
 }

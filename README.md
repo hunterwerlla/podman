@@ -9,6 +9,7 @@ Podman is a terminal based podcast client written in Go with a fully features TU
 **L/-&gt;** to move right (downloaded)<br/>
 **PgUp** to skip forward<br/>
 **PgDown** to skip backward<br/>
+**D** to delete downloads/subscriptions<br/>
 **&lt;spacebar&gt;** to pause/resume when playing<br/>
 **&lt;enter&gt;** to do actions (play, download, view all of the episodes, subscribe)<br/>
 **/** to search podcast list/downloads/new podcasts to subscribe to
@@ -19,7 +20,7 @@ Keybinds are editable by changing ~/.config/podman/config.json
 Podman requires:
 
 [termui](https://github.com/gizak/termui) for the interface,  
-[go-sox](https://github.com/krig/go-sox) to play audio files,  
+[faiface/beep](https://github.com/faiface/beep) to play audio files,  
 [sanitize](https://github.com/kennygrant/sanitize) to clean up podcast descriptions,  
 [go-rss](https://github.com/ungerik/go-rss) to grab podcast feeds  
 [kr/text](https://github.com/kr/text) for text wrapping
@@ -27,8 +28,6 @@ Podman requires:
 Searching utilizes ITunes.
 
 # TODO
-* fix playing a different file crashes if you don't pause, see #2 on todo
-* replace sox
 * re-add download bar
 * add verification of downloads
 * store user data in a database
