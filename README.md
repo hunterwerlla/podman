@@ -27,7 +27,7 @@ Podman requires:
 Searching utilizes ITunes.
 
 # TODO
-* make scrolling work again
+* fix playing a different file crashes if you don't pause, see #2 on todo
 * replace sox
 * re-add download bar
 * add verification of downloads

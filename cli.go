@@ -129,7 +129,7 @@ func CliCommand(config *Configuration) bool {
 				}
 				for i, entry := range entries {
 					if i == epNum {
-						config, err := downloadPodcast(config, pc, entry)
+						err := downloadPodcast(config, pc, entry)
 						writeConfig(config)
 						if err != nil {
 							fmt.Printf("Error when downloading: %s\n", err.Error())
@@ -158,7 +158,7 @@ func CliCommand(config *Configuration) bool {
 			if i == pcNum {
 				//send storage location to player
 				SetPlaying(value.StorageLocation)
-				SetPlayerState(Play)
+				SetPlayerState(PlayerPlay)
 				break
 			}
 			i++
@@ -166,15 +166,15 @@ func CliCommand(config *Configuration) bool {
 		fmt.Println("episode not found")
 		return false
 	} else if command == "stop" {
-		SetPlayerState(Stop)
+		SetPlayerState(PlayerStop)
 	} else if command == "pause" {
-		SetPlayerState(Pause)
+		SetPlayerState(PlayerPause)
 	} else if command == "resume" {
-		SetPlayerState(Resume)
+		SetPlayerState(PlayerResume)
 	} else if command == "ff" {
-		SetPlayerState(FastForward)
+		SetPlayerState(PlayerFastForward)
 	} else if command == "rewind" {
-		SetPlayerState(Rewind)
+		SetPlayerState(PlayerRewind)
 	} else if command == "ls-downloaded" {
 		for i, podcast := range config.Downloaded {
 			fmt.Printf("%d %s %s\n", i, podcast.PodcastTitle, podcast.Title)

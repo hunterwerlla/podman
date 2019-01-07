@@ -16,7 +16,7 @@ var (
 	downloadProgressText bytes.Buffer
 )
 
-func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode) (*Configuration, error) {
+func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode) error {
 	atomic.AddInt32(&downloading, 1)
 	defer func() { atomic.AddInt32(&downloading, -1) }()
 	//get rid of all stdout data
@@ -38,21 +38,21 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	}
 	//if empty, title invalid
 	if title == ".mp3" {
-		return configuration, errors.New("invalid path")
+		return errors.New("invalid path")
 	}
 	fullPathFile = fullPath + "/" + title
 	err := os.MkdirAll(fullPath, 0700)
 	if err != nil {
-		return configuration, err
+		return err
 	}
 	file, err := os.Create(fullPathFile)
 	defer file.Close()
 	if err != nil {
-		return configuration, err
+		return err
 	}
 	link, err := http.Get(ep.Link)
 	if err != nil {
-		return configuration, err
+		return err
 	}
 	defer link.Body.Close()
 	//actually download
@@ -60,13 +60,24 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	_, err = io.Copy(writeTo, link.Body)
 	downloadProgressText.Truncate(0)
 	if err != nil {
-		return configuration, err
+		return err
 	}
 	//add location of file to structure
 	ep.StorageLocation = fullPathFile
 	//file download good so add it to downloaded
 	configuration.Downloaded = append(configuration.Downloaded, ep)
-	return configuration, nil
+	return nil
+}
+
+func deleteDownloadedPodcast(configuration *Configuration, entry PodcastEpisode) {
+	for position, value := range configuration.Downloaded {
+		if value.GUID == entry.GUID {
+			configuration.Downloaded = append(configuration.Downloaded[:position], configuration.Downloaded[position+1:]...)
+			break
+		}
+	}
+	// TODO handle errors
+	go os.Remove(entry.StorageLocation)
 }
 
 func podcastIsDownloaded(configuration *Configuration, entry PodcastEpisode) bool {
@@ -76,6 +87,15 @@ func podcastIsDownloaded(configuration *Configuration, entry PodcastEpisode) boo
 		}
 	}
 	return false
+}
+
+func getPodcastLocation(configuration *Configuration, entry PodcastEpisode) string {
+	for _, value := range configuration.Downloaded {
+		if value.GUID == entry.GUID {
+			return value.StorageLocation
+		}
+	}
+	return ""
 }
 
 func downloadInProgress() bool {

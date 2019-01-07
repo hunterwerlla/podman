@@ -10,6 +10,7 @@ type Configuration struct {
 	PlayKeybind        string
 	SearchKeybind      string
 	ActionKeybind      string
+	DeleteKeybind      string
 	forwardSkipLength  int
 	backwardSkipLength int
 	Subscribed         []Podcast
@@ -42,6 +43,7 @@ func CreateDefault() Configuration {
 		PlayKeybind:        "<Space>",
 		SearchKeybind:      "/",
 		ActionKeybind:      "s",
+		DeleteKeybind:      "d",
 		forwardSkipLength:  30,
 		backwardSkipLength: 10,
 		Subscribed:         make([]Podcast, 0),

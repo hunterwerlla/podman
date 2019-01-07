@@ -8,16 +8,19 @@ import (
 
 func switchToSelectedPodcastScreen(configuration *Configuration) {
 	podcasts := getCurrentPagePodcasts()
-	if currentSelected >= len(podcasts) || currentSelected < 0 {
+	cursor := getCurrentCursorPosition()
+	if cursor >= len(podcasts) || cursor < 0 {
 		return
 	}
-	currentSelectedPodcast = podcasts[currentSelected]
+	currentSelectedPodcast = podcasts[cursor]
 	currentScreen = PodcastDetail
+	// reset cursor
+	setCurrentCursorPosition(0)
 }
 
 func searchPodcastsFromTui(configuration *Configuration) {
 	// search TODO use go()
-	currentSelected = 0
+	setCurrentCursorPosition(0)
 	var err error
 	searchString := strings.Replace(userTextBuffer, "\n", "", -1)
 	searchString = strings.Trim(searchString, "\n\t")
@@ -27,6 +30,8 @@ func searchPodcastsFromTui(configuration *Configuration) {
 		userTextBuffer = "error searching! " + err.Error()
 	}
 }
+
+func doNothingWithInput(configuration *Configuration) {}
 
 func enterPressedHome(configuration *Configuration) {
 	// TODO refactor into two functions
@@ -45,53 +50,45 @@ func enterPressedSearch(configuration *Configuration) {
 
 func enterPressedDownloaded(configuration *Configuration) {
 	podcasts := getCurrentPagePodcastEpisodes()
-	if currentSelected >= len(podcasts) || currentSelected < 0 {
+	cursor := getCurrentCursorPosition()
+	if cursor >= len(podcasts) || cursor < 0 {
 		return
 	}
-	SetPlaying(podcasts[currentSelected].StorageLocation)
-	SetPlayerState(Play)
+	SetPlaying(podcasts[cursor].StorageLocation)
+	SetPlayerState(PlayerPlay)
 }
 
 func enterPressedPodcastDetail(configuration *Configuration) {
 	podcasts := getCurrentPagePodcastEpisodes()
-	if currentSelected >= len(podcasts) || currentSelected < 0 {
+	cursor := getCurrentCursorPosition()
+	if cursor >= len(podcasts) || cursor < 0 {
 		return
 	}
-	if podcastIsDownloaded(configuration, podcasts[currentSelected]) {
+	if podcastIsDownloaded(configuration, podcasts[cursor]) {
+		location := getPodcastLocation(configuration, podcasts[cursor])
+		if location != "" {
+			SetPlaying(location)
+			SetPlayerState(PlayerPlay)
+		}
 		return
 	}
 	// TODO fix this race condition/bad configuration management.
 	go func() {
-		configuration, err := downloadPodcast(configuration, currentSelectedPodcast, podcasts[currentSelected])
+		err := downloadPodcast(configuration, currentSelectedPodcast, podcasts[cursor])
 		if err == nil {
 			writeConfig(configuration)
 		}
 	}()
 }
 
-func escapePressedHome(configuration *Configuration) {
-
-}
-
-func escapePressedSearch(configuration *Configuration) {
-
-}
-
-func escapePressedDownloaded(configuration *Configuration) {
-
-}
-
-func actionPressedHome(configuration *Configuration) {
-
-}
-
 func actionPressedSearch(configuration *Configuration) {
 	subscribedKey := -1
 	podcasts := getCurrentPagePodcasts()
-	if currentSelected >= len(podcasts) || currentSelected < 0 {
+	cursor := getCurrentCursorPosition()
+	if cursor >= len(podcasts) || cursor < 0 {
 		return
 	}
-	selectedPodcast := podcasts[currentSelected]
+	selectedPodcast := podcasts[cursor]
 	// check if it's already part of the configuration
 	for key, value := range configuration.Subscribed {
 		if selectedPodcast.ArtistName == value.ArtistName && selectedPodcast.CollectionName == value.CollectionName {
@@ -107,62 +104,50 @@ func actionPressedSearch(configuration *Configuration) {
 }
 
 func actionPressedDownloaded(configuration *Configuration) {
-
+	cursor := getCurrentCursorPosition()
+	podcasts := getCurrentPagePodcastEpisodes()
+	if cursor >= len(podcasts) || cursor < 0 {
+		return
+	}
+	// reset cursor if needed
+	if cursor == len(configuration.Downloaded)-1 {
+		setCurrentCursorPosition(len(configuration.Downloaded) - 2)
+	}
+	deleteDownloadedPodcast(configuration, podcasts[cursor])
+	// re-prepare to reset
+	prepareDrawPageDownloaded(configuration)
+	writeConfig(configuration)
 }
 
-func actionPressedPodcastDetail(configuration *Configuration) {
-
-}
-
-func upPressedHome(configuration *Configuration) {
-	if currentSelected > 0 {
-		currentSelected--
+func upPressedGeneric(configuration *Configuration) {
+	cursor := getCurrentCursorPosition()
+	if cursor > 0 {
+		setCurrentCursorPosition(cursor - 1)
 	}
 }
 
 func upPressedSearch(configuration *Configuration) {
-	if currentSelected > 0 {
-		currentSelected--
+	cursor := getCurrentCursorPosition()
+	if cursor > 0 {
+		setCurrentCursorPosition(cursor - 1)
 	} else {
 		currentMode = Insert
 	}
 }
 
-func upPressedDownloaded(configuration *Configuration) {
-	if currentSelected > 0 {
-		currentSelected--
-	}
-}
-
-func upPressedPodcastDetail(configuration *Configuration) {
-	if currentSelected > 0 {
-		currentSelected--
-	}
-}
-
-func downPressedHome(configuration *Configuration) {
-	if currentSelected < currentListSize-1 {
-		currentSelected++
+func downPressedGeneric(configuration *Configuration) {
+	cursor := getCurrentCursorPosition()
+	if cursor < currentListSize-1 {
+		setCurrentCursorPosition(cursor + 1)
 	}
 }
 
 func downPressedSearch(configuration *Configuration) {
+	cursor := getCurrentCursorPosition()
 	if currentMode == Insert && len(userTextBuffer) > 0 {
 		searchPodcastsFromTui(configuration)
-	} else if currentSelected < currentListSize-1 {
-		currentSelected++
-	}
-}
-
-func downPressedDownloaded(configuration *Configuration) {
-	if currentSelected < currentListSize-1 {
-		currentSelected++
-	}
-}
-
-func downPressedPodcastDetail(configuration *Configuration) {
-	if currentSelected < currentListSize-1 {
-		currentSelected++
+	} else if cursor < currentListSize-1 {
+		setCurrentCursorPosition(cursor + 1)
 	}
 }
 
@@ -179,6 +164,30 @@ func searchPressedSearch(configuration *Configuration) {
 func searchPressedDownloaded(configuration *Configuration) {
 	userTextBuffer = ""
 	currentMode = Insert
+}
+
+func deletePressedHome(configuration *Configuration) {
+	subscribedKey := -1
+	podcasts := getCurrentPagePodcasts()
+	cursor := getCurrentCursorPosition()
+	if cursor >= len(podcasts) || cursor < 0 {
+		return
+	}
+	for key, value := range configuration.Subscribed {
+		if podcasts[cursor].ArtistName == value.ArtistName && podcasts[cursor].CollectionName == value.CollectionName {
+			subscribedKey = key
+		}
+	}
+	if subscribedKey == -1 {
+		return
+	}
+	// reset cursor if needed
+	if cursor == len(configuration.Subscribed)-1 {
+		setCurrentCursorPosition(len(configuration.Subscribed) - 2)
+	}
+	configuration.Subscribed = append(configuration.Subscribed[:subscribedKey], configuration.Subscribed[subscribedKey+1:]...)
+	writeConfig(configuration)
+	prepareDrawPage[currentScreen](configuration)
 }
 
 func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
@@ -230,6 +239,8 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		searchPressed[currentScreen](configuration)
 	} else if event.ID == configuration.ActionKeybind {
 		actionPressed[currentScreen](configuration)
+	} else if event.ID == configuration.DeleteKeybind {
+		deletePressed[currentScreen](configuration)
 	}
 }
 
@@ -284,19 +295,13 @@ func tuiMainLoop(configuration *Configuration) {
 					} else {
 						currentMode = Normal
 					}
-					// reset text and selected if not transitioning between detail screen
-					// TODO make cursor per screen
-					if (currentScreen != PodcastDetail) && (savedScreen != PodcastDetail) {
-						userTextBuffer = ""
-						currentSelected = 0
-					}
 					// save last screen
 					previousScreen = savedScreen
 				}
 				ui.Render(drawPage[currentScreen](configuration, width, height)...)
 			}
 		case <-ticker:
-			if GetPlayerState() == Play {
+			if GetPlayerState() == PlayerPlay {
 				ui.Render(producePlayerWidget(configuration, width, height))
 			}
 		}

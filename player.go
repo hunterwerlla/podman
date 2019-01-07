@@ -10,15 +10,15 @@ import (
 type PlayerState int
 
 const (
-	// NothingPlaying is the state when the player has nothing cued up/paused/buffered
-	NothingPlaying PlayerState = iota
-	Resume         PlayerState = iota
-	Play           PlayerState = iota
-	Pause          PlayerState = iota
-	Stop           PlayerState = iota
-	FastForward    PlayerState = iota
-	Rewind         PlayerState = iota
-	ExitPlayer     PlayerState = iota
+	// PlayerNothingPlaying is the state when the player has nothing cued up/paused/buffered
+	PlayerNothingPlaying PlayerState = iota
+	PlayerResume         PlayerState = iota
+	PlayerPlay           PlayerState = iota
+	PlayerPause          PlayerState = iota
+	PlayerStop           PlayerState = iota
+	PlayerFastForward    PlayerState = iota
+	PlayerRewind         PlayerState = iota
+	PlayerExit           PlayerState = iota
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 	fileChannel    chan string
 	exitChannel    chan bool
 	playing        string
-	playerState    = NothingPlaying
+	playerState    = PlayerNothingPlaying
 )
 
 // StartPlayer starts the global player. The player is global since there is only one of them
@@ -44,22 +44,22 @@ func StartPlayer() {
 // DisposePlayer sends a signal to the player to destroy itself, and then waits for the player to exit
 // This function will deadlock if called twice
 func DisposePlayer() {
-	playerControl <- ExitPlayer
+	playerControl <- PlayerExit
 	<-exitChannel
 }
 
 func TogglePlayerState() {
-	if playerState == Play {
-		playerControl <- Pause
-	} else if playerState == Pause {
-		playerControl <- Play
+	if playerState == PlayerPlay {
+		playerControl <- PlayerPause
+	} else if playerState == PlayerPause {
+		playerControl <- PlayerPlay
 	}
 }
 
 func StopPlayer() {
 	//reset position
 	playerPosition = -1
-	playerState = NothingPlaying
+	playerState = PlayerNothingPlaying
 	playing = ""
 	lengthOfFile = 0 //set length
 }
@@ -92,7 +92,7 @@ func startPlayer() {
 	var (
 		chain      *sox.EffectsChain
 		inputFile  *sox.Format
-		status     = NothingPlaying
+		status     = PlayerNothingPlaying
 		stopToExit = false
 	)
 	if !sox.Init() {
@@ -100,7 +100,7 @@ func startPlayer() {
 	}
 	defer sox.Quit()
 	for stopToExit != true {
-		status = NothingPlaying //reset status
+		status = PlayerNothingPlaying //reset status
 
 		select {
 		case status = <-playerControl:
@@ -109,25 +109,28 @@ func startPlayer() {
 		}
 
 		switch status {
-		case NothingPlaying:
+		case PlayerNothingPlaying:
 			panic("invalid state when switching status, this should never happen")
-		case Play:
+		case PlayerPlay:
+			if chain != nil || inputFile != nil {
+				cleanupSoxData(&chain, &inputFile)
+			}
 			// TODO yes we are leaking fd's. sox is making pulseaudio panic and we need to get rid of it.
 			chain, inputFile, _ = playFile()
-		case Pause:
+		case PlayerPause:
 			//save time and file then cleanup
 			playerPosition += int(time.Since(startTime).Seconds())
-			cleanupSoxData(chain, inputFile)
-			playerState = Pause
-		case Stop:
+			cleanupSoxData(&chain, &inputFile)
+			playerState = PlayerPause
+		case PlayerStop:
 			StopPlayer()
-			cleanupSoxData(chain, inputFile)
-		case FastForward:
+			cleanupSoxData(&chain, &inputFile)
+		case PlayerFastForward:
 			fastForwardPlayer()
-		case Rewind:
+		case PlayerRewind:
 			rewindPlayer()
-		case ExitPlayer:
-			cleanupSoxData(chain, inputFile)
+		case PlayerExit:
+			cleanupSoxData(&chain, &inputFile)
 			stopToExit = true
 		}
 	}
@@ -145,7 +148,7 @@ func changePlayerPosition(inputFile *sox.Format) {
 }
 
 func playFile() (chain *sox.EffectsChain, inputFile *sox.Format, outputFile *sox.Format) {
-	playerState = Play
+	playerState = PlayerPlay
 	inputFile = sox.OpenRead(playing)
 	changePlayerPosition(inputFile)
 	// TODO make this work on Windows
@@ -185,7 +188,7 @@ func fastForwardPlayer() {
 		if playerPosition > int(lengthOfFile) {
 			playerPosition = int(lengthOfFile) - 1
 		}
-		playerState = Play
+		playerState = PlayerPlay
 	}
 }
 
@@ -199,16 +202,18 @@ func rewindPlayer() {
 		if playerPosition < 0 {
 			playerPosition = 0
 		}
-		playerState = Play
+		playerState = PlayerPlay
 	}
 }
 
-func cleanupSoxData(chain *sox.EffectsChain, inputFile *sox.Format) {
-	if inputFile != nil {
-		inputFile.Release()
+func cleanupSoxData(chain **sox.EffectsChain, inputFile **sox.Format) {
+	if inputFile != nil && *inputFile != nil {
+		(*inputFile).Release()
+		*inputFile = nil
 	}
-	if chain != nil {
-		chain.Release()
+	if chain != nil && *chain != nil {
+		(*chain).Release()
+		*chain = nil
 	}
 }
 
