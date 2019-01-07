@@ -89,6 +89,15 @@ func podcastIsDownloaded(configuration *Configuration, entry PodcastEpisode) boo
 	return false
 }
 
+func getPodcastLocation(configuration *Configuration, entry PodcastEpisode) string {
+	for _, value := range configuration.Downloaded {
+		if value.GUID == entry.GUID {
+			return value.StorageLocation
+		}
+	}
+	return ""
+}
+
 func downloadInProgress() bool {
 	if downloading > 0 {
 		return true

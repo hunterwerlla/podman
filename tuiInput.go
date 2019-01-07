@@ -65,6 +65,11 @@ func enterPressedPodcastDetail(configuration *Configuration) {
 		return
 	}
 	if podcastIsDownloaded(configuration, podcasts[cursor]) {
+		location := getPodcastLocation(configuration, podcasts[cursor])
+		if location != "" {
+			SetPlaying(location)
+			SetPlayerState(PlayerPlay)
+		}
 		return
 	}
 	// TODO fix this race condition/bad configuration management.
