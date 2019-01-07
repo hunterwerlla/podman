@@ -161,6 +161,30 @@ func searchPressedDownloaded(configuration *Configuration) {
 	currentMode = Insert
 }
 
+func deletePressedHome(configuration *Configuration) {
+	subscribedKey := -1
+	podcasts := getCurrentPagePodcasts()
+	cursor := getCurrentCursorPosition()
+	if cursor >= len(podcasts) || cursor < 0 {
+		return
+	}
+	for key, value := range configuration.Subscribed {
+		if podcasts[cursor].ArtistName == value.ArtistName && podcasts[cursor].CollectionName == value.CollectionName {
+			subscribedKey = key
+		}
+	}
+	if subscribedKey == -1 {
+		return
+	}
+	// reset cursor if needed
+	if cursor == len(configuration.Subscribed)-1 {
+		setCurrentCursorPosition(len(configuration.Subscribed) - 2)
+	}
+	configuration.Subscribed = append(configuration.Subscribed[:subscribedKey], configuration.Subscribed[subscribedKey+1:]...)
+	writeConfig(configuration)
+	prepareDrawPage[currentScreen](configuration)
+}
+
 func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 	if event.ID == "<Enter>" {
 		enterPressed[currentScreen](configuration)

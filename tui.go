@@ -26,7 +26,7 @@ const (
 var (
 	// TODO make spacing variable so when it's not wide enough it still works
 	defaultControlsMap = map[screen]string{
-		Home:          "[%s]elect/[<enter>]  [h]/[<left>](search)   [l]/[<right>](downloaded)",
+		Home:          "[%s]elect/[<enter>]  [h]/[<left>](search)   [l]/[<right>](downloaded)   [d]elete subscription",
 		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>](home)",
 		Downloaded:    "[<enter>] Play   [%s]/[d]elete",
 		PodcastDetail: "[<enter>] download episode",
@@ -63,7 +63,7 @@ var (
 	}
 
 	actionPressed = map[screen]func(configuration *Configuration){
-		Home:          doNothingWithInput,
+		Home:          enterPressedHome,
 		Search:        actionPressedSearch,
 		Downloaded:    actionPressedDownloaded,
 		PodcastDetail: doNothingWithInput,
@@ -105,7 +105,7 @@ var (
 	}
 
 	deletePressed = map[screen]func(configuration *Configuration){
-		Home:          doNothingWithInput,
+		Home:          deletePressedHome,
 		Search:        doNothingWithInput,
 		Downloaded:    actionPressedDownloaded,
 		PodcastDetail: doNothingWithInput,
