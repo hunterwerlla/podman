@@ -28,7 +28,7 @@ var (
 	defaultControlsMap = map[screen]string{
 		Home:          "[%s]elect/[<enter>]  [h]/[<left>](search)   [l]/[<right>](downloaded)   [d]elete subscription",
 		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>](home)",
-		Downloaded:    "[<enter>] Play   [%s]/[d]elete",
+		Downloaded:    "[<enter>] Play   [%s]/[d]elete   [l]/[<left>](home)",
 		PodcastDetail: "[<enter>] download episode",
 	}
 
