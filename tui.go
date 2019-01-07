@@ -62,10 +62,10 @@ var (
 	}
 
 	actionPressed = map[screen]func(configuration *Configuration){
-		Home:          actionPressedHome,
+		Home:          doNothingWithInput,
 		Search:        actionPressedSearch,
-		Downloaded:    actionPressedDownloaded,
-		PodcastDetail: actionPressedPodcastDetail,
+		Downloaded:    doNothingWithInput,
+		PodcastDetail: doNothingWithInput,
 	}
 
 	enterPressed = map[screen]func(configuration *Configuration){
@@ -76,9 +76,10 @@ var (
 	}
 
 	escapePressed = map[screen]func(configuration *Configuration){
-		Home:       escapePressedHome,
-		Search:     escapePressedSearch,
-		Downloaded: escapePressedDownloaded,
+		Home:          doNothingWithInput,
+		Search:        doNothingWithInput,
+		Downloaded:    doNothingWithInput,
+		PodcastDetail: doNothingWithInput,
 	}
 
 	upPressed = map[screen]func(configuration *Configuration){
@@ -96,9 +97,10 @@ var (
 	}
 
 	searchPressed = map[screen]func(configuration *Configuration){
-		Home:       searchPressedHome,
-		Search:     searchPressedSearch,
-		Downloaded: searchPressedDownloaded,
+		Home:          searchPressedHome,
+		Search:        searchPressedSearch,
+		Downloaded:    searchPressedDownloaded,
+		PodcastDetail: doNothingWithInput,
 	}
 
 	currentPodcastsInBuffers = map[screen]interface{}{
@@ -107,12 +109,18 @@ var (
 		Downloaded:    make([]PodcastEpisode, 0),
 		PodcastDetail: make([]Podcast, 0),
 	}
+
+	currentSelectedScreen = map[screen]int{
+		Home:   0,
+		Search: 0,
+		Downloaded: 0,
+		PodcastDetail: 0
+	}
 )
 
 var (
 	currentSelected        = 0
 	currentListSize        = 0
-	currentListOffset      = 0
 	currentMode            = Normal
 	currentScreen          = Home
 	previousScreen         = None

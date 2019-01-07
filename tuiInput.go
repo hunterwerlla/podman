@@ -28,6 +28,8 @@ func searchPodcastsFromTui(configuration *Configuration) {
 	}
 }
 
+func doNothingWithInput(configuration *Configuration) {}
+
 func enterPressedHome(configuration *Configuration) {
 	// TODO refactor into two functions
 	if currentMode == Normal {
@@ -69,22 +71,6 @@ func enterPressedPodcastDetail(configuration *Configuration) {
 	}()
 }
 
-func escapePressedHome(configuration *Configuration) {
-
-}
-
-func escapePressedSearch(configuration *Configuration) {
-
-}
-
-func escapePressedDownloaded(configuration *Configuration) {
-
-}
-
-func actionPressedHome(configuration *Configuration) {
-
-}
-
 func actionPressedSearch(configuration *Configuration) {
 	subscribedKey := -1
 	podcasts := getCurrentPagePodcasts()
@@ -104,14 +90,6 @@ func actionPressedSearch(configuration *Configuration) {
 		configuration.Subscribed = append(configuration.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
 	}
 	writeConfig(configuration)
-}
-
-func actionPressedDownloaded(configuration *Configuration) {
-
-}
-
-func actionPressedPodcastDetail(configuration *Configuration) {
-
 }
 
 func upPressedHome(configuration *Configuration) {

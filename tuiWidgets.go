@@ -22,9 +22,9 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 	var listFormattedPodcasts []string
 	podcasts := getCurrentPagePodcasts()
 	currentListSize = len(podcasts)
-	for ii, item := range podcasts {
+	for currentNum, item := range podcasts {
 		formattedPodcast := formatPodcast(item, width)
-		if ii == currentSelected {
+		if currentNum == currentSelected {
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		}
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
@@ -94,22 +94,26 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 }
 
 func produceSearchResultsWidget(configuration *Configuration, width int, height int) *ui.List {
+	searchWidgetHeight := height - searchBarHeight - playerHeight - controlsHeight
 	searchResultsWidget := ui.NewList()
 	searchResultsWidget.Y = searchBarHeight
-	searchResultsWidget.Height = height - searchBarHeight - playerHeight - controlsHeight
+	searchResultsWidget.Height = searchWidgetHeight
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
 	searchResultsWidget.ItemFgColor = ui.ColorBlack
 	var formattedPodcastList []string
 	podcasts := getCurrentPagePodcasts()
 	currentListSize = len(podcasts)
-	for ii, item := range podcasts {
+	for currentNum, item := range podcasts {
+		if currentNum < (currentSelected - (searchWidgetHeight / 2)) {
+			continue
+		}
 		formattedPodcast := formatPodcast(item, width)
 		// TODO make an isSubscribed function
 		subscribed := false
 		for _, value := range configuration.Subscribed {
 			if item.ArtistName == value.ArtistName && item.CollectionName == value.CollectionName {
-				//already subscribed so do nothing
+				//already subscribed, add S -
 				formattedPodcast = "S - " + formattedPodcast
 				subscribed = true
 			}
@@ -117,7 +121,7 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 		if subscribed != true {
 			formattedPodcast = "    " + formattedPodcast
 		}
-		if ii == currentSelected {
+		if currentNum == currentSelected {
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		}
 		formattedPodcastList = append(formattedPodcastList, formattedPodcast)
@@ -127,9 +131,10 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 }
 
 func produceDownloadedWidget(configuration *Configuration, width int, height int) *ui.List {
+	searchResultsWidgetHeight := height - playerHeight - controlsHeight
 	searchResultsWidget := ui.NewList()
 	searchResultsWidget.Y = 0
-	searchResultsWidget.Height = height - playerHeight - controlsHeight
+	searchResultsWidget.Height = searchResultsWidgetHeight
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
 	searchResultsWidget.ItemFgColor = ui.ColorBlack
@@ -137,10 +142,13 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 	var listFormattedPodcasts []string
 	var podcast = getCurrentPagePodcastEpisodes()
 	currentListSize = len(podcast)
-	for currentItem, item := range podcast {
+	for currentNum, item := range podcast {
+		if currentNum < (currentSelected - (searchResultsWidgetHeight / 2)) {
+			continue
+		}
 		// TODO add function for this
 		formattedPodcast := item.PodcastTitle + " " + item.Title + " " + item.Summary
-		if currentItem == currentSelected {
+		if currentNum == currentSelected {
 			formattedPodcast = wrapString(formattedPodcast, width)
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		} else if len(formattedPodcast) > width {
@@ -148,7 +156,6 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 			formattedPodcast += "..."
 		}
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
-		currentItem++
 	}
 	searchResultsWidget.Items = listFormattedPodcasts
 	return searchResultsWidget
