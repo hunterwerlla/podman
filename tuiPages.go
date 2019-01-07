@@ -52,8 +52,9 @@ func drawPageDownloaded(configuration *Configuration, width int, height int) []u
 }
 
 func drawPagePodcastDetail(configuration *Configuration, width int, height int) []ui.Bufferer {
-	widgets := make([]ui.Bufferer, 2)
+	widgets := make([]ui.Bufferer, 3)
 	widgets[0] = producePodcastDetailDescriptionWidget(configuration, width, height)
 	widgets[1] = producePodcastDetailListWidget(configuration, width, height)
+	widgets[2] = producePlayerWidget(configuration, width, height)
 	return widgets
 }

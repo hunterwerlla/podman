@@ -196,7 +196,7 @@ func producePodcastDetailDescriptionWidget(configuration *Configuration, width i
 }
 
 func producePodcastDetailListWidget(configuration *Configuration, width int, height int) ui.Bufferer {
-	podcastDetailListWidgetHeight := height - podcastDetailDescriptionHeight
+	podcastDetailListWidgetHeight := height - podcastDetailDescriptionHeight - playerHeight
 	var listFormattedPodcasts []string
 	podcasts := currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
 	podcastDetailListWidget := ui.NewList()
