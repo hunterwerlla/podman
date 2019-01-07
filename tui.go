@@ -24,10 +24,11 @@ const (
 )
 
 var (
+	// TODO make spacing variable so when it's not wide enough it still works
 	defaultControlsMap = map[screen]string{
-		Home:          "[%s]elect/[<enter>]  [h]left(search)   [l]right(downloaded)",
-		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]right(home)",
-		Downloaded:    "[p]lay/<enter>",
+		Home:          "[%s]elect/[<enter>]  [h]/[<left>](search)   [l]/[<right>](downloaded)",
+		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>](home)",
+		Downloaded:    "[<enter>] Play   [%s]/[d]elete",
 		PodcastDetail: "[<enter>] download episode",
 	}
 
@@ -64,7 +65,7 @@ var (
 	actionPressed = map[screen]func(configuration *Configuration){
 		Home:          doNothingWithInput,
 		Search:        actionPressedSearch,
-		Downloaded:    doNothingWithInput,
+		Downloaded:    actionPressedDownloaded,
 		PodcastDetail: doNothingWithInput,
 	}
 
@@ -83,17 +84,17 @@ var (
 	}
 
 	upPressed = map[screen]func(configuration *Configuration){
-		Home:          upPressedHome,
+		Home:          upPressedGeneric,
 		Search:        upPressedSearch,
-		Downloaded:    upPressedDownloaded,
-		PodcastDetail: upPressedPodcastDetail,
+		Downloaded:    upPressedGeneric,
+		PodcastDetail: upPressedGeneric,
 	}
 
 	downPressed = map[screen]func(configuration *Configuration){
-		Home:          downPressedHome,
+		Home:          downPressedGeneric,
 		Search:        downPressedSearch,
-		Downloaded:    downPressedDownloaded,
-		PodcastDetail: downPressedPodcastDetail,
+		Downloaded:    downPressedGeneric,
+		PodcastDetail: downPressedGeneric,
 	}
 
 	searchPressed = map[screen]func(configuration *Configuration){
@@ -110,16 +111,15 @@ var (
 		PodcastDetail: make([]Podcast, 0),
 	}
 
-	currentSelectedScreen = map[screen]int{
-		Home:   0,
-		Search: 0,
-		Downloaded: 0,
-		PodcastDetail: 0
+	currentssSelectedOnScreen = map[screen]int{
+		Home:          0,
+		Search:        0,
+		Downloaded:    0,
+		PodcastDetail: 0,
 	}
 )
 
 var (
-	currentSelected        = 0
 	currentListSize        = 0
 	currentMode            = Normal
 	currentScreen          = Home
@@ -136,6 +136,7 @@ func getCurrentPagePodcastEpisodes() []PodcastEpisode {
 	return currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
 }
 
+// TODO break into per screen functions
 func fillOutControlsMap(configuration *Configuration, controls map[screen]string) {
 	var searchText string
 	controlsMap[Home] = fmt.Sprintf(controls[Home], configuration.ActionKeybind)
@@ -145,7 +146,7 @@ func fillOutControlsMap(configuration *Configuration, controls map[screen]string
 		searchText = "look at podcast"
 	}
 	controlsMap[Search] = fmt.Sprintf(controls[Search], searchText)
-	controlsMap[Downloaded] = controls[Downloaded]
+	controlsMap[Downloaded] = fmt.Sprintf(controls[Downloaded], configuration.ActionKeybind)
 }
 
 func termuiStyleText(text string, fgcolor string, bgcolor string) string {
@@ -162,6 +163,14 @@ func transitionScreen(transitions map[screen]screen, screen screen) {
 	} else {
 		currentScreen = transitions[screen]
 	}
+}
+
+func getCurrentCursorPosition() int {
+	return currentssSelectedOnScreen[currentScreen]
+}
+
+func setCurrentCursorPosition(position int) {
+	currentssSelectedOnScreen[currentScreen] = position
 }
 
 // TODO remove when sox is removed

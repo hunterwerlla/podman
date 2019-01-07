@@ -21,10 +21,11 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 	podcastWidget.ItemFgColor = ui.ColorBlack
 	var listFormattedPodcasts []string
 	podcasts := getCurrentPagePodcasts()
+	cursor := getCurrentCursorPosition()
 	currentListSize = len(podcasts)
 	for currentNum, item := range podcasts {
 		formattedPodcast := formatPodcast(item, width)
-		if currentNum == currentSelected {
+		if currentNum == cursor {
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		}
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
@@ -35,8 +36,14 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 
 // TODO figure out how to fix this mess
 func producePlayerWidget(configuration *Configuration, width int, height int) ui.Bufferer {
-	if GetPlayerState() != Play || GetLengthOfPlayingFile() < 1 {
-		playerWidget := ui.NewParagraph("Nothing playing")
+	var widgetLabel string
+	if downloadInProgress() {
+		widgetLabel = "Downloading"
+	} else {
+		widgetLabel = "Nothing playing"
+	}
+	if GetPlayerState() != PlayerPlay || GetLengthOfPlayingFile() < 1 {
+		playerWidget := ui.NewParagraph(widgetLabel)
 		playerWidget.TextFgColor = ui.ColorBlack
 		playerWidget.Width = width
 		playerWidget.Height = playerHeight
@@ -104,8 +111,9 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 	var formattedPodcastList []string
 	podcasts := getCurrentPagePodcasts()
 	currentListSize = len(podcasts)
+	cursor := getCurrentCursorPosition()
 	for currentNum, item := range podcasts {
-		if currentNum < (currentSelected - (searchWidgetHeight / 2)) {
+		if currentNum < (cursor - (searchWidgetHeight / 2)) {
 			continue
 		}
 		formattedPodcast := formatPodcast(item, width)
@@ -121,7 +129,7 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 		if subscribed != true {
 			formattedPodcast = "    " + formattedPodcast
 		}
-		if currentNum == currentSelected {
+		if currentNum == cursor {
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		}
 		formattedPodcastList = append(formattedPodcastList, formattedPodcast)
@@ -142,13 +150,14 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 	var listFormattedPodcasts []string
 	var podcast = getCurrentPagePodcastEpisodes()
 	currentListSize = len(podcast)
+	cursor := getCurrentCursorPosition()
 	for currentNum, item := range podcast {
-		if currentNum < (currentSelected - (searchResultsWidgetHeight / 2)) {
+		if currentNum < (cursor - (searchResultsWidgetHeight / 2)) {
 			continue
 		}
 		// TODO add function for this
 		formattedPodcast := item.PodcastTitle + " " + item.Title + " " + item.Summary
-		if currentNum == currentSelected {
+		if currentNum == cursor {
 			formattedPodcast = wrapString(formattedPodcast, width)
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		} else if len(formattedPodcast) > width {
@@ -187,19 +196,29 @@ func producePodcastDetailDescriptionWidget(configuration *Configuration, width i
 }
 
 func producePodcastDetailListWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	podcastDetailListWidgetHeight := height - podcastDetailDescriptionHeight
 	var listFormattedPodcasts []string
 	podcasts := currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
 	podcastDetailListWidget := ui.NewList()
 	podcastDetailListWidget.Width = width
-	podcastDetailListWidget.Height = height - podcastDetailDescriptionHeight
+	podcastDetailListWidget.Height = podcastDetailListWidgetHeight
 	podcastDetailListWidget.Y = podcastDetailDescriptionHeight
 	podcastDetailListWidget.Border = false
 	podcastDetailListWidget.ItemFgColor = ui.ColorBlack
 	podcastDetailListWidget.Overflow = "wrap"
 	currentListSize = len(podcasts)
+	cursor := getCurrentCursorPosition()
 	for currentNum, item := range podcasts {
+		if currentNum < (cursor - (podcastDetailListWidgetHeight / 2)) {
+			continue
+		}
 		formattedPodcast := formatPodcastEpisode(item)
-		if currentNum == currentSelected {
+		if podcastIsDownloaded(configuration, item) {
+			formattedPodcast = "D - " + formattedPodcast
+		} else {
+			formattedPodcast = "    " + formattedPodcast
+		}
+		if currentNum == getCurrentCursorPosition() {
 			formattedPodcast = wrapString(formattedPodcast, width)
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 		} else if len(formattedPodcast) > width {

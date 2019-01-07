@@ -43,6 +43,7 @@ func drawPageSearch(configuration *Configuration, width int, height int) []ui.Bu
 }
 
 func drawPageDownloaded(configuration *Configuration, width int, height int) []ui.Bufferer {
+	fillOutControlsMap(configuration, defaultControlsMap)
 	widgets := make([]ui.Bufferer, 3)
 	widgets[0] = produceDownloadedWidget(configuration, width, height)
 	widgets[1] = produceControlsWidget(configuration, width, height)
