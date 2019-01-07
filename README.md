@@ -27,9 +27,12 @@ Podman requires:
 Searching utilizes ITunes.
 
 # TODO
+* make scrolling work again
+* replace sox
 * re-add download bar
 * add verification of downloads
 * store user data in a database
 * make it work on dark theme terminals
 * add a settings menu
+* make it work on Windows
 * look at optimization
