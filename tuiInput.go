@@ -307,6 +307,9 @@ func tuiMainLoop(configuration *Configuration) {
 		case <-ticker:
 			if GetPlayerState() == PlayerPlay {
 				ui.Render(producePlayerWidget(configuration, width, height))
+			} else if GetPlayerState() == PlayerStop {
+				sendPlayerMessage(PlayerNothingPlaying)
+				ui.Render(producePlayerWidget(configuration, width, height))
 			}
 		}
 	}
