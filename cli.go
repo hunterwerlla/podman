@@ -158,7 +158,7 @@ func CliCommand(config *Configuration) bool {
 			if i == pcNum {
 				//send storage location to player
 				SetPlaying(value.StorageLocation)
-				SetPlayerState(PlayerPlay)
+				sendPlayerMessage(PlayerPlay)
 				break
 			}
 			i++
@@ -166,15 +166,15 @@ func CliCommand(config *Configuration) bool {
 		fmt.Println("episode not found")
 		return false
 	} else if command == "stop" {
-		SetPlayerState(PlayerStop)
+		sendPlayerMessage(PlayerStop)
 	} else if command == "pause" {
-		SetPlayerState(PlayerPause)
+		sendPlayerMessage(PlayerPause)
 	} else if command == "resume" {
-		SetPlayerState(PlayerResume)
+		sendPlayerMessage(PlayerResume)
 	} else if command == "ff" {
-		SetPlayerState(PlayerFastForward)
+		sendPlayerMessage(PlayerFastForward)
 	} else if command == "rewind" {
-		SetPlayerState(PlayerRewind)
+		sendPlayerMessage(PlayerRewind)
 	} else if command == "ls-downloaded" {
 		for i, podcast := range config.Downloaded {
 			fmt.Printf("%d %s %s\n", i, podcast.PodcastTitle, podcast.Title)
