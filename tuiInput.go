@@ -55,7 +55,7 @@ func enterPressedDownloaded(configuration *Configuration) {
 		return
 	}
 	SetPlaying(podcasts[cursor].StorageLocation)
-	SetPlayerState(PlayerPlay)
+	sendPlayerMessage(PlayerPlay)
 }
 
 func enterPressedPodcastDetail(configuration *Configuration) {
@@ -68,7 +68,7 @@ func enterPressedPodcastDetail(configuration *Configuration) {
 		location := getPodcastLocation(configuration, podcasts[cursor])
 		if location != "" {
 			SetPlaying(location)
-			SetPlayerState(PlayerPlay)
+			sendPlayerMessage(PlayerPlay)
 		}
 		return
 	}
@@ -208,6 +208,10 @@ func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 	} else if (event.ID == configuration.DownKeybind && currentMode == Normal) || event.ID == "<Down>" {
 		downPressed[currentScreen](configuration)
 		currentMode = Normal
+	} else if (event.ID == configuration.FastForward && currentMode == Normal) || event.ID == "<Previous>" {
+		sendPlayerMessage(PlayerFastForward)
+	} else if (event.ID == configuration.Rewind && currentMode == Normal) || event.ID == "<Next>" {
+		sendPlayerMessage(PlayerRewind)
 	} else {
 		// nothing matches, return false
 		return false
@@ -302,6 +306,9 @@ func tuiMainLoop(configuration *Configuration) {
 			}
 		case <-ticker:
 			if GetPlayerState() == PlayerPlay {
+				ui.Render(producePlayerWidget(configuration, width, height))
+			} else if GetPlayerState() == PlayerStop {
+				sendPlayerMessage(PlayerNothingPlaying)
 				ui.Render(producePlayerWidget(configuration, width, height))
 			}
 		}

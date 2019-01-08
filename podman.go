@@ -51,18 +51,18 @@ func main() {
 		defaultStorage = usr.HomeDir + "/.config/podman"
 	}
 	//read config file
-	config := CreateDefault()
-	config.StorageLocation = defaultStorage
-	config = readConfig(config)
+	configuration := CreateDefault()
+	configuration.StorageLocation = defaultStorage
+	readConfig(&configuration)
 	//read command line flags
 	noTui := flag.Bool("no-tui", false, "Select whether to use the GUI or not")
 	flag.Parse()
 	// Start up the global player
-	StartPlayer()
+	StartPlayer(&configuration)
 	//made a decision to use TUI or not
 	if *noTui == true {
-		RunCui(&config)
+		RunCui(&configuration)
 	} else {
-		StartTui(&config)
+		StartTui(&configuration)
 	}
 }

@@ -50,14 +50,17 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	if err != nil {
 		return err
 	}
-	link, err := http.Get(ep.Link)
+	httpFile, err := http.Get(ep.Link)
 	if err != nil {
 		return err
 	}
-	defer link.Body.Close()
+	defer httpFile.Body.Close()
+	if httpFile.StatusCode != 200 {
+		return errors.New("Download failed")
+	}
 	//actually download
 	writeTo := io.Writer(file)
-	_, err = io.Copy(writeTo, link.Body)
+	_, err = io.Copy(writeTo, httpFile.Body)
 	downloadProgressText.Truncate(0)
 	if err != nil {
 		return err
@@ -80,10 +83,22 @@ func deleteDownloadedPodcast(configuration *Configuration, entry PodcastEpisode)
 	go os.Remove(entry.StorageLocation)
 }
 
+func podcastExistsOnDisk(entry PodcastEpisode) bool {
+	if _, err := os.Stat(entry.StorageLocation); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
 func podcastIsDownloaded(configuration *Configuration, entry PodcastEpisode) bool {
 	for _, value := range configuration.Downloaded {
 		if value.GUID == entry.GUID {
-			return true
+			if podcastExistsOnDisk(value) {
+				return true
+			}
+			return false
 		}
 	}
 	return false

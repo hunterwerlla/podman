@@ -24,23 +24,24 @@ const (
 )
 
 var (
-	playerPosition int = -1
-	startTime      time.Time
-	lengthOfFile   int
-	playerControl  chan PlayerState
-	fileChannel    chan string
-	exitChannel    chan bool
-	playing        string
-	playerState    = PlayerNothingPlaying
+	playerPosition int = 0
+	// TODO get rid of this and just use file size
+	startTime     time.Time
+	lengthOfFile  int
+	playerControl chan PlayerState
+	fileChannel   chan string
+	exitChannel   chan bool
+	playing       string
+	playerState   = PlayerNothingPlaying
 )
 
 // StartPlayer starts the global player. The player is global since there is only one of them
 // I'm not really a fan of moving it into an object as it should not be reused
-func StartPlayer() {
+func StartPlayer(configuration *Configuration) {
 	playerControl = make(chan PlayerState)
 	fileChannel = make(chan string)
 	exitChannel = make(chan bool)
-	go startPlayer()
+	go startPlayer(configuration)
 }
 
 // DisposePlayer sends a signal to the player to destroy itself, and then waits for the player to exit
@@ -61,7 +62,6 @@ func TogglePlayerState() {
 func StopPlayer() {
 	playerState = PlayerStop
 	playerPosition = -1
-	playerState = PlayerNothingPlaying
 	playing = ""
 	lengthOfFile = 0 //set length
 }
@@ -74,7 +74,7 @@ func GetPlayerState() PlayerState {
 	return playerState
 }
 
-func SetPlayerState(state PlayerState) {
+func sendPlayerMessage(state PlayerState) {
 	playerControl <- state
 }
 
@@ -90,11 +90,12 @@ func GetPlayerPosition() int {
 }
 
 //this runs on its own thread to start/stop and select the media that is playing
-func startPlayer() {
+func startPlayer(configuration *Configuration) {
 	var (
-		status                = PlayerNothingPlaying
-		stopToExit            = false
-		ctrl       *beep.Ctrl = nil
+		status                  = PlayerNothingPlaying
+		stopToExit              = false
+		ctrl       *beep.Ctrl   = nil
+		format     *beep.Format = nil
 	)
 	for stopToExit != true {
 		status = PlayerNothingPlaying //reset status
@@ -107,9 +108,12 @@ func startPlayer() {
 
 		switch status {
 		case PlayerNothingPlaying:
-			panic("invalid state sent to player, this should never happen")
+			playerState = PlayerNothingPlaying
 		case PlayerPlay:
-			ctrl = playFile()
+			if playerState != PlayerPause {
+				playerPosition = 0
+			}
+			ctrl, format = playFile()
 		case PlayerResume:
 			playerState = PlayerPlay
 			ctrl.Paused = false
@@ -124,9 +128,13 @@ func startPlayer() {
 			ctrl.Streamer = nil
 			StopPlayer()
 		case PlayerFastForward:
-			fastForwardPlayer(ctrl)
+			if playerState == PlayerPlay {
+				fastForwardPlayer(ctrl, format, configuration)
+			}
 		case PlayerRewind:
-			rewindPlayer(ctrl)
+			if playerState == PlayerPlay {
+				rewindPlayer(ctrl, format, configuration)
+			}
 		case PlayerExit:
 			speaker.Clear()
 			stopToExit = true
@@ -135,32 +143,44 @@ func startPlayer() {
 	exitChannel <- true
 }
 
-func changePlayerPosition(inputFile beep.StreamSeekCloser, format beep.Format) {
-	if playerPosition < 0 {
-		playerPosition = 0
+func changePlayerPosition(inputFile beep.StreamSeekCloser, format *beep.Format, position int) {
+	if position < 0 {
+		position = 0
 	}
-	seek := int(float64(playerPosition)*float64(format.SampleRate)*float64(format.NumChannels) + 0.5)
-	seek -= seek % int(format.NumChannels)
-	_ = inputFile.Seek(seek)
+	frames := format.SampleRate.N(time.Second * time.Duration(position))
+	if frames < inputFile.Len() {
+		_ = inputFile.Seek(frames)
+	} else {
+		_ = inputFile.Seek(inputFile.Len() - 1)
+	}
 }
 
-func playFile() *beep.Ctrl {
+func playFile() (*beep.Ctrl, *beep.Format) {
 	playerState = PlayerPlay
 	inputFile, _ := os.Open(playing)
-	decoaded, format, _ := mp3.Decode(inputFile)
-	ctrl := &beep.Ctrl{decoaded, false}
-	changePlayerPosition(decoaded, format)
+	decodedMp3, format, _ := mp3.Decode(inputFile)
+	ctrl := &beep.Ctrl{Streamer: decodedMp3}
+	changePlayerPosition(decodedMp3, &format, playerPosition)
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 	speaker.Play(beep.Seq(ctrl, beep.Callback(StopPlayer)))
-	lengthOfFile = decoaded.Len() / format.NumChannels / int(format.SampleRate)
+	lengthOfFile = int(format.SampleRate.D(decodedMp3.Len()).Seconds())
 	startTime = time.Now()
-	return ctrl
+	return ctrl, &format
 }
 
-func fastForwardPlayer(ctrl *beep.Ctrl) {
-	// TODO rewrite this
+func fastForwardPlayer(ctrl *beep.Ctrl, format *beep.Format, configuration *Configuration) {
+	streamer := ctrl.Streamer.(beep.StreamSeekCloser)
+	playerPosition = playerPosition + configuration.FastForwardLength
+	changePlayerPosition(streamer, format, playerPosition)
+	startTime = time.Now()
 }
 
-func rewindPlayer(ctrl *beep.Ctrl) {
-	// TODO rewrite this
+func rewindPlayer(ctrl *beep.Ctrl, format *beep.Format, configuration *Configuration) {
+	streamer := ctrl.Streamer.(beep.StreamSeekCloser)
+	playerPosition = playerPosition - configuration.RewindLength
+	if playerPosition < 1 {
+		playerPosition = 0
+	}
+	changePlayerPosition(streamer, format, playerPosition)
+	startTime = time.Now()
 }

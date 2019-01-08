@@ -12,7 +12,13 @@ func prepareDrawPageSearch(configuration *Configuration) {
 }
 
 func prepareDrawPageDownloaded(configuration *Configuration) {
-	currentPodcastsInBuffers[currentScreen] = configuration.Downloaded
+	filteredList := make([]PodcastEpisode, 0, len(configuration.Downloaded))
+	for _, v := range configuration.Downloaded {
+		if podcastExistsOnDisk(v) {
+			filteredList = append(filteredList, v)
+		}
+	}
+	currentPodcastsInBuffers[currentScreen] = filteredList
 }
 
 func prepareDrawPagePodcastDetail(configuration *Configuration) {

@@ -25,38 +25,40 @@ func getConfigStorage() string {
 	return defaultStorage
 }
 
+func createDefaultConfiguration(configuration *Configuration) {
+	// try to make path first,
+	fmt.Printf("making folder at:%s\n", configuration.StorageLocation)
+	err := os.MkdirAll(configuration.StorageLocation, 0700)
+	if err != nil {
+		fmt.Println("cannot make folder, defaulting storage to local directory")
+		//failed to create folder to store, store files in same directory as program
+	}
+	fmt.Printf("making folder at:%s\n", getConfigStorage())
+	err = os.MkdirAll(getConfigStorage(), 0700)
+	if err != nil {
+		fmt.Println("cannot make folder for config, defaulting storage to local directory")
+		//failed to create folder to store, store files in same directory as program
+	}
+	writeConfig(configuration)
+}
+
 //read config in
-func readConfig(c Configuration) Configuration {
+func readConfig(configuration *Configuration) {
 	// make the config location if needed
-	if _, err := os.Stat(c.StorageLocation); os.IsNotExist(err) {
-		// try to make path first,
-		fmt.Printf("making folder at:%s\n", c.StorageLocation)
-		err = os.MkdirAll(c.StorageLocation, 0700)
-		if err != nil {
-			fmt.Println("cannot make folder, defaulting storage to local directory")
-			//failed to create folder to store, store files in same directory as program
-		}
-		fmt.Printf("making folder at:%s\n", getConfigStorage())
-		err = os.MkdirAll(getConfigStorage(), 0700)
-		if err != nil {
-			fmt.Println("cannot make folder for config, defaulting storage to local directory")
-			//failed to create folder to store, store files in same directory as program
-		}
-		writeConfig(&c)
-		return c
+	if _, err := os.Stat(configuration.StorageLocation); os.IsNotExist(err) {
+		createDefaultConfiguration(configuration)
+		return
 	}
-	config, err := os.Open(getConfigStorage() + configName)
+	configOnDisk, err := os.Open(getConfigStorage() + configName)
 	if err != nil {
 		panic("could not read config file")
 	}
-	defer config.Close()
-	buffer, err := ioutil.ReadAll(config)
+	defer configOnDisk.Close()
+	buffer, err := ioutil.ReadAll(configOnDisk)
 	if err != nil {
 		panic("could not read config file")
 	}
-	json.Unmarshal(buffer, &c)
-	//now read in the settings and write it to the configuration object
-	return c
+	json.Unmarshal(buffer, configuration)
 }
 
 // writeConfig saves current config to file
