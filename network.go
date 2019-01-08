@@ -97,7 +97,15 @@ func getPodcastEntries(podcast Podcast, podcastCache *[]CachedPodcast) ([]Podcas
 		} else {
 			guid = content + title + item.GUID
 		}
-		entries = append(entries, PodcastEpisode{feed.Title, title, description, url, content, guid, ""})
+		entries = append(entries, PodcastEpisode{
+			PodcastTitle:    feed.Title,
+			Title:           title,
+			Summary:         description,
+			Link:            url,
+			Content:         content,
+			GUID:            guid,
+			StorageLocation: "",
+		})
 	}
 	//if it's not nil we are updating
 	if cacheEntry != nil {
