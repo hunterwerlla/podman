@@ -8,20 +8,32 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync/atomic"
 )
 
 var (
-	downloading          int32
+	downloading          = make(map[string]*Download, 0)
 	downloadProgressText bytes.Buffer
 )
 
+type Download struct {
+	TotalDownloaded uint64
+	FileSize        int64
+}
+
+func (wc *Download) Write(p []byte) (int, error) {
+	n := len(p)
+	wc.TotalDownloaded += uint64(n)
+	return n, nil
+}
+
 func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode) error {
-	atomic.AddInt32(&downloading, 1)
-	defer func() { atomic.AddInt32(&downloading, -1) }()
 	//get rid of all stdout data
-	_, w, _ := os.Pipe()
-	os.Stdout = w
+	//_, w, _ := os.Pipe()
+	//os.Stdout = w
+	if downloading[ep.Link] != nil {
+		// already downloading so bail
+		return nil
+	}
 	folder := strings.Replace(podcast.CollectionName, " ", "", -1) //remove spaces
 	fullPath := configuration.StorageLocation + "/" + folder
 	fullPathFile := ""
@@ -50,17 +62,20 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	if err != nil {
 		return err
 	}
-	httpFile, err := http.Get(ep.Link)
+	httpResponse, err := http.Get(ep.Link)
 	if err != nil {
 		return err
 	}
-	defer httpFile.Body.Close()
-	if httpFile.StatusCode != 200 {
+	defer httpResponse.Body.Close()
+	if httpResponse.StatusCode != 200 {
 		return errors.New("Download failed")
 	}
 	//actually download
+	size := httpResponse.ContentLength
+	downloadProgressTracker := &Download{FileSize: size}
+	downloading[ep.Link] = downloadProgressTracker
 	writeTo := io.Writer(file)
-	_, err = io.Copy(writeTo, httpFile.Body)
+	_, err = io.Copy(writeTo, io.TeeReader(httpResponse.Body, downloadProgressTracker))
 	downloadProgressText.Truncate(0)
 	if err != nil {
 		return err
@@ -69,6 +84,8 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	ep.StorageLocation = fullPathFile
 	//file download good so add it to downloaded
 	configuration.Downloaded = append(configuration.Downloaded, ep)
+	// remove from map
+	delete(downloading, ep.Link)
 	return nil
 }
 
@@ -114,7 +131,7 @@ func getPodcastLocation(configuration *Configuration, entry PodcastEpisode) stri
 }
 
 func downloadInProgress() bool {
-	if downloading > 0 {
+	if len(downloading) > 0 {
 		return true
 	}
 	return false

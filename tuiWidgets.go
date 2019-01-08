@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	ui "github.com/gizak/termui"
+	"strconv"
 )
 
 const (
@@ -39,6 +40,9 @@ func producePlayerWidget(configuration *Configuration, width int, height int) ui
 	var widgetLabel string
 	if downloadInProgress() {
 		widgetLabel = "Downloading"
+		for key, value := range downloading {
+			widgetLabel += key + " " + strconv.FormatUint(value.TotalDownloaded, 10) + "/" + strconv.FormatInt(value.FileSize, 10) + "    "
+		}
 	} else {
 		widgetLabel = "Nothing playing"
 	}
