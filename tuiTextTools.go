@@ -37,6 +37,21 @@ func formatPodcastEpisode(p PodcastEpisode) string {
 	return formatBuilder.String()
 }
 
+func substringUTF(input string, begin int, end int) string {
+	stringStart := 0
+	i := 0
+	for j := range input {
+		if i == begin {
+			stringStart = j
+		}
+		if i == end {
+			return input[stringStart:j]
+		}
+		i++
+	}
+	return input[stringStart:]
+}
+
 func wrapString(input string, max int) string {
 	output := text.Wrap(input, max)
 	return output

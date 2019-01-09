@@ -23,6 +23,8 @@ func prepareDrawPageDownloaded(configuration *Configuration) {
 
 func prepareDrawPagePodcastDetail(configuration *Configuration) {
 	entries, err := getPodcastEntries(currentSelectedPodcast, &configuration.Cached)
+	// todo remove
+	writeConfig(configuration)
 	if err == nil {
 		currentPodcastsInBuffers[currentScreen] = entries
 	} else {

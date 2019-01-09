@@ -14,6 +14,13 @@ const (
 	podcastDetailDescriptionHeight = 3
 )
 
+func everyOtherSecond() bool {
+	if time.Now().Second()%2 == 0 {
+		return true
+	}
+	return false
+}
+
 func producePodcastListWidget(configruation *Configuration, width int, height int) *ui.List {
 	podcastWidget := ui.NewList()
 	podcastWidget.Width = width
@@ -93,7 +100,7 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 	if len(userTextBuffer) > 0 {
 		text += userTextBuffer
 	}
-	if currentMode == Insert && time.Now().Second()%2 == 0 {
+	if currentMode == Insert && everyOtherSecond() {
 		text += "_"
 	}
 	searchWidget := ui.NewParagraph(text)
@@ -165,8 +172,8 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 		if currentNum == cursor {
 			formattedPodcast = wrapString(formattedPodcast, width)
 			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
-		} else if len(formattedPodcast) > width {
-			formattedPodcast = formattedPodcast[0 : width-3]
+		} else if len([]rune(formattedPodcast)) > width {
+			formattedPodcast = substringUTF(formattedPodcast, 0, width-3)
 			formattedPodcast += "..."
 		}
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
