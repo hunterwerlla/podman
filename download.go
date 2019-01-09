@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 var (
@@ -15,15 +16,26 @@ var (
 	downloadProgressText bytes.Buffer
 )
 
+const downloadWindowSize = 10
+
 type Download struct {
-	TotalDownloaded uint64
+	TotalDownloaded int64
 	FileSize        int64
+	Speed           int64
+	downloadStart   time.Time
 }
 
-func (wc *Download) Write(p []byte) (int, error) {
-	n := len(p)
-	wc.TotalDownloaded += uint64(n)
-	return n, nil
+func (download *Download) Write(p []byte) (int, error) {
+	numberBytes := len(p)
+	if download.downloadStart.IsZero() {
+		download.downloadStart = time.Now()
+	}
+	download.TotalDownloaded += int64(numberBytes)
+	// do a very bad but working average
+	// TODO improve to sliding window
+	timeBetweenSamples := download.TotalDownloaded * 1000000000 / (time.Since(download.downloadStart).Nanoseconds() + 1)
+	download.Speed = timeBetweenSamples
+	return numberBytes, nil
 }
 
 func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode) error {

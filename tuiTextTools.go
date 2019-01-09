@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bbrks/wrap"
 	"strings"
 	"unicode/utf8"
@@ -29,7 +30,7 @@ func wrapOrBreakText(configuration *Configuration, formattedPodcast string, widt
 		formattedPodcast = wrapString(formattedPodcast, width)
 		formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
 	} else if utf8.RuneCountInString(formattedPodcast) > width {
-		formattedPodcast = substringUTF(formattedPodcast, 0, width-3)
+		formattedPodcast = substringUTF8(formattedPodcast, 0, width-3)
 		formattedPodcast += "..."
 	}
 	return formattedPodcast
@@ -49,7 +50,7 @@ func formatPodcastEpisode(p PodcastEpisode) string {
 	return formatBuilder.String()
 }
 
-func substringUTF(input string, begin int, end int) string {
+func substringUTF8(input string, begin int, end int) string {
 	stringStart := 0
 	i := 0
 	for j := range input {
@@ -69,4 +70,18 @@ func wrapString(input string, max int) string {
 	w.StripTrailingNewline = true
 	output := w.Wrap(input, max)
 	return output
+}
+
+// lovingly stolen from: https://programming.guide/go/formatting-byte-size-to-human-readable-format.html
+func byteCountDecimal(number int64) string {
+	const unit = 1000
+	if number < unit {
+		return fmt.Sprintf("%d B", number)
+	}
+	div, exp := int64(unit), 0
+	for n := number / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(number)/float64(div), "kMGTPE"[exp])
 }

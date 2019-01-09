@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	ui "github.com/gizak/termui"
-	"strconv"
 	"time"
 )
 
@@ -13,6 +12,14 @@ const (
 	controlsHeight                 = 2
 	podcastDetailDescriptionHeight = 3
 )
+
+func everyTwoSeconds() bool {
+	t := time.Now().Second() % 4
+	if t == 0 || t == 1 {
+		return true
+	}
+	return false
+}
 
 func everyOtherSecond() bool {
 	if time.Now().Second()%2 == 0 {
@@ -43,34 +50,60 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 	return podcastWidget
 }
 
-// TODO figure out how to fix this mess
-func producePlayerWidget(configuration *Configuration, width int, height int) ui.Bufferer {
-	var widgetLabel string
-	if downloadInProgress() {
-		widgetLabel = "Downloading"
-		for key, value := range downloading {
-			widgetLabel += key + " " + strconv.FormatUint(value.TotalDownloaded, 10) + "/" + strconv.FormatInt(value.FileSize, 10) + "    "
-		}
+func produceNothingPlayingWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	var widgetText string
+	if GetPlayerState() == PlayerPause {
+		widgetText = "Paused"
 	} else {
-		widgetLabel = "Nothing playing"
+		widgetText = "Nothing playing"
 	}
-	if GetPlayerState() != PlayerPlay || GetLengthOfPlayingFile() < 1 {
-		playerWidget := ui.NewParagraph(widgetLabel)
-		playerWidget.TextFgColor = ui.ColorBlack
-		playerWidget.Width = width
-		playerWidget.Height = playerHeight
-		playerWidget.Y = height - playerHeight
-		playerWidget.BorderLeft = false
-		playerWidget.BorderRight = false
-		playerWidget.BorderBottom = false
-		return playerWidget
+	playerWidget := ui.NewParagraph(widgetText)
+	playerWidget.TextFgColor = ui.ColorBlack
+	playerWidget.Width = width
+	playerWidget.Height = playerHeight
+	playerWidget.Y = height - playerHeight
+	playerWidget.BorderLeft = false
+	playerWidget.BorderRight = false
+	playerWidget.BorderBottom = false
+	return playerWidget
+}
+
+func fillPlayerGauge(playerWidget *ui.Gauge, configuration *Configuration, width int, height int) {
+	var label string
+	if (downloadInProgress() && GetPlayerState() != PlayerPlay) || (downloadInProgress() && everyTwoSeconds()) {
+		label = "Downloading: "
+		var (
+			totalDownloadSize       int64
+			totalDownloadCompleated int64
+		)
+		num := 0
+		for key, value := range downloading {
+			if num > 0 {
+				label += " & "
+			}
+			label += key + " [" + byteCountDecimal(value.TotalDownloaded) + "/" + byteCountDecimal(value.FileSize) + "] (" + byteCountDecimal(value.Speed) + "/s)"
+
+			totalDownloadSize += value.FileSize
+			totalDownloadCompleated += value.TotalDownloaded
+			num++
+		}
+		playerWidget.Percent = int((float64(totalDownloadCompleated) / float64(totalDownloadSize+1)) * 100)
+	} else {
+		lengthOfPlayingFile := GetLengthOfPlayingFile()
+		currentPlayingPosition := GetPlayerPosition()
+		label = fmt.Sprintf("%d/%d", int(currentPlayingPosition), lengthOfPlayingFile)
+		playerWidget.Percent = int((float64(currentPlayingPosition) / float64(lengthOfPlayingFile)) * 100)
 	}
-	lengthOfPlayingFile := GetLengthOfPlayingFile()
-	currentPlayingPosition := GetPlayerPosition()
-	label := fmt.Sprintf("%d/%d", int(currentPlayingPosition), lengthOfPlayingFile)
-	playerWidget := ui.NewGauge()
-	playerWidget.Percent = int((float64(currentPlayingPosition) / float64(lengthOfPlayingFile)) * 100)
 	playerWidget.Label = label
+}
+
+func producePlayerWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	// when nothing is happening, just display a generic message
+	if !downloadInProgress() && GetPlayerState() != PlayerPlay {
+		return produceNothingPlayingWidget(configuration, width, height)
+	}
+	playerWidget := ui.NewGauge()
+	fillPlayerGauge(playerWidget, configuration, width, height)
 	playerWidget.Width = width
 	playerWidget.Height = playerHeight
 	playerWidget.Y = height - playerHeight
@@ -78,7 +111,9 @@ func producePlayerWidget(configuration *Configuration, width int, height int) ui
 	playerWidget.BorderRight = false
 	playerWidget.BorderBottom = false
 	playerWidget.BarColor = ui.ColorBlack
-	playerWidget.LabelAlign = ui.AlignLeft
+	playerWidget.PercentColor = ui.ColorBlack
+	playerWidget.PercentColorHighlighted = ui.ColorWhite
+	playerWidget.LabelAlign = ui.AlignLeft | ui.AlignCenterVertical
 	return playerWidget
 }
 
