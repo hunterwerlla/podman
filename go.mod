@@ -1,6 +1,7 @@
 module github.com/hunterwerlla/podman
 
 require (
+	github.com/bbrks/wrap v2.3.0+incompatible
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/faiface/beep v0.0.0-20181220115448-082eb9168dd1
 	github.com/github/git-sizer v1.3.0 // indirect
@@ -11,20 +12,17 @@ require (
 	github.com/hajimehoshi/oto v0.2.1 // indirect
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/kr/pty v1.1.3 // indirect
-	github.com/kr/text v0.1.0
-	github.com/maruel/panicparse v1.1.1 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/nsf/termbox-go v0.0.0-20190104133558-0938b5187e61 // indirect
 	github.com/paulrosania/go-charset v0.0.0-20151028000031-621bb39fcc83 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
-	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/ungerik/go-rss v0.0.0-20180730053843-e6dab863fc93
 	golang.org/x/exp v0.0.0-20190104205336-ae74f88a12a8 // indirect
 	golang.org/x/image v0.0.0-20181116024801-cd38e8056d9b // indirect
-	golang.org/x/mobile v0.0.0-20190103144551-9a2b4796a4b7 // indirect
-	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
-	golang.org/x/sys v0.0.0-20190106192425-1775db3f06b5 // indirect
+	golang.org/x/mobile v0.0.0-20190107162257-dc0771356504 // indirect
+	golang.org/x/net v0.0.0-20190108225652-1e06a53dbb7e // indirect
+	golang.org/x/sys v0.0.0-20190108104531-7fbe1cd0fcc2 // indirect
 )

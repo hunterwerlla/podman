@@ -167,15 +167,8 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 		if currentNum < (cursor - (searchResultsWidgetHeight / 2)) {
 			continue
 		}
-		// TODO add function for this
 		formattedPodcast := item.PodcastTitle + " " + item.Title + " " + item.Summary
-		if currentNum == cursor {
-			formattedPodcast = wrapString(formattedPodcast, width)
-			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
-		} else if len([]rune(formattedPodcast)) > width {
-			formattedPodcast = substringUTF(formattedPodcast, 0, width-3)
-			formattedPodcast += "..."
-		}
+		formattedPodcast = wrapOrBreakText(configuration, formattedPodcast, width, currentNum == getCurrentCursorPosition())
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
 	}
 	searchResultsWidget.Items = listFormattedPodcasts
@@ -230,15 +223,8 @@ func producePodcastDetailListWidget(configuration *Configuration, width int, hei
 		} else {
 			formattedPodcast = "    " + formattedPodcast
 		}
-		if currentNum == getCurrentCursorPosition() {
-			formattedPodcast = wrapString(formattedPodcast, width)
-			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
-		} else if len(formattedPodcast) > width {
-			formattedPodcast = formattedPodcast[0 : width-3]
-			formattedPodcast += "..."
-		}
+		formattedPodcast = wrapOrBreakText(configuration, formattedPodcast, width, currentNum == getCurrentCursorPosition())
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
-		currentNum++
 	}
 	podcastDetailListWidget.Items = listFormattedPodcasts
 	return podcastDetailListWidget

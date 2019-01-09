@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/kr/text"
+	"github.com/bbrks/wrap"
 	"strings"
+	"unicode/utf8"
 )
 
 func formatPodcast(p Podcast, max int) string {
@@ -21,6 +22,17 @@ func formatPodcast(p Podcast, max int) string {
 		formattedString = formattedString[0:max]
 	}
 	return formattedString
+}
+
+func wrapOrBreakText(configuration *Configuration, formattedPodcast string, width int, selected bool) string {
+	if selected {
+		formattedPodcast = wrapString(formattedPodcast, width)
+		formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
+	} else if utf8.RuneCountInString(formattedPodcast) > width {
+		formattedPodcast = substringUTF(formattedPodcast, 0, width-3)
+		formattedPodcast += "..."
+	}
+	return formattedPodcast
 }
 
 func formatPodcastEpisode(p PodcastEpisode) string {
@@ -53,6 +65,8 @@ func substringUTF(input string, begin int, end int) string {
 }
 
 func wrapString(input string, max int) string {
-	output := text.Wrap(input, max)
+	w := wrap.NewWrapper()
+	w.StripTrailingNewline = true
+	output := w.Wrap(input, max)
 	return output
 }
