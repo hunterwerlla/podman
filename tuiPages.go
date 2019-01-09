@@ -4,7 +4,7 @@ import (
 	ui "github.com/gizak/termui"
 )
 
-func prepareDrawPageMain(configuration *Configuration) {
+func prepareDrawPageHome(configuration *Configuration) {
 	currentPodcastsInBuffers[currentScreen] = configuration.Subscribed
 }
 
@@ -17,6 +17,10 @@ func prepareDrawPageDownloaded(configuration *Configuration) {
 		if podcastExistsOnDisk(v) {
 			filteredList = append(filteredList, v)
 		}
+	}
+	// If deleted outside of downloaded, we have to move the cursor down.
+	if getCurrentCursorPosition() > len(filteredList)-1 {
+		setCurrentCursorPosition(len(filteredList) - 1)
 	}
 	currentPodcastsInBuffers[currentScreen] = filteredList
 }
@@ -32,7 +36,7 @@ func prepareDrawPagePodcastDetail(configuration *Configuration) {
 	}
 }
 
-func drawPageMain(configuration *Configuration, width int, height int) []ui.Bufferer {
+func drawPageHome(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 3)
 	widgets[0] = producePodcastListWidget(configuration, width, height)
 	widgets[1] = produceControlsWidget(configuration, width, height)

@@ -69,6 +69,7 @@ func wrapString(input string, max int) string {
 	w := wrap.NewWrapper()
 	w.StripTrailingNewline = true
 	output := w.Wrap(input, max)
+	output = sanitizePodcast(output)
 	return output
 }
 

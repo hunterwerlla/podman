@@ -47,8 +47,8 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 		return nil
 	}
 	folder := strings.Replace(podcast.CollectionName, " ", "", -1) //remove spaces
-	fullPath := configuration.StorageLocation + "/" + folder
-	fullPathFile := ""
+	basePath := configuration.StorageLocation + "/" + folder
+	filePath := ""
 	title := ""
 	if len(ep.Title) > 30 {
 		title = ep.Title[0:30]
@@ -64,12 +64,12 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	if title == ".mp3" {
 		return errors.New("invalid path")
 	}
-	fullPathFile = fullPath + "/" + title
-	err := os.MkdirAll(fullPath, 0700)
+	filePath = basePath + "/" + title
+	err := os.MkdirAll(basePath, 0700)
 	if err != nil {
 		return err
 	}
-	file, err := os.Create(fullPathFile)
+	file, err := os.Create(filePath)
 	defer file.Close()
 	if err != nil {
 		return err
@@ -93,10 +93,11 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 		return err
 	}
 	//add location of file to structure
-	ep.StorageLocation = fullPathFile
+	ep.StorageLocation = filePath
 	//file download good so add it to downloaded
 	configuration.Downloaded = append(configuration.Downloaded, ep)
-	// remove from map
+	writeConfig(configuration)
+	// remove from downloading map
 	delete(downloading, ep.Link)
 	return nil
 }

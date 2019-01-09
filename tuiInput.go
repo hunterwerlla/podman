@@ -74,10 +74,7 @@ func enterPressedPodcastDetail(configuration *Configuration) {
 	}
 	// TODO fix this race condition/bad configuration management.
 	go func() {
-		err := downloadPodcast(configuration, currentSelectedPodcast, podcasts[cursor])
-		if err == nil {
-			writeConfig(configuration)
-		}
+		_ = downloadPodcast(configuration, currentSelectedPodcast, podcasts[cursor])
 	}()
 }
 
@@ -109,13 +106,11 @@ func actionPressedDownloaded(configuration *Configuration) {
 	if cursor >= len(podcasts) || cursor < 0 {
 		return
 	}
-	// reset cursor if needed
-	if cursor == len(configuration.Downloaded)-1 {
-		setCurrentCursorPosition(len(configuration.Downloaded) - 2)
-	}
 	deleteDownloadedPodcast(configuration, podcasts[cursor])
-	// re-prepare to reset
-	prepareDrawPageDownloaded(configuration)
+	// reset cursor if needed
+	if cursor == len(podcasts)-1 {
+		setCurrentCursorPosition(len(podcasts) - 2)
+	}
 	writeConfig(configuration)
 }
 
@@ -187,7 +182,6 @@ func deletePressedHome(configuration *Configuration) {
 	}
 	configuration.Subscribed = append(configuration.Subscribed[:subscribedKey], configuration.Subscribed[subscribedKey+1:]...)
 	writeConfig(configuration)
-	prepareDrawPage[currentScreen](configuration)
 }
 
 func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
@@ -245,6 +239,7 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		actionPressed[currentScreen](configuration)
 	} else if event.ID == configuration.DeleteKeybind {
 		deletePressed[currentScreen](configuration)
+		prepareDrawPage[currentScreen](configuration)
 	}
 }
 

@@ -39,6 +39,10 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 	podcasts := getCurrentPagePodcasts()
 	cursor := getCurrentCursorPosition()
 	currentListSize = len(podcasts)
+	if currentListSize == 0 {
+		tutorialString := fmt.Sprintf("No subscriptions, go left (<left>/%s) to search for podcasts!", configruation.LeftKeybind)
+		listFormattedPodcasts = append(listFormattedPodcasts, tutorialString)
+	}
 	for currentNum, item := range podcasts {
 		formattedPodcast := formatPodcast(item, width)
 		if currentNum == cursor {
@@ -158,7 +162,11 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 	var formattedPodcastList []string
 	podcasts := getCurrentPagePodcasts()
 	currentListSize = len(podcasts)
-	cursor := getCurrentCursorPosition()
+	cursor := -1
+	// Only highlight when we are not searching
+	if currentMode == Normal {
+		cursor = getCurrentCursorPosition()
+	}
 	for currentNum, item := range podcasts {
 		if currentNum < (cursor - (searchWidgetHeight / 2)) {
 			continue
