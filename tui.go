@@ -48,23 +48,30 @@ var (
 	}
 
 	prepareDrawPage = map[screen]func(configuration *Configuration){
-		Home:          prepareDrawPageMain,
+		Home:          prepareDrawPageHome,
 		Search:        prepareDrawPageSearch,
 		Downloaded:    prepareDrawPageDownloaded,
 		PodcastDetail: prepareDrawPagePodcastDetail,
 	}
 
 	drawPage = map[screen]func(configuration *Configuration, width int, height int) []ui.Bufferer{
-		Home:          drawPageMain,
+		Home:          drawPageHome,
 		Search:        drawPageSearch,
 		Downloaded:    drawPageDownloaded,
 		PodcastDetail: drawPagePodcastDetail,
 	}
 
+	refreshPage = map[screen]func(configuration *Configuration, width int, height int) []ui.Bufferer{
+		Home:          nil,
+		Search:        refreshPageSearch,
+		Downloaded:    nil,
+		PodcastDetail: nil,
+	}
+
 	actionPressed = map[screen]func(configuration *Configuration){
 		Home:          enterPressedHome,
 		Search:        actionPressedSearch,
-		Downloaded:    actionPressedDownloaded,
+		Downloaded:    deletePodcastSelectedByCursor,
 		PodcastDetail: doNothingWithInput,
 	}
 
@@ -106,8 +113,8 @@ var (
 	deletePressed = map[screen]func(configuration *Configuration){
 		Home:          deletePressedHome,
 		Search:        doNothingWithInput,
-		Downloaded:    actionPressedDownloaded,
-		PodcastDetail: doNothingWithInput,
+		Downloaded:    deletePodcastSelectedByCursor,
+		PodcastDetail: deletePodcastSelectedByCursor,
 	}
 
 	currentPodcastsInBuffers = map[screen]interface{}{

@@ -4,7 +4,7 @@ import (
 	ui "github.com/gizak/termui"
 )
 
-func prepareDrawPageMain(configuration *Configuration) {
+func prepareDrawPageHome(configuration *Configuration) {
 	currentPodcastsInBuffers[currentScreen] = configuration.Subscribed
 }
 
@@ -18,11 +18,19 @@ func prepareDrawPageDownloaded(configuration *Configuration) {
 			filteredList = append(filteredList, v)
 		}
 	}
+	// If deleted outside of downloaded, we have to move the cursor down.
+	if getCurrentCursorPosition() > len(filteredList)-1 {
+		setCurrentCursorPosition(len(filteredList) - 1)
+	} else if getCurrentCursorPosition() < 0 && len(filteredList) > 0 {
+		setCurrentCursorPosition(0)
+	}
 	currentPodcastsInBuffers[currentScreen] = filteredList
 }
 
 func prepareDrawPagePodcastDetail(configuration *Configuration) {
 	entries, err := getPodcastEntries(currentSelectedPodcast, &configuration.Cached)
+	// todo remove
+	writeConfig(configuration)
 	if err == nil {
 		currentPodcastsInBuffers[currentScreen] = entries
 	} else {
@@ -30,7 +38,7 @@ func prepareDrawPagePodcastDetail(configuration *Configuration) {
 	}
 }
 
-func drawPageMain(configuration *Configuration, width int, height int) []ui.Bufferer {
+func drawPageHome(configuration *Configuration, width int, height int) []ui.Bufferer {
 	widgets := make([]ui.Bufferer, 3)
 	widgets[0] = producePodcastListWidget(configuration, width, height)
 	widgets[1] = produceControlsWidget(configuration, width, height)
@@ -62,5 +70,11 @@ func drawPagePodcastDetail(configuration *Configuration, width int, height int) 
 	widgets[0] = producePodcastDetailDescriptionWidget(configuration, width, height)
 	widgets[1] = producePodcastDetailListWidget(configuration, width, height)
 	widgets[2] = producePlayerWidget(configuration, width, height)
+	return widgets
+}
+
+func refreshPageSearch(configuration *Configuration, width int, height int) []ui.Bufferer {
+	widgets := make([]ui.Bufferer, 1)
+	widgets[0] = produceSearchWidget(configuration, width, height)
 	return widgets
 }

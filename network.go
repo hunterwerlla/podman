@@ -4,13 +4,21 @@ import (
 	"encoding/json" //for reading itunes data
 	"errors"
 	"fmt"
-	"github.com/kennygrant/sanitize" //for stripping html tags
+	"github.com/kennygrant/sanitize"
 	"github.com/ungerik/go-rss"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
 )
+
+func sanitizePodcast(entry string) string {
+	entry = sanitize.HTML(entry)
+	entry = strings.Replace(entry, "\n", " ", -1)
+	entry = strings.Replace(entry, "\r", " ", -1)
+	entry = strings.TrimSpace(entry)
+	return entry
+}
 
 //search itunes for a podcast with the string given, then returns an array of Podcast
 func searchItunes(term string) ([]Podcast, error) {
@@ -34,6 +42,11 @@ func searchItunes(term string) ([]Podcast, error) {
 	if err != nil {
 		return make([]Podcast, 0), errors.New("Bad data returned by Itunes")
 	}
+	for ii := range results.Results {
+		results.Results[ii].Description = sanitizePodcast(results.Results[ii].Description)
+		results.Results[ii].ArtistName = sanitizePodcast(results.Results[ii].ArtistName)
+		results.Results[ii].CollectionName = sanitizePodcast(results.Results[ii].CollectionName)
+	}
 	return results.Results, nil
 }
 
@@ -48,15 +61,6 @@ func podcastAddDescription(podcast *Podcast) error {
 	return nil
 }
 
-func sanitizeRss(entry string) string {
-	entry = strings.Replace(entry, "\n", " ", -1)
-	entry = strings.Replace(entry, "\r", " ", -1)
-	entry = strings.TrimSpace(entry)
-	entry = strings.Trim(entry, "\n")
-	entry = sanitize.HTML(entry)
-	return entry
-}
-
 //TODO strip HTML
 func getPodcastEntries(podcast Podcast, podcastCache *[]CachedPodcast) ([]PodcastEpisode, error) {
 	var cacheEntry *CachedPodcast
@@ -67,6 +71,7 @@ func getPodcastEntries(podcast Podcast, podcastCache *[]CachedPodcast) ([]Podcas
 			break
 		}
 	}
+	// TODO create a lower timeout client to load from filesystem faster?
 	feed, err := rss.Read(input)
 	if err != nil {
 		if cacheEntry != nil {
@@ -81,9 +86,9 @@ func getPodcastEntries(podcast Podcast, podcastCache *[]CachedPodcast) ([]Podcas
 		// change it from Item type from RSS to built in PodcastEpisode type,
 		// while also removing whitespace and stripping HTML tags
 		url := ""
-		content := sanitizeRss(item.Content)
-		title := sanitizeRss(item.Title)
-		description := sanitizeRss(item.Description)
+		content := sanitizePodcast(item.Content)
+		title := sanitizePodcast(item.Title)
+		description := sanitizePodcast(item.Description)
 		for _, enc := range item.Enclosure {
 			if len(enc.URL) > 0 {
 				url = enc.URL

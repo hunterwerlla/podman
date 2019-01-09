@@ -8,23 +8,47 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync/atomic"
+	"time"
 )
 
 var (
-	downloading          int32
+	downloading          = make(map[string]*Download, 0)
 	downloadProgressText bytes.Buffer
 )
 
+const downloadWindowSize = 10
+
+type Download struct {
+	TotalDownloaded int64
+	FileSize        int64
+	Speed           int64
+	downloadStart   time.Time
+}
+
+func (download *Download) Write(p []byte) (int, error) {
+	numberBytes := len(p)
+	if download.downloadStart.IsZero() {
+		download.downloadStart = time.Now()
+	}
+	download.TotalDownloaded += int64(numberBytes)
+	// do a very bad but working average
+	// TODO improve to sliding window
+	timeBetweenSamples := download.TotalDownloaded * 1000000000 / (time.Since(download.downloadStart).Nanoseconds() + 1)
+	download.Speed = timeBetweenSamples
+	return numberBytes, nil
+}
+
 func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode) error {
-	atomic.AddInt32(&downloading, 1)
-	defer func() { atomic.AddInt32(&downloading, -1) }()
 	//get rid of all stdout data
-	_, w, _ := os.Pipe()
-	os.Stdout = w
+	//_, w, _ := os.Pipe()
+	//os.Stdout = w
+	if downloading[ep.Link] != nil {
+		// already downloading so bail
+		return nil
+	}
 	folder := strings.Replace(podcast.CollectionName, " ", "", -1) //remove spaces
-	fullPath := configuration.StorageLocation + "/" + folder
-	fullPathFile := ""
+	basePath := configuration.StorageLocation + "/" + folder
+	filePath := ""
 	title := ""
 	if len(ep.Title) > 30 {
 		title = ep.Title[0:30]
@@ -40,35 +64,41 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	if title == ".mp3" {
 		return errors.New("invalid path")
 	}
-	fullPathFile = fullPath + "/" + title
-	err := os.MkdirAll(fullPath, 0700)
+	filePath = basePath + "/" + title
+	err := os.MkdirAll(basePath, 0700)
 	if err != nil {
 		return err
 	}
-	file, err := os.Create(fullPathFile)
+	file, err := os.Create(filePath)
 	defer file.Close()
 	if err != nil {
 		return err
 	}
-	httpFile, err := http.Get(ep.Link)
+	httpResponse, err := http.Get(ep.Link)
 	if err != nil {
 		return err
 	}
-	defer httpFile.Body.Close()
-	if httpFile.StatusCode != 200 {
+	defer httpResponse.Body.Close()
+	if httpResponse.StatusCode != 200 {
 		return errors.New("Download failed")
 	}
 	//actually download
+	size := httpResponse.ContentLength
+	downloadProgressTracker := &Download{FileSize: size}
+	downloading[ep.Link] = downloadProgressTracker
 	writeTo := io.Writer(file)
-	_, err = io.Copy(writeTo, httpFile.Body)
+	_, err = io.Copy(writeTo, io.TeeReader(httpResponse.Body, downloadProgressTracker))
 	downloadProgressText.Truncate(0)
 	if err != nil {
 		return err
 	}
 	//add location of file to structure
-	ep.StorageLocation = fullPathFile
+	ep.StorageLocation = filePath
 	//file download good so add it to downloaded
 	configuration.Downloaded = append(configuration.Downloaded, ep)
+	writeConfig(configuration)
+	// remove from downloading map
+	delete(downloading, ep.Link)
 	return nil
 }
 
@@ -114,7 +144,7 @@ func getPodcastLocation(configuration *Configuration, entry PodcastEpisode) stri
 }
 
 func downloadInProgress() bool {
-	if downloading > 0 {
+	if len(downloading) > 0 {
 		return true
 	}
 	return false

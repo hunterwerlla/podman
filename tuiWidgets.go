@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	ui "github.com/gizak/termui"
+	"time"
 )
 
 const (
@@ -11,6 +12,21 @@ const (
 	controlsHeight                 = 2
 	podcastDetailDescriptionHeight = 3
 )
+
+func everyTwoSeconds() bool {
+	t := time.Now().Second() % 4
+	if t == 0 || t == 1 {
+		return true
+	}
+	return false
+}
+
+func everyOtherSecond() bool {
+	if time.Now().Second()%2 == 0 {
+		return true
+	}
+	return false
+}
 
 func producePodcastListWidget(configruation *Configuration, width int, height int) *ui.List {
 	podcastWidget := ui.NewList()
@@ -23,6 +39,10 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 	podcasts := getCurrentPagePodcasts()
 	cursor := getCurrentCursorPosition()
 	currentListSize = len(podcasts)
+	if currentListSize == 0 {
+		tutorialString := fmt.Sprintf("No subscriptions, go left (<left>/%s) to search for podcasts!", configruation.LeftKeybind)
+		listFormattedPodcasts = append(listFormattedPodcasts, tutorialString)
+	}
 	for currentNum, item := range podcasts {
 		formattedPodcast := formatPodcast(item, width)
 		if currentNum == cursor {
@@ -34,31 +54,60 @@ func producePodcastListWidget(configruation *Configuration, width int, height in
 	return podcastWidget
 }
 
-// TODO figure out how to fix this mess
-func producePlayerWidget(configuration *Configuration, width int, height int) ui.Bufferer {
-	var widgetLabel string
-	if downloadInProgress() {
-		widgetLabel = "Downloading"
+func produceNothingPlayingWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	var widgetText string
+	if GetPlayerState() == PlayerPause {
+		widgetText = "Paused"
 	} else {
-		widgetLabel = "Nothing playing"
+		widgetText = "Nothing playing"
 	}
-	if GetPlayerState() != PlayerPlay || GetLengthOfPlayingFile() < 1 {
-		playerWidget := ui.NewParagraph(widgetLabel)
-		playerWidget.TextFgColor = ui.ColorBlack
-		playerWidget.Width = width
-		playerWidget.Height = playerHeight
-		playerWidget.Y = height - playerHeight
-		playerWidget.BorderLeft = false
-		playerWidget.BorderRight = false
-		playerWidget.BorderBottom = false
-		return playerWidget
+	playerWidget := ui.NewParagraph(widgetText)
+	playerWidget.TextFgColor = ui.ColorBlack
+	playerWidget.Width = width
+	playerWidget.Height = playerHeight
+	playerWidget.Y = height - playerHeight
+	playerWidget.BorderLeft = false
+	playerWidget.BorderRight = false
+	playerWidget.BorderBottom = false
+	return playerWidget
+}
+
+func fillPlayerGauge(playerWidget *ui.Gauge, configuration *Configuration, width int, height int) {
+	var label string
+	if (downloadInProgress() && GetPlayerState() != PlayerPlay) || (downloadInProgress() && everyTwoSeconds()) {
+		label = "Downloading: "
+		var (
+			totalDownloadSize       int64
+			totalDownloadCompleated int64
+		)
+		num := 0
+		for key, value := range downloading {
+			if num > 0 {
+				label += " & "
+			}
+			label += key + " [" + byteCountDecimal(value.TotalDownloaded) + "/" + byteCountDecimal(value.FileSize) + "] (" + byteCountDecimal(value.Speed) + "/s)"
+
+			totalDownloadSize += value.FileSize
+			totalDownloadCompleated += value.TotalDownloaded
+			num++
+		}
+		playerWidget.Percent = int((float64(totalDownloadCompleated) / float64(totalDownloadSize+1)) * 100)
+	} else {
+		lengthOfPlayingFile := GetLengthOfPlayingFile()
+		currentPlayingPosition := GetPlayerPosition()
+		label = fmt.Sprintf("%d/%d", int(currentPlayingPosition), lengthOfPlayingFile)
+		playerWidget.Percent = int((float64(currentPlayingPosition) / float64(lengthOfPlayingFile)) * 100)
 	}
-	lengthOfPlayingFile := GetLengthOfPlayingFile()
-	currentPlayingPosition := GetPlayerPosition()
-	label := fmt.Sprintf("%d/%d", int(currentPlayingPosition), lengthOfPlayingFile)
-	playerWidget := ui.NewGauge()
-	playerWidget.Percent = int((float64(currentPlayingPosition) / float64(lengthOfPlayingFile)) * 100)
 	playerWidget.Label = label
+}
+
+func producePlayerWidget(configuration *Configuration, width int, height int) ui.Bufferer {
+	// when nothing is happening, just display a generic message
+	if !downloadInProgress() && GetPlayerState() != PlayerPlay {
+		return produceNothingPlayingWidget(configuration, width, height)
+	}
+	playerWidget := ui.NewGauge()
+	fillPlayerGauge(playerWidget, configuration, width, height)
 	playerWidget.Width = width
 	playerWidget.Height = playerHeight
 	playerWidget.Y = height - playerHeight
@@ -66,7 +115,9 @@ func producePlayerWidget(configuration *Configuration, width int, height int) ui
 	playerWidget.BorderRight = false
 	playerWidget.BorderBottom = false
 	playerWidget.BarColor = ui.ColorBlack
-	playerWidget.LabelAlign = ui.AlignLeft
+	playerWidget.PercentColor = ui.ColorBlack
+	playerWidget.PercentColorHighlighted = ui.ColorWhite
+	playerWidget.LabelAlign = ui.AlignLeft | ui.AlignCenterVertical
 	return playerWidget
 }
 
@@ -88,7 +139,7 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 	if len(userTextBuffer) > 0 {
 		text += userTextBuffer
 	}
-	if currentMode == Insert {
+	if currentMode == Insert && everyOtherSecond() {
 		text += "_"
 	}
 	searchWidget := ui.NewParagraph(text)
@@ -111,7 +162,11 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 	var formattedPodcastList []string
 	podcasts := getCurrentPagePodcasts()
 	currentListSize = len(podcasts)
-	cursor := getCurrentCursorPosition()
+	cursor := -1
+	// Only highlight when we are not searching
+	if currentMode == Normal {
+		cursor = getCurrentCursorPosition()
+	}
 	for currentNum, item := range podcasts {
 		if currentNum < (cursor - (searchWidgetHeight / 2)) {
 			continue
@@ -150,20 +205,18 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 	var listFormattedPodcasts []string
 	var podcast = getCurrentPagePodcastEpisodes()
 	currentListSize = len(podcast)
-	cursor := getCurrentCursorPosition()
+	cursor := -1
+	if currentListSize == 0 {
+		listFormattedPodcasts = append(listFormattedPodcasts, "No podcasts downloaded yet")
+	} else {
+		cursor = getCurrentCursorPosition()
+	}
 	for currentNum, item := range podcast {
 		if currentNum < (cursor - (searchResultsWidgetHeight / 2)) {
 			continue
 		}
-		// TODO add function for this
 		formattedPodcast := item.PodcastTitle + " " + item.Title + " " + item.Summary
-		if currentNum == cursor {
-			formattedPodcast = wrapString(formattedPodcast, width)
-			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
-		} else if len(formattedPodcast) > width {
-			formattedPodcast = formattedPodcast[0 : width-3]
-			formattedPodcast += "..."
-		}
+		formattedPodcast = wrapOrBreakText(configuration, formattedPodcast, width, currentNum == getCurrentCursorPosition())
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
 	}
 	searchResultsWidget.Items = listFormattedPodcasts
@@ -218,15 +271,8 @@ func producePodcastDetailListWidget(configuration *Configuration, width int, hei
 		} else {
 			formattedPodcast = "    " + formattedPodcast
 		}
-		if currentNum == getCurrentCursorPosition() {
-			formattedPodcast = wrapString(formattedPodcast, width)
-			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
-		} else if len(formattedPodcast) > width {
-			formattedPodcast = formattedPodcast[0 : width-3]
-			formattedPodcast += "..."
-		}
+		formattedPodcast = wrapOrBreakText(configuration, formattedPodcast, width, currentNum == getCurrentCursorPosition())
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
-		currentNum++
 	}
 	podcastDetailListWidget.Items = listFormattedPodcasts
 	return podcastDetailListWidget

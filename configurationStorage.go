@@ -25,7 +25,7 @@ func getConfigStorage() string {
 	return defaultStorage
 }
 
-func createDefaultConfiguration(configuration *Configuration) {
+func createDefaultConfig(configuration *Configuration) {
 	// try to make path first,
 	fmt.Printf("making folder at:%s\n", configuration.StorageLocation)
 	err := os.MkdirAll(configuration.StorageLocation, 0700)
@@ -46,7 +46,7 @@ func createDefaultConfiguration(configuration *Configuration) {
 func readConfig(configuration *Configuration) {
 	// make the config location if needed
 	if _, err := os.Stat(configuration.StorageLocation); os.IsNotExist(err) {
-		createDefaultConfiguration(configuration)
+		createDefaultConfig(configuration)
 		return
 	}
 	configOnDisk, err := os.Open(getConfigStorage() + configName)

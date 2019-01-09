@@ -28,8 +28,8 @@ Podman requires:
 Searching utilizes ITunes.
 
 # TODO
+* finish adding controls widget
 * Skipping too much will crash or stop playing. It seems like an issue in the mp3 lib, but I need to look into it.
-* re-add download bar
 * add verification of downloads
 * store user data in a database
 * make it work on dark theme terminals
