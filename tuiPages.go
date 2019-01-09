@@ -21,6 +21,8 @@ func prepareDrawPageDownloaded(configuration *Configuration) {
 	// If deleted outside of downloaded, we have to move the cursor down.
 	if getCurrentCursorPosition() > len(filteredList)-1 {
 		setCurrentCursorPosition(len(filteredList) - 1)
+	} else if getCurrentCursorPosition() < 0 && len(filteredList) > 0 {
+		setCurrentCursorPosition(0)
 	}
 	currentPodcastsInBuffers[currentScreen] = filteredList
 }

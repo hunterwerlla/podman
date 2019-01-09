@@ -205,7 +205,12 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 	var listFormattedPodcasts []string
 	var podcast = getCurrentPagePodcastEpisodes()
 	currentListSize = len(podcast)
-	cursor := getCurrentCursorPosition()
+	cursor := -1
+	if currentListSize == 0 {
+		listFormattedPodcasts = append(listFormattedPodcasts, "No podcasts downloaded yet")
+	} else {
+		cursor = getCurrentCursorPosition()
+	}
 	for currentNum, item := range podcast {
 		if currentNum < (cursor - (searchResultsWidgetHeight / 2)) {
 			continue
