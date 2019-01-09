@@ -71,7 +71,7 @@ var (
 	actionPressed = map[screen]func(configuration *Configuration){
 		Home:          enterPressedHome,
 		Search:        actionPressedSearch,
-		Downloaded:    actionPressedDownloaded,
+		Downloaded:    deletePodcastSelectedByCursor,
 		PodcastDetail: doNothingWithInput,
 	}
 
@@ -113,8 +113,8 @@ var (
 	deletePressed = map[screen]func(configuration *Configuration){
 		Home:          deletePressedHome,
 		Search:        doNothingWithInput,
-		Downloaded:    actionPressedDownloaded,
-		PodcastDetail: actionPressedDownloaded,
+		Downloaded:    deletePodcastSelectedByCursor,
+		PodcastDetail: deletePodcastSelectedByCursor,
 	}
 
 	currentPodcastsInBuffers = map[screen]interface{}{

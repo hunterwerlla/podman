@@ -100,7 +100,7 @@ func actionPressedSearch(configuration *Configuration) {
 	writeConfig(configuration)
 }
 
-func actionPressedDownloaded(configuration *Configuration) {
+func deletePodcastSelectedByCursor(configuration *Configuration) {
 	cursor := getCurrentCursorPosition()
 	podcasts := getCurrentPagePodcastEpisodes()
 	if cursor >= len(podcasts) || cursor < 0 {
