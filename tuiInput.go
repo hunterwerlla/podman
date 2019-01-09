@@ -305,11 +305,15 @@ func tuiMainLoop(configuration *Configuration) {
 				ui.Render(drawPage[currentScreen](configuration, width, height)...)
 			}
 		case <-ticker:
-			if GetPlayerState() == PlayerPlay {
+			// refresh player or reset if needed
+			if GetPlayerState() == PlayerPlay || downloadInProgress() {
 				ui.Render(producePlayerWidget(configuration, width, height))
 			} else if GetPlayerState() == PlayerStop {
 				sendPlayerMessage(PlayerNothingPlaying)
 				ui.Render(producePlayerWidget(configuration, width, height))
+			}
+			if refreshPage[currentScreen] != nil {
+				ui.Render(refreshPage[currentScreen](configuration, width, height)...)
 			}
 		}
 	}

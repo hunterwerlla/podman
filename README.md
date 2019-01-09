@@ -28,6 +28,7 @@ Podman requires:
 Searching utilizes ITunes.
 
 # TODO
+* make search UX more obvious
 * Skipping too much will crash or stop playing. It seems like an issue in the mp3 lib, but I need to look into it.
 * re-add download bar
 * add verification of downloads

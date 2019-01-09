@@ -64,3 +64,9 @@ func drawPagePodcastDetail(configuration *Configuration, width int, height int) 
 	widgets[2] = producePlayerWidget(configuration, width, height)
 	return widgets
 }
+
+func refreshPageSearch(configuration *Configuration, width int, height int) []ui.Bufferer {
+	widgets := make([]ui.Bufferer, 1)
+	widgets[0] = produceSearchWidget(configuration, width, height)
+	return widgets
+}

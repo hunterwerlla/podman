@@ -4,6 +4,7 @@ import (
 	"fmt"
 	ui "github.com/gizak/termui"
 	"strconv"
+	"time"
 )
 
 const (
@@ -92,7 +93,7 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 	if len(userTextBuffer) > 0 {
 		text += userTextBuffer
 	}
-	if currentMode == Insert {
+	if currentMode == Insert && time.Now().Second()%2 == 0 {
 		text += "_"
 	}
 	searchWidget := ui.NewParagraph(text)

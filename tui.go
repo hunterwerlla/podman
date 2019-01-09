@@ -61,6 +61,13 @@ var (
 		PodcastDetail: drawPagePodcastDetail,
 	}
 
+	refreshPage = map[screen]func(configuration *Configuration, width int, height int) []ui.Bufferer{
+		Home:          nil,
+		Search:        refreshPageSearch,
+		Downloaded:    nil,
+		PodcastDetail: nil,
+	}
+
 	actionPressed = map[screen]func(configuration *Configuration){
 		Home:          enterPressedHome,
 		Search:        actionPressedSearch,
