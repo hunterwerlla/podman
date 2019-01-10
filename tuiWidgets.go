@@ -172,16 +172,9 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 			continue
 		}
 		formattedPodcast := formatPodcast(item, width)
-		// TODO make an isSubscribed function
-		subscribed := false
-		for _, value := range configuration.Subscribed {
-			if item.ArtistName == value.ArtistName && item.CollectionName == value.CollectionName {
-				//already subscribed, add S -
-				formattedPodcast = "S - " + formattedPodcast
-				subscribed = true
-			}
-		}
-		if subscribed != true {
+		if podcastIsSubscribed(configuration, &item) {
+			formattedPodcast = "S - " + formattedPodcast
+		} else {
 			formattedPodcast = "    " + formattedPodcast
 		}
 		if currentNum == cursor {
@@ -249,7 +242,7 @@ func producePodcastDetailDescriptionWidget(configuration *Configuration, width i
 }
 
 func producePodcastDetailListWidget(configuration *Configuration, width int, height int) ui.Bufferer {
-	podcastDetailListWidgetHeight := height - podcastDetailDescriptionHeight - playerHeight
+	podcastDetailListWidgetHeight := height - podcastDetailDescriptionHeight - playerHeight - controlsHeight
 	var listFormattedPodcasts []string
 	podcasts := currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
 	podcastDetailListWidget := ui.NewList()
@@ -266,7 +259,7 @@ func producePodcastDetailListWidget(configuration *Configuration, width int, hei
 			continue
 		}
 		formattedPodcast := formatPodcastEpisode(item)
-		if podcastIsDownloaded(configuration, item) {
+		if podcastIsDownloaded(configuration, &item) {
 			formattedPodcast = "D - " + formattedPodcast
 		} else {
 			formattedPodcast = "    " + formattedPodcast

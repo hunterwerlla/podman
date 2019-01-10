@@ -64,7 +64,7 @@ func enterPressedPodcastDetail(configuration *Configuration) {
 	if cursor >= len(podcasts) || cursor < 0 {
 		return
 	}
-	if podcastIsDownloaded(configuration, podcasts[cursor]) {
+	if podcastIsDownloaded(configuration, &podcasts[cursor]) {
 		location := getPodcastLocation(configuration, podcasts[cursor])
 		if location != "" {
 			SetPlaying(location)
@@ -97,7 +97,6 @@ func actionPressedSearch(configuration *Configuration) {
 	} else {
 		configuration.Subscribed = append(configuration.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
 	}
-	writeConfig(configuration)
 }
 
 func deletePodcastSelectedByCursor(configuration *Configuration) {
@@ -111,7 +110,10 @@ func deletePodcastSelectedByCursor(configuration *Configuration) {
 	if cursor == len(podcasts)-1 {
 		setCurrentCursorPosition(len(podcasts) - 2)
 	}
-	writeConfig(configuration)
+}
+
+func escapePressedPodcastDetail(configuration *Configuration) {
+	transitionScreen(leftTransitions, currentScreen)
 }
 
 func upPressedGeneric(configuration *Configuration) {
@@ -181,7 +183,6 @@ func deletePressedHome(configuration *Configuration) {
 		setCurrentCursorPosition(len(configuration.Subscribed) - 2)
 	}
 	configuration.Subscribed = append(configuration.Subscribed[:subscribedKey], configuration.Subscribed[subscribedKey+1:]...)
-	writeConfig(configuration)
 }
 
 func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
@@ -214,7 +215,8 @@ func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 	return true
 }
 
-func handleKeyboard(configuration *Configuration, event ui.Event) {
+// handleKeyboard handles the keyboard, then returns if a screen redraw is required
+func handleKeyboard(configuration *Configuration, event ui.Event) bool {
 	if handleEventsGlobal(configuration, event) {
 		// handled
 	} else if currentMode == Insert {
@@ -233,6 +235,7 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		}
 	} else if event.ID == configuration.PlayKeybind {
 		TogglePlayerState()
+		return true
 	} else if event.ID == configuration.SearchKeybind {
 		searchPressed[currentScreen](configuration)
 	} else if event.ID == configuration.ActionKeybind {
@@ -241,6 +244,7 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		deletePressed[currentScreen](configuration)
 		prepareDrawPage[currentScreen](configuration)
 	}
+	return false
 }
 
 func handleMouse(configuration *Configuration, event ui.Event) {
@@ -274,7 +278,9 @@ func tuiMainLoop(configuration *Configuration) {
 					if e.ID == "<C-c>" {
 						goto exitMainLoop
 					} else {
-						handleKeyboard(configuration, e)
+						if handleKeyboard(configuration, e) {
+							ui.Render(drawPage[currentScreen](configuration, width, height)...)
+						}
 					}
 				} else if e.Type == ui.MouseEvent {
 					handleMouse(configuration, e)
@@ -313,4 +319,7 @@ func tuiMainLoop(configuration *Configuration) {
 		}
 	}
 exitMainLoop:
+	DisposePlayer()
+	// save on exit
+	writeConfig(configuration)
 }

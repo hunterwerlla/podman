@@ -25,10 +25,10 @@ const (
 var (
 	// TODO make spacing variable so when it's not wide enough it still works
 	defaultControlsMap = map[screen]string{
-		Home:          "[%s]elect/[<enter>]  [h]/[<left>](search)   [l]/[<right>](downloaded)   [d]elete subscription",
-		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>](home)",
-		Downloaded:    "[<enter>] Play   [%s]/[d]elete   [l]/[<left>](home)",
-		PodcastDetail: "[<enter>] download episode",
+		Home:          "[%s]elect/[<enter>]  [%s]/[<left>]search   [%s]/[<right>]downloaded   [%s]elete subscription    <Control-c> exit",
+		Search:        "%s   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>]home",
+		Downloaded:    "[<enter>] Play   [%s]/[d]elete   [l]/[<left>]home",
+		PodcastDetail: "[<enter>]/[%s] %s    [%s]elete downloaded    [%s]/[<left>]back",
 	}
 
 	controlsMap = make(map[screen]string)
@@ -86,7 +86,7 @@ var (
 		Home:          doNothingWithInput,
 		Search:        doNothingWithInput,
 		Downloaded:    doNothingWithInput,
-		PodcastDetail: doNothingWithInput,
+		PodcastDetail: escapePressedPodcastDetail,
 	}
 
 	upPressed = map[screen]func(configuration *Configuration){
@@ -149,17 +149,47 @@ func getCurrentPagePodcastEpisodes() []PodcastEpisode {
 	return currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
 }
 
-// TODO break into per screen functions
 func fillOutControlsMap(configuration *Configuration, controls map[screen]string) {
-	var searchText string
-	controlsMap[Home] = fmt.Sprintf(controls[Home], configuration.ActionKeybind)
-	if currentMode == Insert {
-		searchText = "finish search  "
-	} else {
-		searchText = "look at podcast"
+	switch currentScreen {
+	case Home:
+		controlsMap[Home] = fmt.Sprintf(controls[Home], configuration.ActionKeybind, configuration.LeftKeybind, configuration.RightKeybind, configuration.DeleteKeybind)
+	case Search:
+		var (
+			searchText     string
+			subscribedText string
+		)
+		if currentMode == Insert {
+			searchText = "search         "
+		} else {
+			searchText = "look at podcast"
+		}
+		cursor := getCurrentCursorPosition()
+		if len(currentPodcastsInBuffers[Search].([]Podcast)) > 0 &&
+			podcastIsSubscribed(configuration, &currentPodcastsInBuffers[Search].([]Podcast)[cursor]) {
+			subscribedText = fmt.Sprintf("un[%s]ubscribe", configuration.ActionKeybind)
+		} else {
+			subscribedText = fmt.Sprintf("[%s]ubscribe  ", configuration.ActionKeybind)
+		}
+		controlsMap[Search] = fmt.Sprintf(controls[Search], subscribedText, searchText)
+	case Downloaded:
+		controlsMap[Downloaded] = fmt.Sprintf(controls[Downloaded], configuration.ActionKeybind)
+	case PodcastDetail:
+		var actionText string
+		cursor := getCurrentCursorPosition()
+		if podcastIsDownloaded(configuration, &currentPodcastsInBuffers[PodcastDetail].([]PodcastEpisode)[cursor]) {
+			actionText = "play episode    "
+		} else {
+			actionText = "download episode"
+		}
+		controlsMap[PodcastDetail] = fmt.Sprintf(controls[PodcastDetail], configuration.ActionKeybind, actionText, configuration.DeleteKeybind, configuration.LeftKeybind)
 	}
-	controlsMap[Search] = fmt.Sprintf(controls[Search], searchText)
-	controlsMap[Downloaded] = fmt.Sprintf(controls[Downloaded], configuration.ActionKeybind)
+	state := GetPlayerState()
+	if state == PlayerPlay {
+		playerText := "    <space> pause    <Pgup>ff %ds    <Pgdown>rw %ds"
+		controlsMap[currentScreen] += fmt.Sprintf(playerText, configuration.FastForwardLength, configuration.RewindLength)
+	} else if state == PlayerPause {
+		controlsMap[currentScreen] += "    <space> resume"
+	}
 }
 
 func termuiStyleText(text string, fgcolor string, bgcolor string) string {

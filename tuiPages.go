@@ -29,8 +29,6 @@ func prepareDrawPageDownloaded(configuration *Configuration) {
 
 func prepareDrawPagePodcastDetail(configuration *Configuration) {
 	entries, err := getPodcastEntries(currentSelectedPodcast, &configuration.Cached)
-	// todo remove
-	writeConfig(configuration)
 	if err == nil {
 		currentPodcastsInBuffers[currentScreen] = entries
 	} else {
@@ -39,6 +37,7 @@ func prepareDrawPagePodcastDetail(configuration *Configuration) {
 }
 
 func drawPageHome(configuration *Configuration, width int, height int) []ui.Bufferer {
+	fillOutControlsMap(configuration, defaultControlsMap)
 	widgets := make([]ui.Bufferer, 3)
 	widgets[0] = producePodcastListWidget(configuration, width, height)
 	widgets[1] = produceControlsWidget(configuration, width, height)
@@ -66,10 +65,12 @@ func drawPageDownloaded(configuration *Configuration, width int, height int) []u
 }
 
 func drawPagePodcastDetail(configuration *Configuration, width int, height int) []ui.Bufferer {
-	widgets := make([]ui.Bufferer, 3)
+	fillOutControlsMap(configuration, defaultControlsMap)
+	widgets := make([]ui.Bufferer, 4)
 	widgets[0] = producePodcastDetailDescriptionWidget(configuration, width, height)
 	widgets[1] = producePodcastDetailListWidget(configuration, width, height)
-	widgets[2] = producePlayerWidget(configuration, width, height)
+	widgets[2] = produceControlsWidget(configuration, width, height)
+	widgets[3] = producePlayerWidget(configuration, width, height)
 	return widgets
 }
 
