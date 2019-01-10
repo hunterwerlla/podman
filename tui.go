@@ -28,7 +28,7 @@ var (
 		Home:          "[%s]elect/[<enter>]  [%s]/[<left>]search   [%s]/[<right>]downloaded   [%s]elete subscription    <Control-c> exit",
 		Search:        "%s   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>]home",
 		Downloaded:    "[<enter>] Play   [%s]/[d]elete   [l]/[<left>]home",
-		PodcastDetail: "[<enter>] %s    [d]elete downloaded    [h]/[<left>]/[l]/[<right>]back",
+		PodcastDetail: "[<enter>]/[%s] %s    [%s]elete downloaded    [%s]/[<left>]back",
 	}
 
 	controlsMap = make(map[screen]string)
@@ -181,7 +181,14 @@ func fillOutControlsMap(configuration *Configuration, controls map[screen]string
 		} else {
 			actionText = "download episode"
 		}
-		controlsMap[PodcastDetail] = fmt.Sprintf(controls[PodcastDetail], actionText)
+		controlsMap[PodcastDetail] = fmt.Sprintf(controls[PodcastDetail], configuration.ActionKeybind, actionText, configuration.DeleteKeybind, configuration.LeftKeybind)
+	}
+	state := GetPlayerState()
+	if state == PlayerPlay {
+		playerText := "    <space> pause    <Pgup>ff %ds    <Pgdown>rw %ds"
+		controlsMap[currentScreen] += fmt.Sprintf(playerText, configuration.FastForwardLength, configuration.RewindLength)
+	} else if state == PlayerPause {
+		controlsMap[currentScreen] += "    <space> resume"
 	}
 }
 

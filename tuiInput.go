@@ -215,7 +215,8 @@ func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 	return true
 }
 
-func handleKeyboard(configuration *Configuration, event ui.Event) {
+// handleKeyboard handles the keyboard, then returns if a screen redraw is required
+func handleKeyboard(configuration *Configuration, event ui.Event) bool {
 	if handleEventsGlobal(configuration, event) {
 		// handled
 	} else if currentMode == Insert {
@@ -234,6 +235,7 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		}
 	} else if event.ID == configuration.PlayKeybind {
 		TogglePlayerState()
+		return true
 	} else if event.ID == configuration.SearchKeybind {
 		searchPressed[currentScreen](configuration)
 	} else if event.ID == configuration.ActionKeybind {
@@ -242,6 +244,7 @@ func handleKeyboard(configuration *Configuration, event ui.Event) {
 		deletePressed[currentScreen](configuration)
 		prepareDrawPage[currentScreen](configuration)
 	}
+	return false
 }
 
 func handleMouse(configuration *Configuration, event ui.Event) {
@@ -275,7 +278,9 @@ func tuiMainLoop(configuration *Configuration) {
 					if e.ID == "<C-c>" {
 						goto exitMainLoop
 					} else {
-						handleKeyboard(configuration, e)
+						if handleKeyboard(configuration, e) {
+							ui.Render(drawPage[currentScreen](configuration, width, height)...)
+						}
 					}
 				} else if e.Type == ui.MouseEvent {
 					handleMouse(configuration, e)

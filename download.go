@@ -39,9 +39,6 @@ func (download *Download) Write(p []byte) (int, error) {
 }
 
 func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEpisode) error {
-	//get rid of all stdout data
-	//_, w, _ := os.Pipe()
-	//os.Stdout = w
 	if _, exists := downloading[ep.Link]; exists {
 		// already downloading so bail
 		return nil
@@ -57,6 +54,7 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	} else {
 		title = ep.Title
 	}
+	// TODO support other types of files
 	//check if title has extension, if not strip possible period and add extension
 	if path.Ext(title) != "mp3" {
 		title = strings.Replace(title, ".", "", -1)

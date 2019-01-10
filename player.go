@@ -170,14 +170,14 @@ func playFile() (*beep.Ctrl, *beep.Format) {
 
 func fastForwardPlayer(ctrl *beep.Ctrl, format *beep.Format, configuration *Configuration) {
 	streamer := ctrl.Streamer.(beep.StreamSeekCloser)
-	playerPosition = playerPosition + configuration.FastForwardLength
+	playerPosition = GetPlayerPosition() + configuration.FastForwardLength
 	changePlayerPosition(streamer, format, playerPosition)
 	startTime = time.Now()
 }
 
 func rewindPlayer(ctrl *beep.Ctrl, format *beep.Format, configuration *Configuration) {
 	streamer := ctrl.Streamer.(beep.StreamSeekCloser)
-	playerPosition = playerPosition - configuration.RewindLength
+	playerPosition = GetPlayerPosition() - configuration.RewindLength
 	if playerPosition < 1 {
 		playerPosition = 0
 	}

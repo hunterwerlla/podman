@@ -37,6 +37,7 @@ func prepareDrawPagePodcastDetail(configuration *Configuration) {
 }
 
 func drawPageHome(configuration *Configuration, width int, height int) []ui.Bufferer {
+	fillOutControlsMap(configuration, defaultControlsMap)
 	widgets := make([]ui.Bufferer, 3)
 	widgets[0] = producePodcastListWidget(configuration, width, height)
 	widgets[1] = produceControlsWidget(configuration, width, height)
