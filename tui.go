@@ -26,7 +26,7 @@ var (
 	// TODO make spacing variable so when it's not wide enough it still works
 	defaultControlsMap = map[screen]string{
 		Home:          "[%s]elect/[<enter>]  [%s]/[<left>]search   [%s]/[<right>]downloaded   [%s]elete subscription    <Control-c> exit",
-		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>]home",
+		Search:        "%s   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>]home",
 		Downloaded:    "[<enter>] Play   [%s]/[d]elete   [l]/[<left>]home",
 		PodcastDetail: "[<enter>] %s    [d]elete downloaded    [h]/[<left>]/[l]/[<right>]back",
 	}
@@ -154,13 +154,23 @@ func fillOutControlsMap(configuration *Configuration, controls map[screen]string
 	case Home:
 		controlsMap[Home] = fmt.Sprintf(controls[Home], configuration.ActionKeybind, configuration.LeftKeybind, configuration.RightKeybind, configuration.DeleteKeybind)
 	case Search:
-		var searchText string
+		var (
+			searchText     string
+			subscribedText string
+		)
 		if currentMode == Insert {
-			searchText = "finish search  "
+			searchText = "search         "
 		} else {
 			searchText = "look at podcast"
 		}
-		controlsMap[Search] = fmt.Sprintf(controls[Search], searchText)
+		cursor := getCurrentCursorPosition()
+		if len(currentPodcastsInBuffers[Search].([]Podcast)) > 0 &&
+			podcastIsSubscribed(configuration, &currentPodcastsInBuffers[Search].([]Podcast)[cursor]) {
+			subscribedText = fmt.Sprintf("un[%s]ubscribe", configuration.ActionKeybind)
+		} else {
+			subscribedText = fmt.Sprintf("[%s]ubscribe  ", configuration.ActionKeybind)
+		}
+		controlsMap[Search] = fmt.Sprintf(controls[Search], subscribedText, searchText)
 	case Downloaded:
 		controlsMap[Downloaded] = fmt.Sprintf(controls[Downloaded], configuration.ActionKeybind)
 	case PodcastDetail:

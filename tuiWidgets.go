@@ -172,16 +172,9 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 			continue
 		}
 		formattedPodcast := formatPodcast(item, width)
-		// TODO make an isSubscribed function
-		subscribed := false
-		for _, value := range configuration.Subscribed {
-			if item.ArtistName == value.ArtistName && item.CollectionName == value.CollectionName {
-				//already subscribed, add S -
-				formattedPodcast = "S - " + formattedPodcast
-				subscribed = true
-			}
-		}
-		if subscribed != true {
+		if podcastIsSubscribed(configuration, &item) {
+			formattedPodcast = "S - " + formattedPodcast
+		} else {
 			formattedPodcast = "    " + formattedPodcast
 		}
 		if currentNum == cursor {
