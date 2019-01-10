@@ -1,4 +1,5 @@
-### Podman - a terminal based podcast client
+## Podman - Terminal based podcast client
+
 Build: [![Build Status](https://travis-ci.org/hunterwerlla/podman.svg?branch=master)](https://travis-ci.org/hunterwerlla/podman)<br/>
 
 Podman is a terminal based podcast client written in Go with a fully features TUI and somewhat functional CUI
@@ -30,6 +31,10 @@ Podman requires:
 [bbrks/wrap](https://github.com/bbrks/wrap) for text wrapping
 
 Searching utilizes ITunes.
+
+### Screenshots
+![Subscriptions screen](img/mainscreen.png)
+![Podcast detail screen](img/podcastdetail.png)
 
 #### TODO
 * Skipping too much will crash or stop playing. It seems like an issue in the mp3 lib, but I need to look into it.
