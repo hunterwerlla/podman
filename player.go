@@ -83,8 +83,8 @@ func SetPlaying(filename string) {
 }
 
 func GetPlayerPosition() int {
-	if playerPosition < 0 {
-		return playerPosition
+	if playerPosition < 0 || playerPosition >= GetLengthOfPlayingFile() {
+		return 0
 	}
 	return playerPosition + int(time.Since(startTime).Seconds())
 }
