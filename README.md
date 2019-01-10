@@ -33,8 +33,8 @@ Searching utilizes ITunes.
 
 #### TODO
 * Skipping too much will crash or stop playing. It seems like an issue in the mp3 lib, but I need to look into it.
-* store user data in a database
-* add a settings menu
+* store non-configuration data in a database
 * make it work on Windows
 * look at optimization
 * Resume downloads?
+* add a settings menu?

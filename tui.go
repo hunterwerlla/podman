@@ -35,6 +35,7 @@ var (
 	previousScreen         = None
 	currentSelectedPodcast Podcast
 	userTextBuffer         = ""
+	searchFailed           = false
 )
 
 var (

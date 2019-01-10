@@ -29,6 +29,14 @@ func searchPodcastsFromTui(configuration *Configuration) {
 	if err != nil {
 		userTextBuffer = "error searching! " + err.Error()
 	}
+	// If we have podcasts, transition to normal mode. Otherwise, stay in insert
+	if len(currentPodcastsInBuffers[currentScreen].([]Podcast)) > 0 {
+		searchFailed = false
+		currentMode = Normal
+	} else {
+		searchFailed = true
+		currentMode = Insert
+	}
 }
 
 func doNothingWithInput(configuration *Configuration) {}
@@ -188,8 +196,6 @@ func deletePressedHome(configuration *Configuration) {
 func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 	if event.ID == "<Enter>" {
 		enterPressed[currentScreen](configuration)
-		// reset mode on enter after the action is done
-		currentMode = Normal
 	} else if event.ID == "<Escape>" {
 		// reset mode on Escape as well as possibly do an action
 		currentMode = Normal
@@ -202,7 +208,6 @@ func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
 		upPressed[currentScreen](configuration)
 	} else if (event.ID == configuration.DownKeybind && currentMode == Normal) || event.ID == "<Down>" {
 		downPressed[currentScreen](configuration)
-		currentMode = Normal
 	} else if (event.ID == configuration.FastForward && currentMode == Normal) || event.ID == "<Previous>" {
 		sendPlayerMessage(PlayerFastForward)
 	} else if (event.ID == configuration.Rewind && currentMode == Normal) || event.ID == "<Next>" {

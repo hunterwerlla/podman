@@ -76,7 +76,7 @@ func getPodcastEntries(podcast Podcast, podcastCache *[]CachedPodcast) ([]Podcas
 		if cacheEntry != nil {
 			return cacheEntry.Podcasts, nil
 		}
-		return []PodcastEpisode{{Title: "Unable to fetch RSS data, try again later"}}, nil
+		return make([]PodcastEpisode, 0), nil
 	}
 	entries := make([]PodcastEpisode, 0)
 	for _, item := range feed.Item {

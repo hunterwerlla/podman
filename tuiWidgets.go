@@ -159,12 +159,15 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
 	searchResultsWidget.ItemFgColor = getForegroundColorForTheme(configuration)
-	var formattedPodcastList []string
+	var listFormattedPodcasts []string
 	podcasts := getCurrentPagePodcasts()
 	currentListSize = len(podcasts)
 	cursor := -1
-	// Only highlight when we are not searching
-	if currentMode == Normal {
+	if currentListSize == 0 && searchFailed {
+		listFormattedPodcasts = append(listFormattedPodcasts, "No results found")
+	}
+	if currentListSize != 0 && currentMode == Normal {
+		// Only highlight when we are not searching and the list size is not zero
 		cursor = getCurrentCursorPosition()
 	}
 	for currentNum, item := range podcasts {
@@ -180,9 +183,9 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 		if currentNum == cursor {
 			formattedPodcast = termuiStyleText(formattedPodcast, getBackgroundColorForThemeString(configuration), getForegroundColorForThemeString(configuration))
 		}
-		formattedPodcastList = append(formattedPodcastList, formattedPodcast)
+		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
 	}
-	searchResultsWidget.Items = formattedPodcastList
+	searchResultsWidget.Items = listFormattedPodcasts
 	return searchResultsWidget
 }
 
@@ -253,7 +256,12 @@ func producePodcastDetailListWidget(configuration *Configuration, width int, hei
 	podcastDetailListWidget.ItemFgColor = getForegroundColorForTheme(configuration)
 	podcastDetailListWidget.Overflow = "wrap"
 	currentListSize = len(podcasts)
-	cursor := getCurrentCursorPosition()
+	cursor := -1
+	if currentListSize == 0 {
+		listFormattedPodcasts = append(listFormattedPodcasts, "Could not load podcast")
+	} else {
+		cursor = getCurrentCursorPosition()
+	}
 	for currentNum, item := range podcasts {
 		if currentNum < (cursor - (podcastDetailListWidgetHeight / 2)) {
 			continue
