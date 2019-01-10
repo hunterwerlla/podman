@@ -25,10 +25,10 @@ const (
 var (
 	// TODO make spacing variable so when it's not wide enough it still works
 	defaultControlsMap = map[screen]string{
-		Home:          "[%s]elect/[<enter>]  [h]/[<left>](search)   [l]/[<right>](downloaded)   [d]elete subscription",
-		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>](home)",
-		Downloaded:    "[<enter>] Play   [%s]/[d]elete   [l]/[<left>](home)",
-		PodcastDetail: "[<enter>] download episode",
+		Home:          "[%s]elect/[<enter>]  [%s]/[<left>]search   [%s]/[<right>]downloaded   [%s]elete subscription    <Control-c> exit",
+		Search:        "[s]ubscribe/unsubscribe   [/]search   [esc]ape searching   [<enter>]%s   [j]down   [k]up   [l]/[<right>]home",
+		Downloaded:    "[<enter>] Play   [%s]/[d]elete   [l]/[<left>]home",
+		PodcastDetail: "[<enter>] %s    [d]elete downloaded    [h]/[<left>]/[l]/[<right>]back",
 	}
 
 	controlsMap = make(map[screen]string)
@@ -149,17 +149,30 @@ func getCurrentPagePodcastEpisodes() []PodcastEpisode {
 	return currentPodcastsInBuffers[currentScreen].([]PodcastEpisode)
 }
 
-// TODO break into per screen functions
 func fillOutControlsMap(configuration *Configuration, controls map[screen]string) {
-	var searchText string
-	controlsMap[Home] = fmt.Sprintf(controls[Home], configuration.ActionKeybind)
-	if currentMode == Insert {
-		searchText = "finish search  "
-	} else {
-		searchText = "look at podcast"
+	switch currentScreen {
+	case Home:
+		controlsMap[Home] = fmt.Sprintf(controls[Home], configuration.ActionKeybind, configuration.LeftKeybind, configuration.RightKeybind, configuration.DeleteKeybind)
+	case Search:
+		var searchText string
+		if currentMode == Insert {
+			searchText = "finish search  "
+		} else {
+			searchText = "look at podcast"
+		}
+		controlsMap[Search] = fmt.Sprintf(controls[Search], searchText)
+	case Downloaded:
+		controlsMap[Downloaded] = fmt.Sprintf(controls[Downloaded], configuration.ActionKeybind)
+	case PodcastDetail:
+		var actionText string
+		cursor := getCurrentCursorPosition()
+		if podcastIsDownloaded(configuration, currentPodcastsInBuffers[PodcastDetail].([]PodcastEpisode)[cursor]) {
+			actionText = "play episode    "
+		} else {
+			actionText = "download episode"
+		}
+		controlsMap[PodcastDetail] = fmt.Sprintf(controls[PodcastDetail], actionText)
 	}
-	controlsMap[Search] = fmt.Sprintf(controls[Search], searchText)
-	controlsMap[Downloaded] = fmt.Sprintf(controls[Downloaded], configuration.ActionKeybind)
 }
 
 func termuiStyleText(text string, fgcolor string, bgcolor string) string {
