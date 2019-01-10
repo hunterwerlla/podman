@@ -28,25 +28,25 @@ func everyOtherSecond() bool {
 	return false
 }
 
-func producePodcastListWidget(configruation *Configuration, width int, height int) *ui.List {
+func producePodcastListWidget(configuration *Configuration, width int, height int) *ui.List {
 	podcastWidget := ui.NewList()
 	podcastWidget.Width = width
 	podcastWidget.Height = height - playerHeight - controlsHeight
 	podcastWidget.Y = 0
 	podcastWidget.Border = false
-	podcastWidget.ItemFgColor = ui.ColorBlack
+	podcastWidget.ItemFgColor = getForegroundColorForTheme(configuration)
 	var listFormattedPodcasts []string
 	podcasts := getCurrentPagePodcasts()
 	cursor := getCurrentCursorPosition()
 	currentListSize = len(podcasts)
 	if currentListSize == 0 {
-		tutorialString := fmt.Sprintf("No subscriptions, go left (<left>/%s) to search for podcasts!", configruation.LeftKeybind)
+		tutorialString := fmt.Sprintf("No subscriptions, go left (<left>/%s) to search for podcasts!", configuration.LeftKeybind)
 		listFormattedPodcasts = append(listFormattedPodcasts, tutorialString)
 	}
 	for currentNum, item := range podcasts {
 		formattedPodcast := formatPodcast(item, width)
 		if currentNum == cursor {
-			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
+			formattedPodcast = termuiStyleText(formattedPodcast, getBackgroundColorForThemeString(configuration), getForegroundColorForThemeString(configuration))
 		}
 		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
 	}
@@ -62,7 +62,7 @@ func produceNothingPlayingWidget(configuration *Configuration, width int, height
 		widgetText = "Nothing playing"
 	}
 	playerWidget := ui.NewParagraph(widgetText)
-	playerWidget.TextFgColor = ui.ColorBlack
+	playerWidget.TextFgColor = getForegroundColorForTheme(configuration)
 	playerWidget.Width = width
 	playerWidget.Height = playerHeight
 	playerWidget.Y = height - playerHeight
@@ -114,9 +114,9 @@ func producePlayerWidget(configuration *Configuration, width int, height int) ui
 	playerWidget.BorderLeft = false
 	playerWidget.BorderRight = false
 	playerWidget.BorderBottom = false
-	playerWidget.BarColor = ui.ColorBlack
-	playerWidget.PercentColor = ui.ColorBlack
-	playerWidget.PercentColorHighlighted = ui.ColorWhite
+	playerWidget.BarColor = getForegroundColorForTheme(configuration)
+	playerWidget.PercentColor = getForegroundColorForTheme(configuration)
+	playerWidget.PercentColorHighlighted = getBackgroundColorForTheme(configuration)
 	playerWidget.LabelAlign = ui.AlignLeft | ui.AlignCenterVertical
 	return playerWidget
 }
@@ -144,7 +144,7 @@ func produceSearchWidget(configuration *Configuration, width int, height int) *u
 	}
 	searchWidget := ui.NewParagraph(text)
 	searchWidget.Y = 0
-	searchWidget.TextFgColor = ui.ColorBlack
+	searchWidget.TextFgColor = getForegroundColorForTheme(configuration)
 	searchWidget.Height = searchBarHeight
 	searchWidget.Width = width
 	searchWidget.Border = false
@@ -158,13 +158,16 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 	searchResultsWidget.Height = searchWidgetHeight
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
-	searchResultsWidget.ItemFgColor = ui.ColorBlack
-	var formattedPodcastList []string
+	searchResultsWidget.ItemFgColor = getForegroundColorForTheme(configuration)
+	var listFormattedPodcasts []string
 	podcasts := getCurrentPagePodcasts()
 	currentListSize = len(podcasts)
 	cursor := -1
-	// Only highlight when we are not searching
-	if currentMode == Normal {
+	if currentListSize == 0 && searchFailed {
+		listFormattedPodcasts = append(listFormattedPodcasts, "No results found")
+	}
+	if currentListSize != 0 && currentMode == Normal {
+		// Only highlight when we are not searching and the list size is not zero
 		cursor = getCurrentCursorPosition()
 	}
 	for currentNum, item := range podcasts {
@@ -178,11 +181,11 @@ func produceSearchResultsWidget(configuration *Configuration, width int, height 
 			formattedPodcast = "    " + formattedPodcast
 		}
 		if currentNum == cursor {
-			formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
+			formattedPodcast = termuiStyleText(formattedPodcast, getBackgroundColorForThemeString(configuration), getForegroundColorForThemeString(configuration))
 		}
-		formattedPodcastList = append(formattedPodcastList, formattedPodcast)
+		listFormattedPodcasts = append(listFormattedPodcasts, formattedPodcast)
 	}
-	searchResultsWidget.Items = formattedPodcastList
+	searchResultsWidget.Items = listFormattedPodcasts
 	return searchResultsWidget
 }
 
@@ -193,7 +196,7 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 	searchResultsWidget.Height = searchResultsWidgetHeight
 	searchResultsWidget.Width = width
 	searchResultsWidget.Border = false
-	searchResultsWidget.ItemFgColor = ui.ColorBlack
+	searchResultsWidget.ItemFgColor = getForegroundColorForTheme(configuration)
 	searchResultsWidget.Overflow = "wrap"
 	var listFormattedPodcasts []string
 	var podcast = getCurrentPagePodcastEpisodes()
@@ -218,7 +221,7 @@ func produceDownloadedWidget(configuration *Configuration, width int, height int
 
 func produceControlsWidget(configuration *Configuration, width int, height int) ui.Bufferer {
 	controlsWidget := ui.NewParagraph(controlsMap[currentScreen])
-	controlsWidget.TextFgColor = ui.ColorBlack
+	controlsWidget.TextFgColor = getForegroundColorForTheme(configuration)
 	controlsWidget.Width = width
 	controlsWidget.Height = controlsHeight
 	controlsWidget.Y = height - playerHeight - controlsHeight
@@ -231,7 +234,7 @@ func produceControlsWidget(configuration *Configuration, width int, height int) 
 func producePodcastDetailDescriptionWidget(configuration *Configuration, width int, height int) ui.Bufferer {
 	blurb := currentSelectedPodcast.CollectionName + ", " + currentSelectedPodcast.ArtistName + "\n" + currentSelectedPodcast.Description
 	podcastDetailWidget := ui.NewParagraph(blurb)
-	podcastDetailWidget.TextFgColor = ui.ColorBlack
+	podcastDetailWidget.TextFgColor = getForegroundColorForTheme(configuration)
 	podcastDetailWidget.Width = width
 	podcastDetailWidget.Height = podcastDetailDescriptionHeight
 	podcastDetailWidget.Y = 0
@@ -250,10 +253,15 @@ func producePodcastDetailListWidget(configuration *Configuration, width int, hei
 	podcastDetailListWidget.Height = podcastDetailListWidgetHeight
 	podcastDetailListWidget.Y = podcastDetailDescriptionHeight
 	podcastDetailListWidget.Border = false
-	podcastDetailListWidget.ItemFgColor = ui.ColorBlack
+	podcastDetailListWidget.ItemFgColor = getForegroundColorForTheme(configuration)
 	podcastDetailListWidget.Overflow = "wrap"
 	currentListSize = len(podcasts)
-	cursor := getCurrentCursorPosition()
+	cursor := -1
+	if currentListSize == 0 {
+		listFormattedPodcasts = append(listFormattedPodcasts, "Could not load podcast")
+	} else {
+		cursor = getCurrentCursorPosition()
+	}
 	for currentNum, item := range podcasts {
 		if currentNum < (cursor - (podcastDetailListWidgetHeight / 2)) {
 			continue

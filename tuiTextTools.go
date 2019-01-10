@@ -28,7 +28,7 @@ func formatPodcast(p Podcast, max int) string {
 func wrapOrBreakText(configuration *Configuration, formattedPodcast string, width int, selected bool) string {
 	if selected {
 		formattedPodcast = wrapString(formattedPodcast, width)
-		formattedPodcast = termuiStyleText(formattedPodcast, "white", "black")
+		formattedPodcast = termuiStyleText(formattedPodcast, getBackgroundColorForThemeString(configuration), getForegroundColorForThemeString(configuration))
 	} else if utf8.RuneCountInString(formattedPodcast) > width {
 		formattedPodcast = substringUTF8(formattedPodcast, 0, width-3)
 		formattedPodcast += "..."

@@ -145,7 +145,6 @@ func CliCommand(config *Configuration) bool {
 		fmt.Println("Invalid subscription number")
 		return false
 	} else if command == "play" {
-		//TODO make it send a message to a goroutine that runs all the time instead
 		fmt.Scanf("%s", &command)
 		pcNum, err := strconv.Atoi(command)
 		if err != nil {

@@ -43,7 +43,7 @@ type PodcastEpisodeSlice []PodcastEpisode
 
 func main() {
 	//get users home dir, the default storage
-	// TODO fix this
+	// TODO fix this to work on Windows + to be not a mess
 	defaultStorage := "."
 	usr, err := user.Current()
 	//if no error, store in home directory

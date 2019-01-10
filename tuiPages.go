@@ -9,6 +9,7 @@ func prepareDrawPageHome(configuration *Configuration) {
 }
 
 func prepareDrawPageSearch(configuration *Configuration) {
+	searchFailed = false
 }
 
 func prepareDrawPageDownloaded(configuration *Configuration) {
