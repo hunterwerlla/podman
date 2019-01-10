@@ -42,10 +42,12 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	//get rid of all stdout data
 	//_, w, _ := os.Pipe()
 	//os.Stdout = w
-	if downloading[ep.Link] != nil {
+	if _, exists := downloading[ep.Link]; exists {
 		// already downloading so bail
 		return nil
 	}
+	// TODO do a real race condition fix here, although this is fine for human speed
+	downloading[ep.Link] = &Download{TotalDownloaded: 0}
 	folder := strings.Replace(podcast.CollectionName, " ", "", -1) //remove spaces
 	basePath := configuration.StorageLocation + "/" + folder
 	filePath := ""
@@ -96,7 +98,6 @@ func downloadPodcast(configuration *Configuration, podcast Podcast, ep PodcastEp
 	ep.StorageLocation = filePath
 	//file download good so add it to downloaded
 	configuration.Downloaded = append(configuration.Downloaded, ep)
-	writeConfig(configuration)
 	// remove from downloading map
 	delete(downloading, ep.Link)
 	return nil
@@ -122,7 +123,7 @@ func podcastExistsOnDisk(entry PodcastEpisode) bool {
 	return true
 }
 
-func podcastIsDownloaded(configuration *Configuration, entry PodcastEpisode) bool {
+func podcastIsDownloaded(configuration *Configuration, entry *PodcastEpisode) bool {
 	for _, value := range configuration.Downloaded {
 		if value.GUID == entry.GUID {
 			if podcastExistsOnDisk(value) {

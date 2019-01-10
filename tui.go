@@ -86,7 +86,7 @@ var (
 		Home:          doNothingWithInput,
 		Search:        doNothingWithInput,
 		Downloaded:    doNothingWithInput,
-		PodcastDetail: doNothingWithInput,
+		PodcastDetail: escapePressedPodcastDetail,
 	}
 
 	upPressed = map[screen]func(configuration *Configuration){
@@ -176,7 +176,7 @@ func fillOutControlsMap(configuration *Configuration, controls map[screen]string
 	case PodcastDetail:
 		var actionText string
 		cursor := getCurrentCursorPosition()
-		if podcastIsDownloaded(configuration, currentPodcastsInBuffers[PodcastDetail].([]PodcastEpisode)[cursor]) {
+		if podcastIsDownloaded(configuration, &currentPodcastsInBuffers[PodcastDetail].([]PodcastEpisode)[cursor]) {
 			actionText = "play episode    "
 		} else {
 			actionText = "download episode"

@@ -64,7 +64,7 @@ func enterPressedPodcastDetail(configuration *Configuration) {
 	if cursor >= len(podcasts) || cursor < 0 {
 		return
 	}
-	if podcastIsDownloaded(configuration, podcasts[cursor]) {
+	if podcastIsDownloaded(configuration, &podcasts[cursor]) {
 		location := getPodcastLocation(configuration, podcasts[cursor])
 		if location != "" {
 			SetPlaying(location)
@@ -97,7 +97,6 @@ func actionPressedSearch(configuration *Configuration) {
 	} else {
 		configuration.Subscribed = append(configuration.Subscribed, selectedPodcast) //now subscribe by adding it to the subscribed list
 	}
-	writeConfig(configuration)
 }
 
 func deletePodcastSelectedByCursor(configuration *Configuration) {
@@ -111,7 +110,10 @@ func deletePodcastSelectedByCursor(configuration *Configuration) {
 	if cursor == len(podcasts)-1 {
 		setCurrentCursorPosition(len(podcasts) - 2)
 	}
-	writeConfig(configuration)
+}
+
+func escapePressedPodcastDetail(configuration *Configuration) {
+	transitionScreen(leftTransitions, currentScreen)
 }
 
 func upPressedGeneric(configuration *Configuration) {
@@ -181,7 +183,6 @@ func deletePressedHome(configuration *Configuration) {
 		setCurrentCursorPosition(len(configuration.Subscribed) - 2)
 	}
 	configuration.Subscribed = append(configuration.Subscribed[:subscribedKey], configuration.Subscribed[subscribedKey+1:]...)
-	writeConfig(configuration)
 }
 
 func handleEventsGlobal(configuration *Configuration, event ui.Event) bool {
@@ -313,4 +314,7 @@ func tuiMainLoop(configuration *Configuration) {
 		}
 	}
 exitMainLoop:
+	DisposePlayer()
+	// save on exit
+	writeConfig(configuration)
 }

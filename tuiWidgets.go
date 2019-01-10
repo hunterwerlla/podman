@@ -259,7 +259,7 @@ func producePodcastDetailListWidget(configuration *Configuration, width int, hei
 			continue
 		}
 		formattedPodcast := formatPodcastEpisode(item)
-		if podcastIsDownloaded(configuration, item) {
+		if podcastIsDownloaded(configuration, &item) {
 			formattedPodcast = "D - " + formattedPodcast
 		} else {
 			formattedPodcast = "    " + formattedPodcast
