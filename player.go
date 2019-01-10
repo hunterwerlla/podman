@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-//go:generate stringer -type=PlayerState
 type PlayerState int
 
 const (

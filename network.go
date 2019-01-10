@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json" //for reading itunes data
 	"errors"
-	"fmt"
 	"github.com/kennygrant/sanitize"
 	"github.com/ungerik/go-rss"
 	"io/ioutil"
@@ -75,11 +74,9 @@ func getPodcastEntries(podcast Podcast, podcastCache *[]CachedPodcast) ([]Podcas
 	feed, err := rss.Read(input)
 	if err != nil {
 		if cacheEntry != nil {
-			//TODO return an error that isn't null
 			return cacheEntry.Podcasts, nil
 		}
-		fmt.Println("Unable to fetch RSS data, try again later")
-		return make([]PodcastEpisode, 0), nil
+		return []PodcastEpisode{{Title: "Unable to fetch RSS data, try again later"}}, nil
 	}
 	entries := make([]PodcastEpisode, 0)
 	for _, item := range feed.Item {

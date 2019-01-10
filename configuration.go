@@ -15,6 +15,7 @@ type Configuration struct {
 	Rewind            string
 	FastForwardLength int
 	RewindLength      int
+	Theme             theme
 	Subscribed        []Podcast
 	Downloaded        []PodcastEpisode
 	Cached            []CachedPodcast
@@ -50,6 +51,7 @@ func CreateDefault() Configuration {
 		Rewind:            "<Next>",
 		FastForwardLength: 30,
 		RewindLength:      10,
+		Theme:             ThemeLight,
 		Subscribed:        make([]Podcast, 0),
 		Downloaded:        make([]PodcastEpisode, 0),
 		Cached:            make([]CachedPodcast, 0),

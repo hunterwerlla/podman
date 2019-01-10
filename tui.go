@@ -7,6 +7,7 @@ import (
 
 type screen string
 type mode string
+type theme string
 
 const (
 	None          screen = "None"
@@ -20,6 +21,20 @@ const (
 const (
 	Normal mode = "Normal"
 	Insert mode = "Insert"
+)
+
+const (
+	ThemeLight theme = "Light"
+	ThemeDark  theme = "Dark"
+)
+
+var (
+	currentListSize        = 0
+	currentMode            = Normal
+	currentScreen          = Home
+	previousScreen         = None
+	currentSelectedPodcast Podcast
+	userTextBuffer         = ""
 )
 
 var (
@@ -132,15 +147,6 @@ var (
 	}
 )
 
-var (
-	currentListSize        = 0
-	currentMode            = Normal
-	currentScreen          = Home
-	previousScreen         = None
-	currentSelectedPodcast Podcast
-	userTextBuffer         = ""
-)
-
 func getCurrentPagePodcasts() []Podcast {
 	return currentPodcastsInBuffers[currentScreen].([]Podcast)
 }
@@ -190,11 +196,6 @@ func fillOutControlsMap(configuration *Configuration, controls map[screen]string
 	} else if state == PlayerPause {
 		controlsMap[currentScreen] += "    <space> resume"
 	}
-}
-
-func termuiStyleText(text string, fgcolor string, bgcolor string) string {
-	text = "[" + text + "](fg-" + fgcolor + ",bg-" + string(bgcolor) + ")"
-	return text
 }
 
 func transitionScreen(transitions map[screen]screen, screen screen) {
