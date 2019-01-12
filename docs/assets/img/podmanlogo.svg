@@ -5,11 +5,35 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    id="svg8"
    version="1.1"
    viewBox="0 0 33.074604 52.166492"
    height="52.166492mm"
-   width="33.074604mm">
+   width="33.074604mm"
+   sodipodi:docname="podmanlogo.svg"
+   inkscape:version="0.92.2 2405546, 2018-03-11">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="3192"
+     inkscape:window-height="1688"
+     id="namedview907"
+     showgrid="false"
+     inkscape:zoom="5.1428635"
+     inkscape:cx="-24.755976"
+     inkscape:cy="109.22596"
+     inkscape:window-x="0"
+     inkscape:window-y="108"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
   <defs
      id="defs2" />
   <metadata
@@ -20,7 +44,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -29,11 +53,11 @@
      id="layer1">
     <rect
        y="70.855904"
-       x="82.820145"
+       x="84.154625"
        height="10.623746"
-       width="3.3103912"
+       width="3.6414304"
        id="rect168"
-       style="fill:#ffcc00;fill-opacity:1;stroke-width:0.31373328" />
+       style="fill:#ffcc00;fill-opacity:1;stroke-width:0.32904625" />
     <circle
        r="16.537302"
        cy="95.244911"
@@ -98,22 +122,23 @@
        style="fill:#000000;stroke-width:0.26458332" />
     <rect
        y="62.371277"
-       x="74.461304"
-       height="18.615326"
-       width="5.622396"
+       x="72.870949"
+       height="18.872559"
+       width="6.8030992"
        id="rect149"
-       style="fill:#000000;stroke-width:0.26458332" />
-    <circle
-       r="2.7863874"
-       cy="62.402107"
-       cx="77.278732"
+       style="fill:#000000;stroke-width:0.29304561" />
+    <ellipse
+       cy="62.474228"
+       cx="76.268471"
        id="path153"
-       style="fill:#000000;stroke-width:0.27617288" />
+       style="fill:#000000;stroke-width:0.30601081"
+       rx="3.3988125"
+       ry="2.8045766" />
     <circle
        style="fill:#784421;fill-opacity:1;stroke-width:0.26458332"
        r="2.1799171"
        cy="69.745728"
-       cx="84.465515"
+       cx="85.965515"
        id="path88" />
     <rect
        transform="rotate(-138)"
