@@ -2,3 +2,8 @@
 ---
 
 @import "{{ site.theme }}";
+
+h2, h3, h4, h5 {
+	font-size: 20;
+	color: #37bbe4;
+}
