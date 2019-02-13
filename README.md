@@ -1,7 +1,7 @@
 ## Podman - A podcast client for your terminal 
 
 ![podman logo](docs/assets/img/podmanlogo.svg) <br/>
-Build: [![Build Status](https://travis-ci.org/hunterwerlla/podman.svg?branch=master)](https://travis-ci.org/hunterwerlla/podman)
+Build: [![CircleCI](https://circleci.com/gh/hunterwerlla/podman.svg?style=svg)](https://circleci.com/gh/hunterwerlla/podman)
 Latest Release: [v1.0.0](https://github.com/hunterwerlla/podman/releases/tag/v1.0.0)<br/>
 
 Podman is a terminal based podcast client written in Go with a fully features TUI and somewhat functional CUI
