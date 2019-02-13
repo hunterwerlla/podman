@@ -1,0 +1,22 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.11
+    steps:
+      - checkout
+      - run:
+          name: install libasound
+          command: |
+              sudo apt-get install -y libasound2-dev
+      - run:
+          name: run build
+          command: |
+            go get -v
+            go build -v
+      - run:
+          name: run tests
+          command: |
+            go fmt ./...
+            go vet ./...
+            go test -v ./...
